@@ -4,8 +4,7 @@ import {
   Sparkles, ShieldCheck, Zap, ChevronDown, 
   ChevronUp, Timer, TrendingUp, Calendar, 
   ChevronLeft, ChevronRight, CheckCircle2,
-  SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw,
-  ExternalLink
+  SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup } from '../types';
 import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod } from '../data/protocolData';
@@ -439,38 +438,6 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Official Bucked Up Supplement Partner Banner */}
-      <div className="bg-gradient-to-r from-amber-500/10 via-zinc-900 to-amber-500/5 border border-amber-500/30 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
-            <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-black uppercase tracking-wider text-amber-300 font-athletic">
-                Official Supplement Partner: Bucked Up
-              </span>
-              <span className="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
-                bckd.co/87uJC2e
-              </span>
-            </div>
-            <p className="text-[11px] text-zinc-300 mt-0.5">
-              Fuel your progressive overload, running stamina, and recovery with Coach AJ Risner&apos;s recommended Bucked Up stack.
-            </p>
-          </div>
-        </div>
-
-        <a
-          href="https://bckd.co/87uJC2e"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-amber-950/40 flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
-        >
-          <span>Shop Bucked Up</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
       </div>
 
       {/* PRIMARY PROGRAM SELECTOR: 2 Unified Programs side-by-side */}

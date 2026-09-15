@@ -3,7 +3,7 @@ import {
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
   Instagram, ExternalLink, Zap
 } from 'lucide-react';
-import { RisnerLogo, IssaCertifiedBadge } from './BrandingLogos';
+import { RisnerLogo } from './BrandingLogos';
 
 export type TabType = 'workouts' | 'warmups' | 'calculator' | 'logs' | 'graphs' | 'contact';
 
@@ -31,8 +31,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Brand & Actions Row */}
-        <div className="flex items-center justify-between h-20 border-b border-zinc-900">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between min-h-16 sm:h-20 py-2 sm:py-0 border-b border-zinc-900 gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <RisnerLogo size="md" />
           </div>
 
@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="https://bckd.co/87uJC2e"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-amber-500/30 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-amber-500/30 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
               title="Official Supplement Partner: Bucked Up"
             >
               <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="https://www.instagram.com/ajrisner"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-pink-300 hover:text-pink-200 border border-pink-500/30 hover:border-pink-500/50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-pink-300 hover:text-pink-200 border border-pink-500/30 hover:border-pink-500/50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
               title="Follow Instagram: AJ Risner"
             >
               <Instagram className="w-3.5 h-3.5 text-pink-400" />
@@ -66,9 +66,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>AJ Risner</span>
               <ExternalLink className="w-3 h-3 text-pink-400/70" />
             </a>
-
-            {/* ISSA Certified Badge */}
-            <IssaCertifiedBadge />
           </div>
         </div>
 
