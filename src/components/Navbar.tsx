@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const tabs = [
     { id: 'workouts', label: 'Workouts', icon: Dumbbell },
     { id: 'warmups', label: 'Warm-Ups', icon: Flame },
-    { id: 'calculator', label: '1RM & Reps', icon: Calculator },
+    { id: 'calculator', label: 'Calculators', icon: Calculator },
     { id: 'logs', label: 'Workout Logs', icon: History },
     { id: 'graphs', label: 'Progress', icon: TrendingUp },
     { id: 'contact', label: 'Contact Me', icon: Mail },

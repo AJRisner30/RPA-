@@ -3,11 +3,13 @@ import {
   Calculator, Dumbbell, Sparkles, Scale, Percent, 
   ArrowRight, RotateCcw, Info, CheckCircle2, Bookmark, 
   Save, Plus, Trash2, HelpCircle, Layers, ChevronDown, 
-  ChevronUp, Target, Award, ShieldCheck, Flame, BarChart3
+  ChevronUp, Target, Award, ShieldCheck, Flame, BarChart3,
+  Timer
 } from 'lucide-react';
 import { WorkoutSessionLog } from '../types';
 import { calculate1RM, extractPersonalRecords } from '../utils/storage';
 import { soundManager } from '../utils/audio';
+import { RunPaceHrCalculator } from './RunPaceHrCalculator';
 
 export type CalculationFormula = 'epley' | 'brzycki' | 'lombardi' | 'consensus';
 export type WeightUnit = 'lbs' | 'kg';
@@ -38,6 +40,9 @@ interface RepLoadCalculatorTabProps {
 }
 
 export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs = [] }) => {
+  // Calculator mode: Strength (1RM & Rep Loads) vs Cardio (Run Pace & Heart Rate)
+  const [activeCalculator, setActiveCalculator] = useState<'strength' | 'cardio'>('strength');
+
   // Unit & Formula toggles
   const [unit, setUnit] = useState<WeightUnit>('lbs');
   const [formula, setFormula] = useState<CalculationFormula>('consensus');
@@ -371,25 +376,64 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
 
   return (
     <div id="rep-calculator-tab" className="space-y-6">
-      {/* Tab Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 shadow-xl">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-wider">
-              ISSA Load Intensity Prescription
-            </span>
-            <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded-full text-[10px] font-mono">
-              Epley & Brzycki Model
-            </span>
-          </div>
-          <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-white font-athletic flex items-center gap-2.5">
-            <Calculator className="w-7 h-7 text-rose-500" />
-            1RM &amp; <span className="text-rose-500">Rep Load</span> Calculator
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-            Prescribe precise working barbell &amp; dumbbell weights for any rep count based on your estimated 1RM, target reps, and RPE effort level.
-          </p>
+      {/* Top Suite Switcher: 1RM & Rep Loads vs Run Pace & HR */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-900 border border-zinc-800 p-2 sm:p-2.5 rounded-2xl shadow-lg">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveCalculator('strength')}
+            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              activeCalculator === 'strength'
+                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/40'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+            }`}
+          >
+            <Dumbbell className="w-4 h-4" />
+            <span>1RM &amp; Rep Loads</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveCalculator('cardio')}
+            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              activeCalculator === 'cardio'
+                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/40'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+            }`}
+          >
+            <Timer className="w-4 h-4" />
+            <span>Run Pace &amp; Heart Rate</span>
+          </button>
         </div>
+
+        <span className="text-[11px] font-mono text-zinc-500 hidden md:inline px-3">
+          Risner Performance Athletics • Precision Calculators
+        </span>
+      </div>
+
+      {activeCalculator === 'cardio' ? (
+        <RunPaceHrCalculator />
+      ) : (
+        <>
+          {/* Tab Header Banner */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="px-2.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-wider">
+                  Load Intensity Prescription
+                </span>
+                <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded-full text-[10px] font-mono">
+                  Epley &amp; Brzycki Model
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-white font-athletic flex items-center gap-2.5">
+                <Calculator className="w-7 h-7 text-rose-500" />
+                1RM &amp; <span className="text-rose-500">Rep Load</span> Calculator
+              </h1>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                Prescribe precise working barbell &amp; dumbbell weights for any rep count based on your estimated 1RM, target reps, and RPE effort level.
+              </p>
+            </div>
 
         {/* Global Controls: Unit & Formula */}
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
@@ -910,7 +954,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
           <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 text-xs text-zinc-400 space-y-2">
             <div className="flex items-center gap-2 text-zinc-200 font-bold">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>ISSA Coaching Directive: Progressive Overload</span>
+              <span>Coach AJ&apos;s Directive: Progressive Overload</span>
             </div>
             <p className="text-[11px] leading-relaxed text-zinc-400">
               When you achieve all target reps at <span className="text-zinc-200 font-bold">RPE 8 or lower</span> across all working sets, advance the working weight by <span className="text-amber-400 font-bold">5 lbs (barbell)</span> or <span className="text-amber-400 font-bold">2.5 lbs (dumbbell per hand)</span> on your subsequent workout session.
@@ -1114,6 +1158,8 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
