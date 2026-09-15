@@ -10,8 +10,9 @@ import { WarmupsTab } from './components/WarmupsTab';
 import { RepLoadCalculatorTab } from './components/RepLoadCalculatorTab';
 import { ProgressGraphsTab } from './components/ProgressGraphsTab';
 import { WorkoutLogsTab } from './components/WorkoutLogsTab';
+import { ContactTab } from './components/ContactTab';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
-import { Award, ShieldCheck, Dumbbell, Heart, Flame } from 'lucide-react';
+import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap } from 'lucide-react';
 import { RpaCompanyEmblem } from './components/BrandingLogos';
 
 export default function App() {
@@ -91,6 +92,10 @@ export default function App() {
             onNavigateToLogs={() => setActiveTab('logs')}
           />
         )}
+
+        {activeTab === 'contact' && (
+          <ContactTab />
+        )}
       </main>
 
       {/* Live Interactive Weights Tracker Modal */}
@@ -102,27 +107,70 @@ export default function App() {
         />
       )}
 
-      {/* Footer Branded with RPA & ISSA Credentials */}
+      {/* Footer Branded with RPA, ISSA Credentials, Socials, and Partners */}
       <footer className="mt-auto border-t border-zinc-900 bg-zinc-950 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
-          <div className="flex items-center gap-3">
-            <RpaCompanyEmblem size="sm" />
-            <div className="flex items-center gap-2">
-              <span className="font-athletic font-black tracking-wider uppercase text-zinc-200">
-                Risner Performance Athletics
-              </span>
-              <span className="text-zinc-600">•</span>
-              <span>Strength & Conditioning System</span>
+        <div className="max-w-7xl mx-auto flex flex-col gap-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+            <div className="flex items-center gap-3">
+              <RpaCompanyEmblem size="sm" />
+              <div className="flex items-center gap-2">
+                <span className="font-athletic font-black tracking-wider uppercase text-zinc-200">
+                  Risner Performance Athletics
+                </span>
+                <span className="text-zinc-600">•</span>
+                <span>Strength & Conditioning System</span>
+              </div>
+            </div>
+
+            {/* Quick Contact & Social Links in Footer */}
+            <div className="flex items-center gap-4 flex-wrap justify-center text-xs">
+              <a
+                href="mailto:risnerathletics@gmail.com"
+                className="flex items-center gap-1.5 text-zinc-300 hover:text-rose-400 transition-colors font-medium cursor-pointer"
+                title="Email Coach AJ Risner"
+              >
+                <Mail className="w-3.5 h-3.5 text-rose-400" />
+                <span>risnerathletics@gmail.com</span>
+              </a>
+
+              <span className="text-zinc-700 hidden sm:inline">•</span>
+
+              <a
+                href="https://www.instagram.com/ajrisner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-zinc-300 hover:text-pink-400 transition-colors font-medium cursor-pointer"
+                title="Instagram: AJ Risner"
+              >
+                <Instagram className="w-3.5 h-3.5 text-pink-400" />
+                <span>Instagram: AJ Risner</span>
+                <ExternalLink className="w-3 h-3 text-zinc-500" />
+              </a>
+
+              <span className="text-zinc-700 hidden sm:inline">•</span>
+
+              <a
+                href="https://bckd.co/87uJC2e"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-amber-400 hover:text-amber-300 transition-colors font-bold cursor-pointer"
+                title="Bucked Up Supplement Partner"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <span>Bucked Up Supplements</span>
+                <ExternalLink className="w-3 h-3 text-amber-400/60" />
+              </a>
+            </div>
+
+            <div className="flex items-center gap-2 text-zinc-400">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Certified by International Sports Sciences Association (ISSA-CPT)</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-zinc-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Certified by International Sports Sciences Association (ISSA-CPT)</span>
-          </div>
-
-          <div className="text-zinc-400 font-mono text-[11px]">
-            Designed for Peak Human Performance
+          <div className="pt-4 border-t border-zinc-900/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-zinc-500 font-mono">
+            <span>Coach Aryan &quot;AJ&quot; Risner, ISSA-CPT • All Rights Reserved</span>
+            <span>Designed for Peak Human Performance</span>
           </div>
         </div>
       </footer>

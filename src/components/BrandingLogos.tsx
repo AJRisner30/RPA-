@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Award, ShieldCheck, CheckCircle2, X } from 'lucide-react';
+import { Award, ShieldCheck, CheckCircle2, X, Mail, Instagram, ExternalLink, Zap } from 'lucide-react';
 
 /**
  * Official Risner Performance Athletics Shield Emblem Vector Logo
@@ -390,12 +390,60 @@ export const IssaCertifiedBadge: React.FC<{ compact?: boolean }> = ({ compact = 
             <div className="mt-5 space-y-3.5 text-sm">
               <div className="p-3 bg-zinc-950/70 rounded-xl border border-zinc-800 flex justify-between items-center">
                 <span className="text-zinc-400">Head Coach:</span>
-                <span className="text-white font-bold tracking-wide">Aryan Risner, ISSA-CPT</span>
+                <span className="text-white font-bold tracking-wide">Aryan &quot;AJ&quot; Risner, ISSA-CPT</span>
               </div>
 
               <div className="p-3 bg-zinc-950/70 rounded-xl border border-zinc-800 flex justify-between items-center">
                 <span className="text-zinc-400">Organization:</span>
                 <span className="text-rose-400 font-bold">Risner Performance Athletics</span>
+              </div>
+
+              {/* Direct Email */}
+              <div className="p-3 bg-zinc-950/70 rounded-xl border border-zinc-800 flex justify-between items-center">
+                <span className="text-zinc-400 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-rose-400" />
+                  Contact Email:
+                </span>
+                <a
+                  href="mailto:risnerathletics@gmail.com"
+                  className="text-rose-400 hover:text-rose-300 font-mono text-xs font-bold underline"
+                >
+                  risnerathletics@gmail.com
+                </a>
+              </div>
+
+              {/* Instagram */}
+              <div className="p-3 bg-zinc-950/70 rounded-xl border border-zinc-800 flex justify-between items-center">
+                <span className="text-zinc-400 flex items-center gap-1.5">
+                  <Instagram className="w-3.5 h-3.5 text-pink-400" />
+                  Instagram:
+                </span>
+                <a
+                  href="https://www.instagram.com/ajrisner"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-pink-400 hover:text-pink-300 font-bold text-xs flex items-center gap-1"
+                >
+                  <span>AJ Risner (@ajrisner)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+
+              {/* Bucked Up Supplement Partner */}
+              <div className="p-3 bg-zinc-950/70 rounded-xl border border-amber-500/20 flex justify-between items-center">
+                <span className="text-zinc-400 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  Supplements:
+                </span>
+                <a
+                  href="https://bckd.co/87uJC2e"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-400 hover:text-amber-300 font-bold text-xs flex items-center gap-1 font-mono"
+                >
+                  <span>Bucked Up (bckd.co/87uJC2e)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
 
               {/* Verified Competencies */}

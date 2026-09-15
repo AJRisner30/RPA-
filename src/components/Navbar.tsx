@@ -1,10 +1,11 @@
 import React from 'react';
 import { 
-  Dumbbell, Flame, Calculator, History, TrendingUp, Award 
+  Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
+  Instagram, ExternalLink, Zap
 } from 'lucide-react';
 import { RisnerLogo, IssaCertifiedBadge } from './BrandingLogos';
 
-export type TabType = 'workouts' | 'warmups' | 'calculator' | 'logs' | 'graphs';
+export type TabType = 'workouts' | 'warmups' | 'calculator' | 'logs' | 'graphs' | 'contact';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -23,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'calculator', label: '1RM & Reps', icon: Calculator },
     { id: 'logs', label: 'Workout Logs', icon: History },
     { id: 'graphs', label: 'Progress', icon: TrendingUp },
+    { id: 'contact', label: 'Contact Me', icon: Mail },
   ];
 
   return (
@@ -34,7 +36,37 @@ export const Navbar: React.FC<NavbarProps> = ({
             <RisnerLogo size="md" />
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+            {/* Bucked Up Supplement Partner Link */}
+            <a
+              href="https://bckd.co/87uJC2e"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-amber-500/30 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+              title="Official Supplement Partner: Bucked Up"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <span className="hidden sm:inline">Bucked Up</span>
+              <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded font-mono font-black text-amber-300">
+                Supps
+              </span>
+              <ExternalLink className="w-3 h-3 text-amber-400/70" />
+            </a>
+
+            {/* Instagram: AJ Risner Link */}
+            <a
+              href="https://www.instagram.com/ajrisner"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-pink-300 hover:text-pink-200 border border-pink-500/30 hover:border-pink-500/50 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+              title="Follow Instagram: AJ Risner"
+            >
+              <Instagram className="w-3.5 h-3.5 text-pink-400" />
+              <span className="hidden md:inline">Instagram:</span>
+              <span>AJ Risner</span>
+              <ExternalLink className="w-3 h-3 text-pink-400/70" />
+            </a>
+
             {/* ISSA Certified Badge */}
             <IssaCertifiedBadge />
           </div>
