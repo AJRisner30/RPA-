@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
-  Instagram, ExternalLink, Zap
+  Instagram, ExternalLink, Zap, User, UserCheck
 } from 'lucide-react';
 import { RisnerLogo } from './BrandingLogos';
+import { AthleteProfile } from '../utils/athleteAuth';
 
 export type TabType = 'workouts' | 'warmups' | 'calculator' | 'logs' | 'graphs' | 'contact';
 
@@ -11,12 +12,16 @@ interface NavbarProps {
   activeTab: TabType;
   onSelectTab: (tab: TabType) => void;
   onStartActiveWorkout: () => void;
+  currentAthlete?: AthleteProfile;
+  onOpenAthleteModal: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onSelectTab,
   onStartActiveWorkout,
+  currentAthlete,
+  onOpenAthleteModal,
 }) => {
   const tabs = [
     { id: 'workouts', label: 'Workouts', icon: Dumbbell },
@@ -37,6 +42,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+            {/* Athlete Login & Profile Switcher */}
+            <button
+              type="button"
+              onClick={onOpenAthleteModal}
+              className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 hover:border-zinc-500 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95"
+              title="Switch athlete profile or sign in to track personal progress"
+            >
+              <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+                {currentAthlete ? currentAthlete.name.charAt(0).toUpperCase() : 'A'}
+              </div>
+              <span className="truncate max-w-[85px] sm:max-w-[120px] font-semibold text-zinc-100">
+                {currentAthlete ? currentAthlete.name : 'Athlete Login'}
+              </span>
+              <UserCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            </button>
+
             {/* Bucked Up Supplement Partner Link */}
             <a
               href="https://bckd.co/87uJC2e"

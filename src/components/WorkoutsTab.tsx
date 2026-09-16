@@ -285,30 +285,96 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
     // If day has conditioning (run / ruck) and is not rest, append as trackable cardio
     if (day.run && !day.run.toLowerCase().includes('rest') && !day.run.toLowerCase().includes('n/a')) {
-      const isRuck = day.run.toLowerCase().includes('ruck') || day.focus.toLowerCase().includes('ruck');
-      const isIntervals = day.run.toLowerCase().includes('interval') || day.run.toLowerCase().includes('track') || day.run.toLowerCase().includes('sprint');
-      
+      const combined = `${day.run} ${day.pace} ${day.focus}`.toLowerCase();
+      const isRuck = combined.includes('ruck');
+      const isIntervals = combined.includes('interval') || combined.includes('track') || combined.includes('sprint') || combined.includes('repeats');
+
+      // Pack weight for rucking
+      let packWeight: number | undefined;
+      const packMatch = combined.match(/(\d+(?:\.\d+)?)\s*(?:lbs?|pound)/);
+      if (packMatch) {
+        packWeight = parseFloat(packMatch[1]);
+      } else if (isRuck) {
+        packWeight = 30;
+      }
+
+      // Accurate distance extraction from day.run title and pace
+      let distance: number | undefined;
+      const rangeMatch = day.run.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*mile/i);
+      if (rangeMatch) {
+        distance = parseFloat(((parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2).toFixed(1));
+      } else {
+        const singleMatch = day.run.match(/(\d+(?:\.\d+)?)\s*mile/i);
+        if (singleMatch) {
+          distance = parseFloat(singleMatch[1]);
+        } else {
+          const paceRangeMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*mile/i);
+          if (paceRangeMatch) {
+            distance = parseFloat(((parseFloat(paceRangeMatch[1]) + parseFloat(paceRangeMatch[2])) / 2).toFixed(1));
+          } else {
+            const paceSingleMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*mile/i);
+            if (paceSingleMatch) {
+              distance = parseFloat(paceSingleMatch[1]);
+            }
+          }
+        }
+      }
+
+      // Duration in minutes
+      let durationMins: number | undefined;
+      const minMatch = day.run.match(/(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*min/i);
+      if (minMatch) {
+        if (minMatch[2]) {
+          durationMins = Math.round((parseFloat(minMatch[1]) + parseFloat(minMatch[2])) / 2);
+        } else {
+          durationMins = Math.round(parseFloat(minMatch[1]));
+        }
+      } else {
+        const paceMinMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*min/i);
+        if (paceMinMatch) {
+          durationMins = Math.round(parseFloat(paceMinMatch[1]));
+        }
+      }
+
+      // Sensible defaults if not specified
+      if (!distance && !durationMins) {
+        if (isRuck) {
+          distance = 5.0;
+          durationMins = 75;
+        } else if (isIntervals) {
+          distance = 2.5;
+          durationMins = 25;
+        } else {
+          distance = 3.5;
+          durationMins = 30;
+        }
+      } else if (!distance && durationMins) {
+        distance = parseFloat((durationMins / 9.5).toFixed(1));
+      } else if (distance && !durationMins) {
+        durationMins = isRuck ? Math.round(distance * 15) : Math.round(distance * 9);
+      }
+
+      const targetText = durationMins 
+        ? `${durationMins} mins${distance ? ` (${distance} mi target)` : ''}`
+        : `${distance} miles`;
+
       exercises.push({
         id: `proto-cardio-${Date.now()}`,
-        name: isRuck 
-          ? 'Ruck March (Weighted Pack)' 
-          : isIntervals 
-          ? 'Speed & Track Intervals' 
-          : 'Zone 2 Base Conditioning Run',
+        name: day.run.trim(),
         muscleGroup: 'Full Body',
         type: 'cardio',
         defaultSets: 1,
-        targetReps: isRuck ? '5 miles' : isIntervals ? 'Interval repeats' : '30-60 mins',
+        targetReps: targetText,
         restPeriodSeconds: 0,
-        distance_miles: isRuck ? 5 : isIntervals ? 3 : 4,
-        weight_lbs: isRuck ? 30 : undefined,
+        distance_miles: distance,
+        weight_lbs: packWeight,
         pace: day.pace,
         progression_rules: isRuck
-          ? { metric: 'weight_lbs', trigger: 'pace_under_15_min', increment_value: 5, action: '+5 lbs pack load' }
+          ? { metric: 'weight_lbs', trigger: 'pace_under_15_min', increment_value: 5, action: '+5 lbs pack load when pace < 15 min/mi' }
           : isIntervals
-          ? { metric: 'seconds', trigger: 'pace_progression', increment_value: -2, action: 'drop 2-3s per interval' }
-          : { metric: 'distance_miles', trigger: 'per_week', increment_value: 0.5, action: '+0.5 mi weekly volume' },
-        notes: `${day.run} • Pace: ${day.pace}`
+          ? { metric: 'seconds', trigger: 'pace_progression', increment_value: -2, action: 'drop 2-3s per interval repeat' }
+          : { metric: 'distance_miles', trigger: 'per_week', increment_value: 0.5, action: '+0.5 mi weekly aerobic expansion' },
+        notes: `${day.run} • Target Pace: ${day.pace}`
       });
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "Risner Performance Athletics",
-  "description": "Elite workout programming, dynamic warm-ups, estimated 1RM and rep-max load calculations, weight tracking logs, rest period timer, and performance visualization by ISSA Certified Risner Performance Athletics.",
+  "description": "Elite workout programming, dynamic warm-ups, auto-overload progression, run pace & HR calculations, athlete login progress tracking, and performance visualization by Coach Aryan 'AJ' Risner.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

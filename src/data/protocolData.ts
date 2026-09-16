@@ -84,7 +84,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
           "Chest-Supported Row (3x10) [Overload: +5 lbs on 10 reps]"
         ],
         run: "Tempo Run (3-4 Miles)",
-        pace: "2-3 Miles at Tempo Pace (RPE 6-7).",
+        pace: "3-4 Miles at Tempo Pace (RPE 6-7 with 0.5 mi warm-up/cool-down).",
         progressionRule: "Deadlift: +10 lbs on 5 reps; Push Press: +5 lbs on 6 reps"
       },
       {
@@ -92,7 +92,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         focus: "Active Recovery",
         warmup: "Cat-cow transitions, 90/90 hip stretches, and deep diaphragmatic breathing.",
         strength: ["Stretching, foam rolling, or light yoga."],
-        run: "Optional Light Spin",
+        run: "Optional Light Spin (20-30 mins)",
         pace: "Keep heart rate under 110 bpm.",
         progressionRule: "Active recovery & mobility. Heart rate < 110 bpm."
       },
@@ -102,7 +102,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         warmup: "5 mins brisk walk, calf stretching, and hip flexor activation.",
         strength: ["Pre-hab exercises (glute bridges, clamshells)."],
         run: "Long Run (6-10 Miles)",
-        pace: "Zone 2 / RPE 3-4. Time on feet is the goal.",
+        pace: "6-10 Miles in Zone 2 / RPE 3-4. Time on feet is the goal.",
         progressionRule: "Zone 2 Long Run: +0.5 to +1.0 mile/week base building"
       },
       {
@@ -171,7 +171,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
           "Single Arm Row (3x10) [Overload: +5 lbs on 10 reps]"
         ],
         run: "Threshold Run (4-6 Miles)",
-        pace: "3-4 Miles at Threshold Pace (RPE 7-8).",
+        pace: "4-6 Miles total (1 mi warmup + 3-4 Miles at Threshold Pace RPE 7-8 + 1 mi cooldown).",
         progressionRule: "Deadlift: +10 lbs on 4x4; DB Bench: +5 lbs on 10 reps"
       },
       {
@@ -256,8 +256,8 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
           "Trap Bar Deadlift (3x5) [Overload: +10 lbs on 5 reps]",
           "DB Overhead Press (3x8) [Overload: +5 lbs on 8 reps]"
         ],
-        run: "Race Pace Simulation",
-        pace: "2-3 Miles at Goal Race Pace.",
+        run: "Race Pace Simulation (2-3 Miles)",
+        pace: "2-3 Miles at Goal Race Pace (RPE 8.5-9).",
         progressionRule: "Trap Bar Deadlift: +10 lbs on 5 reps; Race Pace Sim"
       },
       {

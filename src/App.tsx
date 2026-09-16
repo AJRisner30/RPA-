@@ -12,6 +12,8 @@ import { ProgressGraphsTab } from './components/ProgressGraphsTab';
 import { WorkoutLogsTab } from './components/WorkoutLogsTab';
 import { ContactTab } from './components/ContactTab';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
+import { AthleteLoginModal } from './components/AthleteLoginModal';
+import { getCurrentAthlete, AthleteProfile } from './utils/athleteAuth';
 import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap } from 'lucide-react';
 import { RpaCompanyEmblem } from './components/BrandingLogos';
 
@@ -19,6 +21,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
   const [programs, setPrograms] = useState<WorkoutProgram[]>(() => getStoredPrograms());
   const [logs, setLogs] = useState<WorkoutSessionLog[]>(() => getStoredWorkoutLogs());
+  const [currentAthlete, setCurrentAthlete] = useState<AthleteProfile>(() => getCurrentAthlete());
+  const [isAthleteModalOpen, setIsAthleteModalOpen] = useState<boolean>(false);
 
   // Active workout session modal state
   const [activeLiveProgram, setActiveLiveProgram] = useState<WorkoutProgram | null>(null);
@@ -56,6 +60,8 @@ export default function App() {
           if (tab !== 'warmups') setTargetWarmupId(null);
         }}
         onStartActiveWorkout={() => handleStartWorkout(programs[0])}
+        currentAthlete={currentAthlete}
+        onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -107,7 +113,17 @@ export default function App() {
         />
       )}
 
-      {/* Footer Branded with RPA, ISSA Credentials, Socials, and Partners */}
+      {/* Athlete Login & Profile Modal */}
+      <AthleteLoginModal
+        isOpen={isAthleteModalOpen}
+        onClose={() => setIsAthleteModalOpen(false)}
+        onAthleteChanged={(athlete) => {
+          setCurrentAthlete(athlete);
+          setLogs(getStoredWorkoutLogs());
+        }}
+      />
+
+      {/* Footer Branded with RPA, Coach AJ Risner, Socials, and Partners */}
       <footer className="mt-auto border-t border-zinc-900 bg-zinc-950 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
@@ -164,12 +180,12 @@ export default function App() {
 
             <div className="flex items-center gap-2 text-zinc-400">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Certified by International Sports Sciences Association (ISSA-CPT)</span>
+              <span>Risner Performance Athletics • Tactical & Endurance Progression</span>
             </div>
           </div>
 
           <div className="pt-4 border-t border-zinc-900/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-zinc-500 font-mono">
-            <span>Coach Aryan &quot;AJ&quot; Risner, ISSA-CPT • All Rights Reserved</span>
+            <span>Coach Aryan &quot;AJ&quot; Risner • Risner Performance Athletics • All Rights Reserved</span>
             <span>Designed for Peak Human Performance</span>
           </div>
         </div>

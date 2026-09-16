@@ -1,5 +1,6 @@
 import { WorkoutProgram, WorkoutSessionLog, SupplementProtocol, PersonalRecord } from '../types';
 import { INITIAL_PROGRAMS, INITIAL_PAST_LOGS, INITIAL_SUPPLEMENTS } from '../data/initialData';
+import { getCurrentAthlete } from './athleteAuth';
 
 const PROGRAMS_KEY = 'rpa_programs_v1';
 const LOGS_KEY = 'rpa_workout_logs_v1';
@@ -53,24 +54,51 @@ export function savePrograms(programs: WorkoutProgram[]) {
   }
 }
 
+const FRESH_START_V1_KEY = 'rpa_fresh_start_cleared_v1';
+
 export function getStoredWorkoutLogs(): WorkoutSessionLog[] {
-  if (typeof window === 'undefined') return INITIAL_PAST_LOGS;
+  if (typeof window === 'undefined') return [];
   try {
+    // Check if one-time fresh reset was performed to wipe legacy mock logs
+    const hasFreshStart = localStorage.getItem(FRESH_START_V1_KEY);
+    if (!hasFreshStart) {
+      localStorage.setItem(FRESH_START_V1_KEY, 'true');
+      localStorage.setItem(LOGS_KEY, JSON.stringify([]));
+      localStorage.removeItem('hybridStrengthLogs');
+      return [];
+    }
+
     const data = localStorage.getItem(LOGS_KEY);
     if (!data) {
-      localStorage.setItem(LOGS_KEY, JSON.stringify(INITIAL_PAST_LOGS));
-      return INITIAL_PAST_LOGS;
+      localStorage.setItem(LOGS_KEY, JSON.stringify([]));
+      return [];
     }
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Extra safety: if data only contains old mock logs (log-1 through log-6), clear them
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed.every((l) => typeof l.id === 'string' && /^log-[1-6]$/.test(l.id))) {
+      localStorage.setItem(LOGS_KEY, JSON.stringify([]));
+      return [];
+    }
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     console.error('Failed to load logs', e);
-    return INITIAL_PAST_LOGS;
+    return [];
   }
 }
 
 export function saveWorkoutLog(log: WorkoutSessionLog): WorkoutSessionLog[] {
+  let taggedLog = { ...log };
+  if (!taggedLog.athleteId) {
+    try {
+      const currentAthlete = getCurrentAthlete();
+      taggedLog.athleteId = currentAthlete.id;
+    } catch {
+      // fallback
+    }
+  }
+
   const currentLogs = getStoredWorkoutLogs();
-  const updated = [log, ...currentLogs];
+  const updated = [taggedLog, ...currentLogs];
   if (typeof window !== 'undefined') {
     localStorage.setItem(LOGS_KEY, JSON.stringify(updated));
   }
@@ -85,6 +113,48 @@ export function deleteWorkoutLog(logId: string): WorkoutSessionLog[] {
   }
   return updated;
 }
+
+/**
+ * Completely clears all workout session logs and recent lift tracker sets
+ * across every athlete so all athletes start fresh at one time.
+ */
+export function clearAllWorkoutLogs(): WorkoutSessionLog[] {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(LOGS_KEY, JSON.stringify([]));
+    localStorage.removeItem('hybridStrengthLogs');
+    window.dispatchEvent(new CustomEvent('logs_cleared', { detail: { scope: 'all' } }));
+  }
+  return [];
+}
+
+/**
+ * Clears workout session logs for a specific athlete only.
+ */
+export function clearAthleteWorkoutLogs(athleteId: string): WorkoutSessionLog[] {
+  const currentLogs = getStoredWorkoutLogs();
+  const updated = currentLogs.filter((l) => {
+    // If athleteId matches or if log has no athleteId and target is default AJ
+    if (l.athleteId === athleteId) return false;
+    if (!l.athleteId && athleteId === 'athlete-aj-risner') return false;
+    return true;
+  });
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(LOGS_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('logs_cleared', { detail: { scope: 'athlete', athleteId } }));
+  }
+  return updated;
+}
+
+/**
+ * Clears quick lift tracker sets from local storage.
+ */
+export function clearHybridStrengthLogs(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('hybridStrengthLogs');
+  }
+}
+
 
 export function getStoredSupplements(): SupplementProtocol[] {
   if (typeof window === 'undefined') return INITIAL_SUPPLEMENTS;
