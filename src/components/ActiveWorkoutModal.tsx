@@ -26,7 +26,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   // Find athlete-specific past logs for progressive overload calculations
   const allLogs = getStoredWorkoutLogs();
   const pastLogs = allLogs.filter(
-    (l) => l.athleteId === currentAthlete.id || (!l.athleteId && currentAthlete.id === 'athlete-aj-risner')
+    (l) => l.athleteId === currentAthlete.id || (!l.athleteId && (currentAthlete.id === 'athlete-default' || currentAthlete.id === 'athlete-aj-risner'))
   );
   const effectiveLogs = pastLogs.length > 0 ? pastLogs : allLogs;
 

@@ -7,6 +7,7 @@ import {
 import { AthleteProfile, WorkoutSessionLog } from '../types';
 import { 
   getAthletes, 
+  getSelectableAthletes,
   getCurrentAthlete, 
   setCurrentAthlete, 
   registerAthlete, 
@@ -31,7 +32,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
   onClose,
   onAthleteChanged,
 }) => {
-  const [athletes, setAthletes] = useState<AthleteProfile[]>(() => getAthletes());
+  const [athletes, setAthletes] = useState<AthleteProfile[]>(() => getSelectableAthletes());
   const [currentAthlete, setCurrentAthleteState] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [viewMode, setViewMode] = useState<'switch' | 'register' | 'login' | 'profile'>('switch');
 
@@ -57,7 +58,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
 
   const allLogs: WorkoutSessionLog[] = getStoredWorkoutLogs();
   const athleteLogs = allLogs.filter(
-    (l) => l.athleteId === currentAthlete.id || (!l.athleteId && currentAthlete.id === 'athlete-aj-risner')
+    (l) => l.athleteId === currentAthlete.id || (!l.athleteId && (currentAthlete.id === 'athlete-default' || currentAthlete.id === 'athlete-aj-risner'))
   );
   const totalVolume = athleteLogs.reduce((acc, l) => acc + (l.totalVolumeLbs || 0), 0);
   const totalSessions = athleteLogs.length;
@@ -105,7 +106,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
         weightLbs: parseFloat(regWeight) || 180,
       });
 
-      setAthletes(getAthletes());
+      setAthletes(getSelectableAthletes());
       setCurrentAthleteState(newAthlete);
       onAthleteChanged(newAthlete);
       onClose();
@@ -125,7 +126,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
 
     const found = loginAthlete(loginQuery, loginPin);
     if (found) {
-      setAthletes(getAthletes());
+      setAthletes(getSelectableAthletes());
       setCurrentAthleteState(found);
       onAthleteChanged(found);
       onClose();
@@ -243,7 +244,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 {athletes.map((athlete) => {
                   const isActive = athlete.id === currentAthlete.id;
                   const count = allLogs.filter(
-                    (l) => l.athleteId === athlete.id || (!l.athleteId && athlete.id === 'athlete-aj-risner')
+                    (l) => l.athleteId === athlete.id || (!l.athleteId && athlete.id === 'athlete-default')
                   ).length;
 
                   return (
@@ -470,7 +471,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Aryan Risner or risneraryan@gmail.com"
+                  placeholder="e.g. athlete@example.com or athlete name"
                   value={loginQuery}
                   onChange={(e) => setLoginQuery(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500"

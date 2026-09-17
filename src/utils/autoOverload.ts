@@ -107,21 +107,34 @@ export function getAutoOverloadRecommendation(
   const avgRpe = workingSets.reduce((acc, s) => acc + (s.rpe || 8), 0) / workingSets.length;
   const highestRpe = workingSets.reduce((max, s) => Math.max(max, s.rpe || 0), 0);
 
-  // Parse target reps upper bound (e.g. "4x8" -> 8, "10-12" -> 12, "3x5" -> 5)
+  // Parse target reps upper bound (e.g. "4x8" -> 8, "8-10" -> 10, "5-8" -> 8, "3-5" -> 5, "5x5" -> 5, "3x3" -> 3)
   let targetRepMax = 8;
   if (targetRepsText) {
-    const numbers = targetRepsText.match(/\d+/g);
-    if (numbers && numbers.length > 0) {
-      targetRepMax = parseInt(numbers[numbers.length - 1], 10);
+    if (targetRepsText.includes('5x5') || targetRepsText.includes('5 x 5')) {
+      targetRepMax = 5;
+    } else if (targetRepsText.includes('3x3') || targetRepsText.includes('3 x 3')) {
+      targetRepMax = 3;
+    } else if (targetRepsText.includes('40m') || targetRepsText.includes('carry')) {
+      targetRepMax = 1; // 1 completed carry distance
+    } else {
+      const numbers = targetRepsText.match(/\d+/g);
+      if (numbers && numbers.length > 0) {
+        targetRepMax = parseInt(numbers[numbers.length - 1], 10);
+      }
     }
   }
 
-  // Determine overload increment based on movement category
+  // Determine overload increment based on movement category (exact to The Apex Protocol guidelines)
   let defaultIncrement = 5;
-  if (isLowerBodyCompound) {
-    defaultIncrement = 10; // +10 lbs on Back Squat, Deadlifts, RDLs
+  if (nameLower.includes('overhead press') || nameLower.includes('ohp') || nameLower.includes('strict overhead')) {
+    defaultIncrement = 2.5; // Exact Apex Protocol manual specification: "+2.5 lbs from last week"
+  } else if (nameLower.includes('weighted pull-up') || nameLower.includes('pull-up') || nameLower.includes('pullup')) {
+    defaultIncrement = 2.5;
+  } else if (isLowerBodyCompound) {
+    // Back Squat & Trap Bar Deadlift: linear +5 lbs, or +10 lbs when top reps exceeded with reserve
+    defaultIncrement = (prevReps > targetRepMax && (highestRpe || avgRpe) <= 7.5) ? 10 : 5;
   } else if (isUpperBodyCompound) {
-    defaultIncrement = 5; // +5 lbs on Bench, OHP, Rows
+    defaultIncrement = 5; // +5 lbs on Bench, Push Press, Rows
   } else if (isDumbbell) {
     defaultIncrement = 5; // +5 lbs total
   }

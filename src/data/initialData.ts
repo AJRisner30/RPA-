@@ -2,6 +2,302 @@ import { WorkoutProgram, WarmUpRoutine, SupplementProtocol, WorkoutSessionLog } 
 
 export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   {
+    id: 'the-apex-protocol-master',
+    title: 'The Apex Protocol (26-Week Master)',
+    subtitle: 'Comprehensive Tactical Fitness & Conditioning • Elite Standard',
+    category: 'Hybrid',
+    frequency: '6 Days / Week',
+    estimatedDurationMinutes: 70,
+    recommendedWarmupId: 'warmup-apex-sop',
+    description: 'The definitive 26-week tactical conditioning blueprint authored by Coach Aryan "AJ" Risner. Built to forge elite combat chassis durability, massive compound strength, high-velocity running, and load carriage mastery.',
+    schedule: [
+      {
+        day: 1,
+        focus: 'Lower Body Prime (Structural Leg Strength)',
+        exercises: [
+          {
+            id: 'apex-d1-squat',
+            name: 'Barbell Back Squat',
+            muscleGroup: 'Quads',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '8-10',
+            targetRpe: 8,
+            restPeriodSeconds: 120,
+            notes: 'Linear Auto-Overload: +2.5 to 5 lbs on top reps. Pristine depth.'
+          },
+          {
+            id: 'apex-d1-rdl',
+            name: 'Romanian Deadlift',
+            muscleGroup: 'Hamstrings & Glutes',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '10',
+            targetRpe: 8,
+            restPeriodSeconds: 90,
+            notes: 'Hinge back into hamstrings, keep bar glued to shins.'
+          },
+          {
+            id: 'apex-d1-bss',
+            name: 'Bulgarian Split Squat',
+            muscleGroup: 'Quads',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '8/leg',
+            targetRpe: 8.5,
+            restPeriodSeconds: 90,
+            notes: 'Elevate rear foot on bench, maintain upright torso.'
+          },
+          {
+            id: 'apex-d1-pallof',
+            name: 'Pallof Press',
+            muscleGroup: 'Core',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '12/side',
+            targetRpe: 7.5,
+            restPeriodSeconds: 60,
+            notes: 'Anti-rotational core bracing against cable/band tension.'
+          }
+        ]
+      },
+      {
+        day: 2,
+        focus: 'Energy Systems (Aerobic Capacity)',
+        exercises: [
+          {
+            id: 'apex-d2-run',
+            name: 'Tactical Aerobic Base',
+            muscleGroup: 'Full Body',
+            type: 'cardio',
+            defaultSets: 1,
+            targetReps: '35-50 Min',
+            restPeriodSeconds: 0,
+            pace: 'Zone 2 (135-150 BPM)',
+            notes: 'Conversational pace. +5 mins duration weekly in Phase 1.'
+          },
+          {
+            id: 'apex-d2-plank',
+            name: 'Plank Series',
+            muscleGroup: 'Core',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '60s',
+            targetRpe: 8,
+            restPeriodSeconds: 45,
+            notes: 'Front and side planks. +15s hold progression.'
+          }
+        ]
+      },
+      {
+        day: 3,
+        focus: 'Upper Body Push/Pull (Torso & Grip Integrity)',
+        exercises: [
+          {
+            id: 'apex-d3-ohp',
+            name: 'Strict Overhead Press',
+            muscleGroup: 'Shoulders',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '8-10',
+            targetRpe: 8,
+            restPeriodSeconds: 120,
+            notes: 'Strict linear progression: Add 2.5 lbs from last week.'
+          },
+          {
+            id: 'apex-d3-pullups',
+            name: 'Weighted Pull-Ups',
+            muscleGroup: 'Back',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '6-8',
+            targetRpe: 8.5,
+            restPeriodSeconds: 120,
+            notes: 'Linear progression: +2.5 to 5 lbs upon hitting 8 reps.'
+          },
+          {
+            id: 'apex-d3-incline',
+            name: 'DB Incline Bench',
+            muscleGroup: 'Chest',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '10',
+            targetRpe: 8,
+            restPeriodSeconds: 90,
+            notes: '+5 lbs total load when hitting 10 clean reps.'
+          },
+          {
+            id: 'apex-d3-row',
+            name: 'Chest-Supported Row',
+            muscleGroup: 'Back',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '10',
+            targetRpe: 8,
+            restPeriodSeconds: 90,
+            notes: 'Upper back thickness and scapular retraction.'
+          },
+          {
+            id: 'apex-d3-carry',
+            name: "Heavy Farmer's Carry",
+            muscleGroup: 'Full Body',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '40m',
+            targetRpe: 9,
+            restPeriodSeconds: 90,
+            notes: 'Grip, traps, and core endurance. 40m per set.'
+          }
+        ]
+      },
+      {
+        day: 4,
+        focus: 'Active Recovery (CNS Down-regulation)',
+        exercises: [
+          {
+            id: 'apex-d4-recovery',
+            name: 'Recovery / Active Mobility',
+            muscleGroup: 'Full Body',
+            type: 'strength',
+            defaultSets: 1,
+            targetReps: '30 Min',
+            restPeriodSeconds: 0,
+            notes: 'Light walk, yoga, or stretching flow. HR < 110 BPM.'
+          }
+        ]
+      },
+      {
+        day: 5,
+        focus: 'Full Body Power (Combat Chassis Development)',
+        exercises: [
+          {
+            id: 'apex-d5-deadlift',
+            name: 'Trap Bar Deadlift',
+            muscleGroup: 'Hamstrings & Glutes',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '8-10',
+            targetRpe: 8.5,
+            restPeriodSeconds: 180,
+            notes: 'Linear Auto-Overload: +2.5 to 5 lbs on top reps. 3 min rest.'
+          },
+          {
+            id: 'apex-d5-pushpress',
+            name: 'Push Press',
+            muscleGroup: 'Shoulders',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '6',
+            targetRpe: 8,
+            restPeriodSeconds: 120,
+            notes: 'Explosive dip and drive. +5 lbs when all sets clean.'
+          },
+          {
+            id: 'apex-d5-lunges',
+            name: 'Walking Lunges',
+            muscleGroup: 'Quads',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '20 steps',
+            targetRpe: 8.5,
+            restPeriodSeconds: 90,
+            notes: '20 total steps with heavy dumbbells.'
+          },
+          {
+            id: 'apex-d5-swings',
+            name: 'KB Swings',
+            muscleGroup: 'Hamstrings & Glutes',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '15',
+            targetRpe: 8,
+            restPeriodSeconds: 60,
+            notes: 'Violent hip snap, Russian height.'
+          }
+        ]
+      },
+      {
+        day: 6,
+        focus: 'Tactical Endurance (Zone 2 Output)',
+        exercises: [
+          {
+            id: 'apex-d6-run',
+            name: 'Long Slow Distance Run',
+            muscleGroup: 'Full Body',
+            type: 'cardio',
+            defaultSets: 1,
+            targetReps: '47-77 Min',
+            restPeriodSeconds: 0,
+            pace: 'Zone 2 (Keep HR < 145 BPM)',
+            notes: 'Strict aerobic adaptation. Progresses by +2 mins weekly.'
+          }
+        ]
+      },
+      {
+        day: 7,
+        focus: 'Complete Rest & Nutrition Replenishment',
+        exercises: [
+          {
+            id: 'apex-d7-rest',
+            name: 'Complete Rest & Nutrition Replenishment',
+            muscleGroup: 'Full Body',
+            type: 'strength',
+            defaultSets: 1,
+            targetReps: 'Full Day',
+            restPeriodSeconds: 0,
+            notes: 'Carb replenishment, electrolytes, and 8+ hours quality sleep.'
+          }
+        ]
+      }
+    ],
+    exercises: [
+      {
+        id: 'apex-d1-squat',
+        name: 'Barbell Back Squat',
+        muscleGroup: 'Quads',
+        type: 'strength',
+        defaultSets: 4,
+        targetReps: '8-10',
+        targetRpe: 8,
+        restPeriodSeconds: 120,
+        notes: 'Linear Auto-Overload: +2.5 to 5 lbs on top reps. Pristine depth.'
+      },
+      {
+        id: 'apex-d1-rdl',
+        name: 'Romanian Deadlift',
+        muscleGroup: 'Hamstrings & Glutes',
+        type: 'strength',
+        defaultSets: 3,
+        targetReps: '10',
+        targetRpe: 8,
+        restPeriodSeconds: 90,
+        notes: 'Hinge back into hamstrings, keep bar glued to shins.'
+      },
+      {
+        id: 'apex-d1-bss',
+        name: 'Bulgarian Split Squat',
+        muscleGroup: 'Quads',
+        type: 'strength',
+        defaultSets: 3,
+        targetReps: '8/leg',
+        targetRpe: 8.5,
+        restPeriodSeconds: 90,
+        notes: 'Elevate rear foot on bench, maintain upright torso.'
+      },
+      {
+        id: 'apex-d1-pallof',
+        name: 'Pallof Press',
+        muscleGroup: 'Core',
+        type: 'strength',
+        defaultSets: 3,
+        targetReps: '12/side',
+        targetRpe: 7.5,
+        restPeriodSeconds: 60,
+        notes: 'Anti-rotational core bracing against cable/band tension.'
+      }
+    ]
+  },
+  {
     id: 'rpa-strength-upper',
     title: 'RPA Upper Body Strength & Hypertrophy',
     subtitle: 'Compound Power + Shoulder Integrity',
@@ -672,6 +968,102 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
 ];
 
 export const INITIAL_WARMUPS: WarmUpRoutine[] = [
+  {
+    id: 'warmup-apex-sop',
+    title: 'The Apex Protocol SOP Warmup (Elevate, Mobilize, Activate)',
+    category: 'Full Body / CNS',
+    durationMinutes: 10,
+    description: "Standard Operating Procedures (WARMUP) - Execute this sequence before every strength session. Do not bypass the preparation phase. This lubricates the joints, activates the CNS, and primes the kinetic chain.",
+    focusMuscles: ['Full Body', 'CNS Priming', 'Thoracic Spine', 'Hip Complex', 'Ankles'],
+    steps: [
+      {
+        id: 'sop-elevate',
+        name: '1. Elevate: Row, Assault Bike, or Light Jog',
+        targetArea: 'Systemic Temperature & Blood Flow',
+        durationSeconds: 240,
+        repsText: '3-5 Minutes',
+        cues: [
+          'Progressively elevate core body temperature and heart rate.',
+          'Bring breathing rate up without inducing lactic fatigue.'
+        ],
+        coachingPoint: 'Joint fluid becomes less viscous as body temperature rises.'
+      },
+      {
+        id: 'sop-wgs',
+        name: "2. Mobilize: World's Greatest Stretch",
+        targetArea: 'Hips, Thoracic Spine, Ankles & Hamstrings',
+        repsText: '10 Reps per side',
+        durationSeconds: 90,
+        cues: [
+          'Deep lunge stance, place inside elbow toward ankle.',
+          'Rotate arm to ceiling, tracking thumb with eyes.',
+          'Shift back to straighten front leg and stretch hamstring.'
+        ],
+        coachingPoint: 'Unlocks multi-planar rotational mobility across ankles, hips, and T-spine.'
+      },
+      {
+        id: 'sop-band-pullapart',
+        name: '2. Mobilize: Band Pull-Aparts',
+        targetArea: 'Scapular Retractors & Rear Delts',
+        repsText: '3 x 15 Reps',
+        durationSeconds: 60,
+        cues: [
+          'Keep arms straight, depress shoulders away from ears.',
+          'Pull band until it contacts breastbone. 1s pause.'
+        ],
+        coachingPoint: 'Establishes a solid upper back platform for heavy pressing and pulling.'
+      },
+      {
+        id: 'sop-lunge-twist',
+        name: '2. Mobilize: Walking Lunge w/ Thoracic Twist',
+        targetArea: 'Hip Flexors, Glutes & Thoracic Spine',
+        repsText: '10 Reps per side',
+        durationSeconds: 75,
+        cues: [
+          'Step forward into deep lunge, knee tracking over toes.',
+          'Rotate torso over lead knee with tall upright posture.'
+        ],
+        coachingPoint: 'Opens anterior hip capsule and primes reciprocal glute firing.'
+      },
+      {
+        id: 'sop-goblet-squat',
+        name: '3. Activate: KB Goblet Squat (3-sec pause)',
+        targetArea: 'Quadriceps, Adductors & Deep Core',
+        repsText: '2 x 8 Reps (3s pause)',
+        durationSeconds: 60,
+        cues: [
+          'Hold kettlebell at sternum.',
+          'Descend into deep squat, hold bottom position for 3 full seconds.',
+          'Drive through whole foot to stand tall.'
+        ],
+        coachingPoint: 'Forces neuromuscular recruitment at the deep end-range of hip flexion.'
+      },
+      {
+        id: 'sop-shoulder-taps',
+        name: '3. Activate: Plank Shoulder Taps',
+        targetArea: 'Anti-Rotational Core & Scapular Stability',
+        repsText: '2 x 20 Reps (10/side)',
+        durationSeconds: 50,
+        cues: [
+          'Solid pushup plank, feet slightly wider than shoulder width.',
+          'Tap opposite shoulder without letting hips sway side-to-side.'
+        ],
+        coachingPoint: 'Primes rotational stability and anti-torsional core stiffness.'
+      },
+      {
+        id: 'sop-broad-jumps',
+        name: '3. Activate: Broad Jumps (Max Intent)',
+        targetArea: 'CNS Neurological Firing & Triple Extension',
+        repsText: '2 x 3 Reps (Max Intent)',
+        durationSeconds: 45,
+        cues: [
+          'Load hips back, swing arms back, explode forward with 100% intent.',
+          'Land softly in athletic quarter squat, absorbing force through hips.'
+        ],
+        coachingPoint: 'Maximal velocity CNS recruitment immediately before loading compound barbells.'
+      }
+    ]
+  },
   {
     id: 'warmup-upper-primer',
     title: 'RPA Upper Body Scapular & Thoracic Primer',

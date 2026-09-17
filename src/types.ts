@@ -206,9 +206,30 @@ export function isExerciseTimed(
   type?: string,
   targetReps?: string
 ): boolean {
+  if (type === 'strength') return false;
   if (type === 'cardio') return true;
   const name = exerciseName.toLowerCase();
   const reps = (targetReps || '').toLowerCase();
+
+  // Strength and accessory movements that must NEVER be timed cardio
+  if (
+    name.includes('lunge') || 
+    name.includes('split squat') || 
+    name.includes('squat') || 
+    name.includes('step-up') ||
+    name.includes('deadlift') ||
+    name.includes('press') ||
+    name.includes('row') ||
+    name.includes('pull-up') ||
+    name.includes('curl') ||
+    name.includes('raise') ||
+    name.includes('swing') ||
+    reps.includes('steps') ||
+    reps.includes('/leg') ||
+    reps.includes('/side')
+  ) {
+    return false;
+  }
 
   // Explicit time indicators in target reps
   if (

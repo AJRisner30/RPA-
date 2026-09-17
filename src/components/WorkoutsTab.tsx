@@ -7,7 +7,7 @@ import {
   SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup } from '../types';
-import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod } from '../data/protocolData';
+import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
 
 // Custom Running Shoe SVG icon
@@ -40,9 +40,17 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   onStartWorkout,
   onSelectWarmup,
 }) => {
-  // Primary program selector: 'hybrid_protocol' (condensed 3 phases) vs 'hybrid_db' (dumbbell & calisthenics)
-  const [selectedProgram, setSelectedProgram] = useState<'hybrid_protocol' | 'hybrid_db'>('hybrid_protocol');
+  // Primary program selector: 'apex_protocol' (26-week tactical blueprint) vs 'hybrid_protocol' (condensed 3 phases) vs 'hybrid_db' (dumbbell & calisthenics)
+  const [selectedProgram, setSelectedProgram] = useState<'apex_protocol' | 'hybrid_protocol' | 'hybrid_db'>('apex_protocol');
   
+  // Active phase inside The Apex Protocol (5 Mesocycles)
+  const [activeApexPhaseKey, setActiveApexPhaseKey] = useState<
+    'apex_phase1' | 'apex_phase2' | 'apex_phase3' | 'apex_phase4' | 'apex_phase5'
+  >('apex_phase1');
+
+  // Active week inside The Apex Protocol (Weeks 1 to 26)
+  const [activeApexWeek, setActiveApexWeek] = useState<number>(1);
+
   // Active phase inside Hybrid Protocol (condenses Phase 1, Phase 2, Phase 3 into 1 tab)
   const [activeProtocolPhaseKey, setActiveProtocolPhaseKey] = useState<'phase1' | 'phase2' | 'phase3'>('phase1');
 
@@ -92,9 +100,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   }, [activeExerciseTimer?.isRunning]);
 
   // Current active phase data based on selected program
-  const currentPhase = selectedProgram === 'hybrid_db'
-    ? (PROTOCOL_DATA[activeDbPhaseKey] || PROTOCOL_DATA.db_phase1 || PROTOCOL_DATA.hybrid_db)
-    : (PROTOCOL_DATA[activeProtocolPhaseKey] || PROTOCOL_DATA.phase1);
+  const currentPhase = useMemo(() => {
+    if (selectedProgram === 'apex_protocol') {
+      return getApexWeekData(activeApexWeek);
+    }
+    if (selectedProgram === 'hybrid_db') {
+      return PROTOCOL_DATA[activeDbPhaseKey] || PROTOCOL_DATA.db_phase1 || PROTOCOL_DATA.hybrid_db;
+    }
+    return PROTOCOL_DATA[activeProtocolPhaseKey] || PROTOCOL_DATA.phase1;
+  }, [selectedProgram, activeApexWeek, activeDbPhaseKey, activeProtocolPhaseKey]);
 
   // Determine current day of week to highlight in schedule
   const todayDayName = useMemo(() => {
@@ -108,6 +122,11 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     }
     if (exerciseRestTimes[exerciseString]) {
       return exerciseRestTimes[exerciseString];
+    }
+    const bracketMatch = exerciseString.match(/\[.*?rest:\s*(\d+)s?.*?\]/i);
+    if (bracketMatch) {
+      const parsed = parseInt(bracketMatch[1], 10);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
     }
     return getDefaultRestPeriod(cleanStr);
   };
@@ -180,76 +199,183 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     });
   };
 
+  // Helper to determine if a strength entry is a real exercise or a rest/recovery note
+  const isRealStrengthExercise = (str: string): boolean => {
+    if (!str) return false;
+    const clean = str.replace(/\[.*?\]/g, '').trim().toLowerCase();
+    if (!clean) return false;
+    if (
+      clean === 'rest' ||
+      clean.startsWith('rest ') ||
+      clean.startsWith('rest/') ||
+      clean.startsWith('rest /') ||
+      clean.startsWith('rest -') ||
+      clean.startsWith('rest:') ||
+      clean === 'complete rest' ||
+      clean.includes('complete rest') ||
+      clean.includes('nutrition replenishment') ||
+      clean.includes('meal prep') ||
+      clean.includes('sleep quality') ||
+      clean === 'none' ||
+      clean === 'n/a'
+    ) {
+      return false;
+    }
+    return true;
+  };
+
+  // Helper to determine if a run/conditioning entry is real conditioning or rest
+  const isRealConditioningRun = (runStr?: string): boolean => {
+    if (!runStr) return false;
+    const clean = runStr.replace(/\[.*?\]/g, '').trim().toLowerCase();
+    if (
+      clean === 'rest' ||
+      clean.startsWith('rest ') ||
+      clean.startsWith('rest/') ||
+      clean.startsWith('rest /') ||
+      clean.startsWith('rest -') ||
+      clean.startsWith('rest:') ||
+      clean.includes('complete rest') ||
+      clean.includes('rest from running') ||
+      clean.includes('cns recovery') ||
+      clean === 'none' ||
+      clean === 'n/a'
+    ) {
+      return false;
+    }
+    return true;
+  };
+
+  // Helper to determine if a day is purely a rest day
+  const isProtocolRestDay = (day: ProtocolDay): boolean => {
+    const focusLower = day.focus.toLowerCase();
+    if (
+      focusLower.includes('complete rest') ||
+      focusLower === 'rest' ||
+      focusLower.startsWith('rest /') ||
+      focusLower.startsWith('rest -')
+    ) {
+      return true;
+    }
+    const hasRealStrength = day.strength.some(isRealStrengthExercise);
+    const hasRealRun = isRealConditioningRun(day.run);
+    return !hasRealStrength && !hasRealRun;
+  };
+
   // Helper to convert a ProtocolDay into a live WorkoutProgram for the tracker
   const convertDayToProgram = (day: ProtocolDay): WorkoutProgram => {
     const exercises: ExerciseTemplate[] = day.strength
-      .filter((s) => !s.toLowerCase().includes('rest') && !s.toLowerCase().includes('meal prep') && !s.toLowerCase().includes('none'))
+      .filter(isRealStrengthExercise)
       .map((str, idx) => {
-        // Clean out bracket notes like "[Overload: +10 lbs on 8 reps]"
-        const cleanStr = str.replace(/\[.*?\]/g, '').trim();
-        const match = cleanStr.match(/(.*?)\s*\((?:(\d+)x(\d+(?:-\d+)?(?:\/leg|\/side)?)|(\d+x\d+s)|(.*?))\)/i);
-        let name = cleanStr;
-        let defaultSets = 3;
-        let targetReps = '8-10';
-
-        if (match) {
-          name = match[1].trim();
-          if (match[2] && match[3]) {
-            defaultSets = parseInt(match[2], 10) || 3;
-            targetReps = match[3].trim();
-          } else if (match[4]) {
-            defaultSets = 3;
-            targetReps = match[4].trim();
-          }
-        }
+        const parsed = parseExerciseString(str);
+        const name = parsed.name;
+        const defaultSets = parsed.defaultSets;
+        const targetReps = parsed.targetReps;
 
         // Determine muscle group
         let muscleGroup: MuscleGroup = 'Full Body';
         const lowerName = name.toLowerCase();
-        if (lowerName.includes('squat') || lowerName.includes('lunge') || lowerName.includes('quad')) {
+        if (lowerName.includes('squat') || lowerName.includes('lunge') || lowerName.includes('quad') || lowerName.includes('split squat')) {
           muscleGroup = 'Quads';
-        } else if (lowerName.includes('deadlift') || lowerName.includes('rdl') || lowerName.includes('hip thrust')) {
+        } else if (lowerName.includes('deadlift') || lowerName.includes('rdl') || lowerName.includes('hip thrust') || lowerName.includes('hamstring') || lowerName.includes('swing')) {
           muscleGroup = 'Hamstrings & Glutes';
-        } else if (lowerName.includes('bench') || lowerName.includes('floor press') || lowerName.includes('push-up') || lowerName.includes('pushup')) {
+        } else if (lowerName.includes('bench') || lowerName.includes('floor press') || lowerName.includes('push-up') || lowerName.includes('pushup') || lowerName.includes('chest') || lowerName.includes('dip')) {
           muscleGroup = 'Chest';
-        } else if (lowerName.includes('row') || lowerName.includes('pull-up') || lowerName.includes('lat')) {
+        } else if (lowerName.includes('row') || lowerName.includes('pull-up') || lowerName.includes('pullup') || lowerName.includes('lat') || lowerName.includes('chin')) {
           muscleGroup = 'Back';
-        } else if (lowerName.includes('press') || lowerName.includes('overhead')) {
+        } else if (lowerName.includes('overhead press') || lowerName.includes('ohp') || lowerName.includes('push press') || lowerName.includes('press') || lowerName.includes('shoulder') || lowerName.includes('delt')) {
           muscleGroup = 'Shoulders';
-        } else if (lowerName.includes('plank') || lowerName.includes('twist') || lowerName.includes('woodchopper') || lowerName.includes('raise')) {
+        } else if (lowerName.includes('plank') || lowerName.includes('pallof') || lowerName.includes('twist') || lowerName.includes('woodchopper') || lowerName.includes('raise') || lowerName.includes('core') || lowerName.includes('ab wheel')) {
           muscleGroup = 'Core';
         }
 
-        // Auto-Overload rules for BOTH Hybrid Protocol and Hybrid DB & Bodyweight
+        // Auto-Overload rules for all 3 programs (Apex Protocol, Hybrid Protocol, Hybrid DB & Bodyweight)
         let progressionRuleObj = undefined;
-        if (lowerName.includes('squat') || lowerName.includes('deadlift') || lowerName.includes('rdl') || lowerName.includes('hip thrust')) {
+        let defaultWeightLbs: number | undefined = undefined;
+
+        // Strict OHP: 2.5 lbs weekly increment (Apex Protocol explicit)
+        if (lowerName.includes('overhead press') || lowerName.includes('ohp')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
             trigger: 'complete_max_reps' as const,
-            increment_value: 10,
-            action: '+10 lbs next session',
+            increment_value: 2.5,
+            action: '+2.5 lbs next session',
           };
-        } else if (lowerName.includes('floor press')) {
-          progressionRuleObj = {
-            metric: 'weight_lbs' as const,
-            trigger: 'complete_max_reps' as const,
-            increment_value: 5,
-            action: '+5 lbs next session',
-          };
-        } else if (lowerName.includes('bench') || lowerName.includes('press') || lowerName.includes('row') || lowerName.includes('overhead')) {
-          progressionRuleObj = {
-            metric: 'weight_lbs' as const,
-            trigger: 'complete_max_reps' as const,
-            increment_value: 5,
-            action: '+5 lbs next session',
-          };
+          defaultWeightLbs = 75;
         } else if (lowerName.includes('pull-up') || lowerName.includes('pullup')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
             trigger: 'complete_max_reps' as const,
-            increment_value: 5,
-            action: '+5 lbs on belt',
+            increment_value: 2.5,
+            action: '+2.5 lbs on belt',
           };
+          defaultWeightLbs = 0;
+        } else if (lowerName.includes('squat') && !lowerName.includes('split')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+2.5 to 5 lbs next session',
+          };
+          defaultWeightLbs = 135;
+        } else if (lowerName.includes('deadlift') || lowerName.includes('trap bar')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 10,
+            action: '+5 to 10 lbs next session',
+          };
+          defaultWeightLbs = 185;
+        } else if (lowerName.includes('rdl') || lowerName.includes('romanian')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 115;
+        } else if (lowerName.includes('push press')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 95;
+        } else if (lowerName.includes('floor press') || lowerName.includes('bench') || lowerName.includes('row')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 50;
+        } else if (lowerName.includes('split squat') || lowerName.includes('lunge')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 30;
+        } else if (lowerName.includes('carry') || lowerName.includes('farmer')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 50;
+        } else if (lowerName.includes('swing')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 35;
+        } else if (lowerName.includes('pallof')) {
+          defaultWeightLbs = 20;
         } else if (lowerName.includes('push-up') || lowerName.includes('pushup')) {
           progressionRuleObj = {
             metric: 'reps' as const,
@@ -257,6 +383,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             increment_value: 1,
             action: '+1 rep next session',
           };
+          defaultWeightLbs = 0;
         } else if (lowerName.includes('plank')) {
           progressionRuleObj = {
             metric: 'seconds' as const,
@@ -264,9 +391,10 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             increment_value: 15,
             action: '+15s hold',
           };
+          defaultWeightLbs = 0;
         }
 
-        const configuredRest = getExerciseRest(cleanStr);
+        const configuredRest = getExerciseRest(str);
 
         return {
           id: `proto-ex-${idx}-${Date.now()}`,
@@ -275,16 +403,17 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           defaultSets,
           targetReps,
           targetRpe: 8.5,
+          weight_lbs: defaultWeightLbs,
           restPeriodSeconds: configuredRest,
           progression_rules: progressionRuleObj,
-          notes: str.includes('[Overload:')
-            ? str.match(/\[(.*?)\]/)?.[1] || `RPA Protocol (${day.day} - ${day.focus})`
+          notes: parsed.notes
+            ? parsed.notes
             : `RPA Protocol (${day.day} - ${day.focus}). Target Rest: ${configuredRest}s.`
         };
       });
 
     // If day has conditioning (run / ruck) and is not rest, append as trackable cardio
-    if (day.run && !day.run.toLowerCase().includes('rest') && !day.run.toLowerCase().includes('n/a')) {
+    if (isRealConditioningRun(day.run)) {
       const combined = `${day.run} ${day.pace} ${day.focus}`.toLowerCase();
       const isRuck = combined.includes('ruck');
       const isIntervals = combined.includes('interval') || combined.includes('track') || combined.includes('sprint') || combined.includes('repeats');
@@ -378,9 +507,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       });
     }
 
-    const programTitle = selectedProgram === 'hybrid_protocol'
+    const programTitle = selectedProgram === 'apex_protocol'
+      ? `The Apex Protocol (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
+      : selectedProgram === 'hybrid_protocol'
       ? `Hybrid Protocol (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
       : `Hybrid DB & Bodyweight (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`;
+
+    const recommendedWarmupId = selectedProgram === 'apex_protocol'
+      ? 'warmup-apex-sop'
+      : 'warmup-upper-primer';
 
     return {
       id: `session-${day.day.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
@@ -389,6 +524,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       category: 'Hybrid',
       frequency: 'Scheduled',
       estimatedDurationMinutes: 60,
+      recommendedWarmupId,
       description: `${currentPhase.title} - ${day.day}: ${day.focus}. Auto-Overload enabled session combining compound strength and aerobic capacity.`,
       exercises: exercises.length > 0 ? exercises : [
         {
@@ -408,6 +544,55 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     const program = convertDayToProgram(day);
     onStartWorkout(program);
   };
+
+  // Mesocycle phase options for The Apex Protocol (26-Week Master)
+  const apexMesocycles = [
+    {
+      id: 'apex_phase1' as const,
+      label: 'Phase 1: Foundation & Base',
+      weeks: 'Weeks 1-4',
+      badge: 'Base & Hypertrophy',
+      focus: 'Aerobic Base (Zone 2) & Structural Joint Prep',
+      weekRange: [1, 2, 3, 4],
+      defaultWeek: 1
+    },
+    {
+      id: 'apex_phase2' as const,
+      label: 'Phase 2: Build & Strength',
+      weeks: 'Weeks 5-10',
+      badge: 'Volume & Heavy Lifts',
+      focus: 'Progressive Barbell Loading, 400m Repeats & 35 lb Ruck Mileage',
+      weekRange: [5, 6, 7, 8, 9, 10],
+      defaultWeek: 5
+    },
+    {
+      id: 'apex_phase3' as const,
+      label: 'Phase 3: Intensify & Threshold',
+      weeks: 'Weeks 11-16',
+      badge: 'Threshold & Power',
+      focus: 'Heavy Triple Progression, VO2 Max Intervals & 40 lb Ruck Load',
+      weekRange: [11, 12, 13, 14, 15, 16],
+      defaultWeek: 11
+    },
+    {
+      id: 'apex_phase4' as const,
+      label: 'Phase 4: Tactical Peak',
+      weeks: 'Weeks 17-22',
+      badge: 'Heavy Ruck & Speed Under Load',
+      focus: 'Speed Under Load, 45 lb Heavy Ruck & Explosive Combat Chassis',
+      weekRange: [17, 18, 19, 20, 21, 22],
+      defaultWeek: 17
+    },
+    {
+      id: 'apex_phase5' as const,
+      label: "Phase 5: Tactical Peak & Taper",
+      weeks: 'Weeks 23-26',
+      badge: 'Tactical Peak Performance',
+      focus: "Event-Specific Drills, Taper & Tactical Peak Performance",
+      weekRange: [23, 24, 25, 26],
+      defaultWeek: 23
+    },
+  ];
 
   // Mesocycle phase options for the condensed Hybrid Protocol tab
   const protocolMesocycles = [
@@ -479,14 +664,18 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white font-athletic uppercase tracking-wide">
-            {selectedProgram === 'hybrid_protocol' ? (
+            {selectedProgram === 'apex_protocol' ? (
+              <>The Apex <span className="text-emerald-400">Protocol</span> (26-Week Master)</>
+            ) : selectedProgram === 'hybrid_protocol' ? (
               <>Hybrid <span className="text-rose-500">Protocol</span> (12-Week Master)</>
             ) : (
               <>Hybrid <span className="text-amber-500">Dumbbell & Bodyweight</span> (12-Week Master)</>
             )}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-300 mt-1 max-w-2xl leading-relaxed">
-            {selectedProgram === 'hybrid_protocol'
+            {selectedProgram === 'apex_protocol'
+              ? "The definitive 26-week tactical conditioning blueprint authored by Coach Aryan 'AJ' Risner. Built to forge elite combat chassis durability, massive compound strength, high-velocity running, and load carriage mastery."
+              : selectedProgram === 'hybrid_protocol'
               ? 'Concurrently periodized 12-week master protocol condensing all 3 phases (Foundation, Build, Peak) with automated progressive overload benchmarks.'
               : 'Concurrently periodized 12-week dumbbell compound power, chest-to-deck bodyweight volume, and aerobic ruck endurance with automated progressive overload rules.'}
           </p>
@@ -498,7 +687,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           <div className="flex flex-col">
             <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Active Track</span>
             <span className="text-xs font-black text-white font-mono">
-              {selectedProgram === 'hybrid_protocol' 
+              {selectedProgram === 'apex_protocol'
+                ? `The Apex Protocol (${currentPhase.weeks})`
+                : selectedProgram === 'hybrid_protocol' 
                 ? `Hybrid Protocol (${currentPhase.title.split(':')[0]})`
                 : `DB & Bodyweight (${currentPhase.title.split(':')[0]})`}
             </span>
@@ -506,7 +697,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         </div>
       </div>
 
-      {/* PRIMARY PROGRAM SELECTOR: 2 Unified Programs side-by-side */}
+      {/* PRIMARY PROGRAM SELECTOR: 3 Programs side-by-side */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-black uppercase tracking-wider text-zinc-400 font-athletic flex items-center gap-1.5">
@@ -518,8 +709,48 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {/* Program 1: Hybrid Protocol (12-Week Master - Condenses all 3 phases into 1 tab) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          {/* Program 1: The Apex Protocol (26-Week Master) */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedProgram('apex_protocol');
+              setDayViewMode('all');
+            }}
+            className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+              selectedProgram === 'apex_protocol'
+                ? 'bg-emerald-500/10 border-emerald-500/70 shadow-lg shadow-emerald-500/10'
+                : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/80'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1 mb-2">
+              <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded ${
+                selectedProgram === 'apex_protocol'
+                  ? 'bg-emerald-500 text-zinc-950 font-black'
+                  : 'bg-zinc-800 text-zinc-400'
+              }`}>
+                Auto-Overload • {selectedProgram === 'apex_protocol' ? currentPhase.weeks : 'Weeks 1-26'}
+              </span>
+              <Sparkles className={`w-4 h-4 ${selectedProgram === 'apex_protocol' ? 'text-emerald-400' : 'text-zinc-600'}`} />
+            </div>
+
+            <div>
+              <span className={`text-base font-black tracking-wide block font-athletic uppercase ${
+                selectedProgram === 'apex_protocol' ? 'text-white' : 'text-zinc-300'
+              }`}>
+                The Apex Protocol (26-Week Master)
+              </span>
+              <span className="text-xs text-zinc-400 block mt-1 leading-snug">
+                Elite tactical conditioning blueprint. Barbell compounds, strict linear overload, VO2 max intervals & 45 lb heavy rucks.
+              </span>
+            </div>
+
+            {selectedProgram === 'apex_protocol' && (
+              <div className="h-1 w-full mt-3 rounded-full bg-emerald-400" />
+            )}
+          </button>
+
+          {/* Program 2: Hybrid Protocol (12-Week Master - Condenses all 3 phases into 1 tab) */}
           <button
             type="button"
             onClick={() => {
@@ -559,7 +790,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             )}
           </button>
 
-          {/* Program 2: Hybrid DB & Bodyweight */}
+          {/* Program 3: Hybrid DB & Bodyweight */}
           <button
             type="button"
             onClick={() => {
@@ -602,7 +833,48 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       </div>
 
       {/* AUTOMATED OVERLOAD BENCHMARKS STRIP */}
-      {selectedProgram === 'hybrid_protocol' ? (
+      {selectedProgram === 'apex_protocol' ? (
+        /* The Apex Protocol Overload Benchmarks */
+        <div className="bg-zinc-900/95 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-800">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
+                The Apex Protocol Auto-Overload Laws ({currentPhase.weeks})
+              </h3>
+            </div>
+            <span className="text-[11px] text-zinc-400 font-mono">
+              ISSACPT Tactical Standard: Strict linear increments & progressive volume
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
+            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Strict OHP & Pull-Ups</span>
+              <span className="text-sm font-black text-emerald-400 font-mono">+2.5 lbs</span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">Strict linear progression each week</span>
+            </div>
+
+            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Squat & Trap Bar DL</span>
+              <span className="text-sm font-black text-emerald-400 font-mono">+10 lbs / +5 lbs</span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">+10 lbs if RPE ≤ 7.5; else +5 lbs</span>
+            </div>
+
+            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Incline, Rows & Push Press</span>
+              <span className="text-sm font-black text-emerald-400 font-mono">+5 lbs</span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing all target reps</span>
+            </div>
+
+            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Aerobic Run & Ruck</span>
+              <span className="text-sm font-black text-emerald-400 font-mono">+5 min / +2 min / +1 mi</span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">Dynamic weekly prescription</span>
+            </div>
+          </div>
+        </div>
+      ) : selectedProgram === 'hybrid_protocol' ? (
         /* Hybrid Protocol Overload Benchmarks */
         <div className="bg-zinc-900/95 border border-rose-500/30 rounded-2xl p-4 sm:p-5 shadow-lg">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-800">
@@ -737,6 +1009,94 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 26-WEEK MESOCYCLE & WEEK SELECTOR (For The Apex Protocol) */}
+      {selectedProgram === 'apex_protocol' && (
+        <div className="bg-zinc-900 border border-emerald-500/30 rounded-2xl p-3 sm:p-4 shadow-md space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-black uppercase tracking-wider text-emerald-400 font-athletic flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              26-Week Mesocycle Progression (5 Phases)
+            </span>
+            <span className="text-[11px] text-emerald-400 font-mono font-bold">
+              {currentPhase.weeks} • Week {activeApexWeek} Active
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            {apexMesocycles.map((m) => {
+              const isSelected = activeApexPhaseKey === m.id;
+
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveApexPhaseKey(m.id);
+                    setActiveApexWeek(m.defaultWeek);
+                    setDayViewMode('all');
+                  }}
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-emerald-500/15 border-emerald-500 shadow-md shadow-emerald-950/30'
+                      : 'bg-zinc-950 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
+                      isSelected ? 'bg-emerald-500 text-zinc-950 font-black' : 'bg-zinc-800 text-zinc-400'
+                    }`}>
+                      {m.weeks}
+                    </span>
+                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                  </div>
+
+                  <div>
+                    <span className={`text-xs sm:text-sm font-black block tracking-wide ${
+                      isSelected ? 'text-white' : 'text-zinc-300'
+                    }`}>
+                      {m.label}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5 truncate">
+                      {m.badge}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Interactive Week Pill Row for Current Mesocycle */}
+          <div className="pt-2.5 border-t border-zinc-800/80 flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Select Week:</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(apexMesocycles.find((m) => m.id === activeApexPhaseKey)?.weekRange || [1, 2, 3, 4]).map((w) => {
+                const isSelectedWeek = activeApexWeek === w;
+                return (
+                  <button
+                    key={w}
+                    type="button"
+                    onClick={() => {
+                      setActiveApexWeek(w);
+                      setDayViewMode('all');
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border ${
+                      isSelectedWeek
+                        ? 'bg-emerald-400 text-zinc-950 border-emerald-300 shadow-sm'
+                        : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                    }`}
+                  >
+                    Week {w}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400 ml-auto hidden sm:inline">
+              Conditioning dynamically tailored to Week {activeApexWeek}
+            </span>
+          </div>
         </div>
       )}
 
@@ -928,7 +1288,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           {/* Individual Day Pills */}
           {currentPhase.days.map((day, idx) => {
             const isSelected = dayViewMode === idx;
-            const isRest = day.focus.toLowerCase().includes('rest');
+            const isRest = isProtocolRestDay(day);
             const isToday = day.day.toLowerCase() === todayDayName.toLowerCase();
 
             return (
@@ -993,8 +1353,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       {/* Daily Cards */}
       <div className="space-y-5">
         {daysToShow.map((day, idx) => {
-          const isRestDay = day.focus.toLowerCase().includes('rest') || 
-            (day.strength.length === 1 && day.strength[0].toLowerCase().includes('rest'));
+          const isRestDay = isProtocolRestDay(day);
           const isToday = day.day.toLowerCase() === todayDayName.toLowerCase();
 
           return (
@@ -1065,7 +1424,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                   {!isRestDay && (
                     <button
                       type="button"
-                      onClick={() => onSelectWarmup('warmup-lower-hip')}
+                      onClick={() => {
+                        if (selectedProgram === 'apex_protocol') {
+                          onSelectWarmup('warmup-apex-sop');
+                        } else if (day.focus.toLowerCase().includes('lower') || day.focus.toLowerCase().includes('squat') || day.focus.toLowerCase().includes('deadlift')) {
+                          onSelectWarmup('warmup-lower-hip');
+                        } else {
+                          onSelectWarmup('warmup-upper-primer');
+                        }
+                      }}
                       className="shrink-0 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-amber-400 hover:text-amber-300 text-xs font-bold rounded-lg border border-amber-500/30 transition-colors flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
                     >
                       <Clock className="w-3.5 h-3.5" />
@@ -1083,7 +1450,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     </div>
 
                     <span className="text-[11px] text-zinc-500 font-mono">
-                      {isRestDay ? '0 movements' : `${day.strength.length} movements`}
+                      {isRestDay ? '0 movements' : `${day.strength.filter(isRealStrengthExercise).length} movements`}
                     </span>
                   </div>
 
@@ -1096,9 +1463,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                         Active recovery, nutrition replenishment, and muscle restoration.
                       </span>
                     </div>
+                  ) : day.strength.filter(isRealStrengthExercise).length === 0 ? (
+                    <div className="p-3.5 bg-zinc-950/40 rounded-xl border border-zinc-800/60 text-center">
+                      <p className="text-xs text-zinc-400">
+                        Conditioning & Aerobic Base priority session. Scheduled cardio details below.
+                      </p>
+                    </div>
                   ) : (
                     <div className="space-y-2">
-                      {day.strength.map((exerciseStr, i) => {
+                      {day.strength.filter(isRealStrengthExercise).map((exerciseStr, i) => {
                         const currentRest = getExerciseRest(exerciseStr);
                         const overloadMatch = exerciseStr.match(/\[(Overload:.*?)\]/);
                         const cleanExerciseName = exerciseStr.replace(/\[.*?\]/g, '').trim();

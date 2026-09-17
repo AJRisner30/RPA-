@@ -16,7 +16,7 @@ import {
 } from '../utils/storage';
 import { soundManager } from '../utils/audio';
 import { TEMPLATE_EXERCISES, HybridStrengthLogItem, getDefaultRestPeriod } from '../data/protocolData';
-import { getCurrentAthlete, AthleteProfile } from '../utils/athleteAuth';
+import { getCurrentAthlete, getAthletes, AthleteProfile } from '../utils/athleteAuth';
 
 interface WorkoutLogsTabProps {
   logs: WorkoutSessionLog[];
@@ -34,6 +34,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
   // Current active athlete & filter
   const [currentAthlete, setCurrentAthlete] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [athleteFilter, setAthleteFilter] = useState<'current' | 'all'>('current');
+  const athletes = getAthletes();
 
   // Lift Tracker form state (exact fields from user's template)
   const [exercise, setExercise] = useState<string>('Back Squat');
@@ -260,7 +261,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
       return log.athleteId === currentAthlete.id;
     }
     // Backward compatibility for legacy logs without athleteId
-    return currentAthlete.id === 'athlete-aj-risner';
+    return currentAthlete.id === 'athlete-default' || currentAthlete.id === 'athlete-aj-risner';
   });
 
   const filteredSessionLogs = athleteScopedLogs.filter((log) => {
@@ -770,7 +771,9 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                           </h4>
                           {log.athleteId && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono">
-                              {log.athleteId === 'athlete-aj-risner' ? 'Coach AJ' : 'Jordan'}
+                              {log.athleteId === 'athlete-aj-risner'
+                                ? (currentAthlete.id === 'athlete-aj-risner' ? 'Coach AJ' : 'Athlete')
+                                : (athletes.find((a) => a.id === log.athleteId)?.name || 'Athlete')}
                             </span>
                           )}
                         </div>

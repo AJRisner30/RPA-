@@ -133,9 +133,9 @@ export function clearAllWorkoutLogs(): WorkoutSessionLog[] {
 export function clearAthleteWorkoutLogs(athleteId: string): WorkoutSessionLog[] {
   const currentLogs = getStoredWorkoutLogs();
   const updated = currentLogs.filter((l) => {
-    // If athleteId matches or if log has no athleteId and target is default AJ
+    // If athleteId matches or if log has no athleteId and target is default
     if (l.athleteId === athleteId) return false;
-    if (!l.athleteId && athleteId === 'athlete-aj-risner') return false;
+    if (!l.athleteId && (athleteId === 'athlete-default' || athleteId === 'athlete-aj-risner')) return false;
     return true;
   });
 

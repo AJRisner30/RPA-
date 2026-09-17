@@ -49,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 hover:border-zinc-500 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95"
               title="Switch athlete profile or sign in to track personal progress"
             >
-              <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+              <div className={`w-5 h-5 rounded-full bg-gradient-to-tr ${currentAthlete?.avatarColor || 'from-emerald-600 to-teal-700'} flex items-center justify-center text-[10px] font-black text-white shrink-0`}>
                 {currentAthlete ? currentAthlete.name.charAt(0).toUpperCase() : 'A'}
               </div>
               <span className="truncate max-w-[85px] sm:max-w-[120px] font-semibold text-zinc-100">
