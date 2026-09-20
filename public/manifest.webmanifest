@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "Overland Athletics",
+  "short_name": "Overland",
+  "description": "Overland Athletics — Run • Lift • Ruck. Elite performance training, tactical conditioning, hybrid strength, and endurance progression engineered to go the distance.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#10151a",
+  "background_color": "#10151a",
+  "categories": ["fitness", "health", "sports"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

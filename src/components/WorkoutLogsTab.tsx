@@ -184,7 +184,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
       durationMinutes: 15,
       totalVolumeLbs: weightNum * repsNum,
       totalSetsCompleted: 1,
-      notes: `Logged via RPA Lift Tracker for ${currentAthlete.name}: ${weightNum} lbs × ${repsNum} reps (Est 1RM: ${estimated1RM} lbs).`,
+      notes: `Logged via Overland Athletics Lift Tracker for ${currentAthlete.name}: ${weightNum} lbs × ${repsNum} reps (Est 1RM: ${estimated1RM} lbs).`,
       exercises: [
         {
           exerciseName: exercise,
@@ -282,7 +282,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `RPA_Hybrid_Lifts_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute('download', `Overland_Athletics_Lifts_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -296,7 +296,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
           <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
             <button
               type="button"
-              className="px-4 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold shadow-sm"
+              className="px-4 py-1.5 bg-amber-500 text-black font-black rounded-lg text-xs font-bold shadow-sm"
             >
               Workout Logs & Sets
             </button>
@@ -305,7 +305,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
               onClick={onNavigateToGraphs}
               className="px-4 py-1.5 text-zinc-400 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <TrendingUp className="w-3.5 h-3.5 text-rose-500" />
+              <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
               <span>Progress Graphs & PRs</span>
             </button>
           </div>
@@ -436,7 +436,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
         <div className="flex flex-col sm:flex-row gap-2 pt-1">
           <button 
             onClick={handleSaveSet}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black px-6 py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider shadow-lg shadow-red-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black px-6 py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider shadow-lg shadow-amber-950/40 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4" />
             Log Set & Start Rest ({restSeconds}s)
@@ -512,7 +512,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveRestTimer(null)}
-                  className="p-1 text-zinc-400 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="p-1 text-zinc-400 hover:text-amber-400 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
                   title="Dismiss timer"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -524,7 +524,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
             {activeRestTimer.secondsRemaining > 0 && (
               <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all duration-1000 ease-linear rounded-full"
+                  className="h-full bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-1000 ease-linear rounded-full"
                   style={{
                     width: `${Math.min(100, (activeRestTimer.secondsRemaining / (activeRestTimer.totalSeconds || 1)) * 100)}%`,
                   }}
@@ -549,7 +549,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
               <button
                 type="button"
                 onClick={handleClearHybridSets}
-                className="text-[11px] text-zinc-500 hover:text-rose-400 font-semibold underline underline-offset-2 transition-colors cursor-pointer"
+                className="text-[11px] text-zinc-500 hover:text-amber-400 font-semibold underline underline-offset-2 transition-colors cursor-pointer"
               >
                 Clear Sets
               </button>
@@ -648,7 +648,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                 onClick={() => setAthleteFilter('current')}
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   athleteFilter === 'current'
-                    ? 'bg-rose-600 text-white shadow-sm'
+                    ? 'bg-amber-500 text-black font-black shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -659,7 +659,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                 onClick={() => setAthleteFilter('all')}
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   athleteFilter === 'all'
-                    ? 'bg-rose-600 text-white shadow-sm'
+                    ? 'bg-amber-500 text-black font-black shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -671,10 +671,10 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
             <button
               type="button"
               onClick={() => setIsClearModalOpen(true)}
-              className="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-100 text-xs font-bold rounded-xl border border-rose-800/60 transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 hover:text-amber-100 text-xs font-bold rounded-xl border border-amber-700/50 transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Clear workout history"
             >
-              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+              <Trash2 className="w-3.5 h-3.5 text-amber-400" />
               Clear Logs
             </button>
 
@@ -704,7 +704,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
         {filteredSessionLogs.length === 0 ? (
           <div className="p-8 sm:p-12 text-center rounded-2xl border border-zinc-800/80 bg-zinc-900/30 flex flex-col items-center justify-center">
             <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-3 shadow-inner">
-              <History className="w-7 h-7 text-rose-500/80" />
+              <History className="w-7 h-7 text-amber-400/80" />
             </div>
             <h4 className="text-lg font-black text-white font-athletic uppercase tracking-wider">
               {logs.length === 0 
@@ -725,7 +725,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                 <button
                   type="button"
                   onClick={onOpenLiveWorkout}
-                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-950/40 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black font-bold text-xs rounded-xl shadow-lg shadow-amber-950/30 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
                 >
                   <Dumbbell className="w-4 h-4" />
                   Start Live Workout Session
@@ -848,7 +848,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                                   >
                                     <div className="text-[10px] text-zinc-500 font-mono flex items-center justify-between">
                                       <span>SET {set.setNumber}</span>
-                                      {set.rpe && <span className="text-rose-400 font-bold">RPE {set.rpe}</span>}
+                                      {set.rpe && <span className="text-amber-400 font-bold">RPE {set.rpe}</span>}
                                     </div>
                                     {isTimed ? (
                                       <div className="font-mono font-bold text-sm text-emerald-400 my-0.5">
@@ -902,7 +902,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
             <div className="p-6 border-b border-zinc-800/80">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-950/50 border border-rose-800/50 flex items-center justify-center text-rose-400">
+                  <div className="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-700/50 flex items-center justify-center text-amber-400">
                     <ShieldAlert className="w-5 h-5" />
                   </div>
                   <div>
@@ -934,7 +934,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                   onClick={() => setClearScope('all')}
                   className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
                     clearScope === 'all'
-                      ? 'bg-rose-950/30 border-rose-600/70 text-white'
+                      ? 'bg-amber-950/20 border-amber-500/70 text-white'
                       : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:bg-zinc-900'
                   }`}
                 >
@@ -943,12 +943,12 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                     name="clearScope"
                     checked={clearScope === 'all'}
                     onChange={() => setClearScope('all')}
-                    className="mt-0.5 accent-rose-600"
+                    className="mt-0.5 accent-amber-500"
                   />
                   <div className="text-xs">
                     <div className="font-bold text-white flex items-center gap-2">
                       Clear All Athletes' Logs
-                      <span className="px-1.5 py-0.5 rounded bg-rose-900/60 text-rose-300 text-[10px] font-bold">
+                      <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px] font-bold">
                         Global Fresh Start
                       </span>
                     </div>
@@ -962,7 +962,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                   onClick={() => setClearScope('current')}
                   className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
                     clearScope === 'current'
-                      ? 'bg-rose-950/30 border-rose-600/70 text-white'
+                      ? 'bg-amber-950/20 border-amber-500/70 text-white'
                       : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:bg-zinc-900'
                   }`}
                 >
@@ -971,7 +971,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                     name="clearScope"
                     checked={clearScope === 'current'}
                     onChange={() => setClearScope('current')}
-                    className="mt-0.5 accent-rose-600"
+                    className="mt-0.5 accent-amber-500"
                   />
                   <div className="text-xs">
                     <div className="font-bold text-white">
@@ -990,14 +990,14 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                     type="checkbox"
                     checked={clearLiftsToo}
                     onChange={(e) => setClearLiftsToo(e.target.checked)}
-                    className="rounded border-zinc-700 accent-rose-600"
+                    className="rounded border-zinc-700 accent-amber-500"
                   />
                   <span>Also clear recent Quick Lift Tracker sets ({hybridLogs.length} sets)</span>
                 </label>
               </div>
 
-              <div className="p-3 bg-rose-950/20 border border-rose-900/40 rounded-xl flex items-start gap-2.5 text-[11px] text-rose-300">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <div className="p-3 bg-amber-950/20 border border-amber-800/40 rounded-xl flex items-start gap-2.5 text-[11px] text-amber-300">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>This action cannot be undone. Cleared workout logs and PR graph data will be reset.</span>
               </div>
             </div>
@@ -1013,7 +1013,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
               <button
                 type="button"
                 onClick={handleExecuteClear}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-950/50 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black font-bold text-xs rounded-xl shadow-lg shadow-amber-950/30 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {clearScope === 'all' ? 'Clear All Logs (Total Reset)' : `Clear ${currentAthlete.name}'s Logs`}

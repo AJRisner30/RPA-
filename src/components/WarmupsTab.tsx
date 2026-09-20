@@ -120,7 +120,7 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
             Athlete Warm-Up Protocols
           </h1>
           <p className="text-sm text-zinc-300 mt-2 leading-relaxed">
-            Risner Performance Athletics joint lubrication, rotator cuff activation, hip capsule mobilization,
+            Overland Athletics joint lubrication, rotator cuff activation, hip capsule mobilization,
             and CNS neural potentiation routines prior to heavy loading.
           </p>
         </div>
@@ -345,7 +345,7 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
                 type="button"
                 onClick={() => setIsTimerRunning(!isTimerRunning)}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-                  isTimerRunning ? 'bg-amber-500 text-zinc-950' : 'bg-rose-600 text-white'
+                  isTimerRunning ? 'bg-amber-500 text-zinc-950' : 'bg-amber-500 text-black font-black'
                 }`}
               >
                 {isTimerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}

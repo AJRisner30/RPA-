@@ -3,34 +3,50 @@
 :root {
   --font-heading: 'Barlow Condensed', sans-serif;
   --font-sans: 'Outfit', sans-serif;
+  --color-overland-gold: #d8a348;
+  --color-overland-gold-light: #f6c15b;
+  --color-overland-slate: #12171d;
+  --color-overland-slate-card: #182028;
+  --color-overland-border: #2c3846;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #0b0f17;
+  background-color: #10151a;
   color: #f1f5f9;
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(ellipse 90% 40% at 50% -10%, rgba(216, 163, 72, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 30% at 50% 100%, rgba(216, 163, 72, 0.03), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background-color: #d8a348;
+  color: #0c1014;
 }
 
 h1, h2, h3, .font-athletic {
   font-family: var(--font-heading);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
-/* Custom scrollbar for athletic dark theme */
+/* Custom scrollbar for tactical overland dark theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f17;
+  background: #10151a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #25303c;
   border-radius: 9999px;
+  border: 1px solid rgba(216, 163, 72, 0.15);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #e11d48;
+  background: #d8a348;
 }
+

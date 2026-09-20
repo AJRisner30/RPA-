@@ -9,7 +9,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
     frequency: '6 Days / Week',
     estimatedDurationMinutes: 70,
     recommendedWarmupId: 'warmup-apex-sop',
-    description: 'The definitive 26-week tactical conditioning blueprint authored by Coach Aryan "AJ" Risner. Built to forge elite combat chassis durability, massive compound strength, high-velocity running, and load carriage mastery.',
+    description: 'The definitive 26-week tactical conditioning blueprint by Overland Athletics. Built to forge elite combat chassis durability, massive compound strength, high-velocity running, and load carriage mastery.',
     schedule: [
       {
         day: 1,
@@ -299,13 +299,13 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-strength-upper',
-    title: 'RPA Upper Body Strength & Hypertrophy',
+    title: 'Overland Upper Body Strength & Hypertrophy',
     subtitle: 'Compound Power + Shoulder Integrity',
     category: 'Strength',
     frequency: '2x / week',
     estimatedDurationMinutes: 65,
     recommendedWarmupId: 'warmup-upper-primer',
-    description: 'Designed by Risner Performance Athletics. Focuses on horizontal/vertical pressing power, back thickness, and rotator cuff stability with structured progressive overload.',
+    description: 'Designed by Overland Athletics. Focuses on horizontal/vertical pressing power, back thickness, and rotator cuff stability with structured progressive overload.',
     exercises: [
       {
         id: 'ex-bench-press',
@@ -365,7 +365,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
         targetReps: '15',
         targetRpe: 8,
         restPeriodSeconds: 60,
-        notes: 'RPA Prehab protocol: pull rope towards forehead and rotate thumbs back to target rear delts & lower traps.'
+        notes: 'Overland Prehab protocol: pull rope towards forehead and rotate thumbs back to target rear delts & lower traps.'
       },
       {
         id: 'ex-tricep-skullcrushers',
@@ -381,7 +381,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-lower-squat',
-    title: 'RPA Lower Body Posterior & Quad Drive',
+    title: 'Overland Lower Body Posterior & Quad Drive',
     subtitle: 'Hip Extension & Knee Dominance',
     category: 'Power',
     frequency: '2x / week',
@@ -443,7 +443,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-pull-deadlift',
-    title: 'RPA Pull & Posterior Chain Engine',
+    title: 'Overland Pull & Posterior Chain Engine',
     subtitle: 'Deadlift Velocity & Lat Width',
     category: 'Strength',
     frequency: '1-2x / week',
@@ -505,7 +505,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-athletic-power',
-    title: 'RPA Athletic Potentiation & Speed',
+    title: 'Overland Athletic Potentiation & Speed',
     subtitle: 'Triphasic Plyometrics & Rate of Force',
     category: 'Athletic Conditioning',
     frequency: '1x / week',
@@ -1066,7 +1066,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
   },
   {
     id: 'warmup-upper-primer',
-    title: 'RPA Upper Body Scapular & Thoracic Primer',
+    title: 'Overland Upper Body Scapular & Thoracic Primer',
     category: 'Upper Body',
     durationMinutes: 7,
     description: 'Essential pre-lift protocol designed to unlock thoracic spine mobility, lubricate the glenohumeral joint, and fire rotator cuff stabilizers prior to pressing and pulling.',
@@ -1140,7 +1140,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
   },
   {
     id: 'warmup-lower-hip',
-    title: 'RPA Lower Body Hip Capsule & Ankle Opener',
+    title: 'Overland Lower Body Hip Capsule & Ankle Opener',
     category: 'Lower Body',
     durationMinutes: 8,
     description: 'Targeted mobility protocol to open hip capsules, improve ankle dorsiflexion for deeper squats, and activate glute medius for knee tracking stability.',
@@ -1214,7 +1214,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
   },
   {
     id: 'warmup-cns-ramp',
-    title: 'RPA Central Nervous System Potentiation & Ramp',
+    title: 'Overland Central Nervous System Potentiation & Ramp',
     category: 'Full Body / CNS',
     durationMinutes: 5,
     description: 'Short, high-intensity neural primer designed to elevate heart rate, recruit high-threshold motor units (Type IIx fibers), and synchronize coordination.',

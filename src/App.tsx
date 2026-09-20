@@ -14,8 +14,10 @@ import { ContactTab } from './components/ContactTab';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { AthleteLoginModal } from './components/AthleteLoginModal';
 import { getCurrentAthlete, AthleteProfile } from './utils/athleteAuth';
-import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap } from 'lucide-react';
-import { RpaCompanyEmblem } from './components/BrandingLogos';
+import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone } from 'lucide-react';
+import { OverlandCompanyEmblem } from './components/BrandingLogos';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { PWAInstallButton } from './components/PWAInstallButton';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
@@ -51,7 +53,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen bg-[#10151a] text-zinc-100 flex flex-col font-sans selection:bg-amber-500 selection:text-black">
       {/* Brand & Tab Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -123,18 +125,21 @@ export default function App() {
         }}
       />
 
-      {/* Footer Branded with RPA, Coach AJ Risner, Socials, and Partners */}
-      <footer className="mt-auto border-t border-zinc-900 bg-zinc-950 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Footer Branded with Overland Athletics, Run Lift Ruck, Socials, and Partners */}
+      <footer className="mt-auto border-t border-amber-500/20 bg-[#0d1217] py-8 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
             <div className="flex items-center gap-3">
-              <RpaCompanyEmblem size="sm" />
+              <OverlandCompanyEmblem size="sm" />
               <div className="flex items-center gap-2">
-                <span className="font-athletic font-black tracking-wider uppercase text-zinc-200">
-                  Risner Performance Athletics
+                <span className="font-athletic font-black tracking-wider uppercase text-zinc-100">
+                  Overland Athletics
                 </span>
                 <span className="text-zinc-600">•</span>
-                <span>Strength & Conditioning System</span>
+                <span className="text-amber-400 font-bold tracking-wide">Run • Lift • Ruck</span>
+                <span className="text-zinc-600 hidden sm:inline">•</span>
+                <span className="hidden sm:inline text-zinc-400">Go The Distance</span>
               </div>
             </div>
 
@@ -142,10 +147,10 @@ export default function App() {
             <div className="flex items-center gap-4 flex-wrap justify-center text-xs">
               <a
                 href="mailto:risnerathletics@gmail.com"
-                className="flex items-center gap-1.5 text-zinc-300 hover:text-rose-400 transition-colors font-medium cursor-pointer"
-                title="Email Coach AJ Risner"
+                className="flex items-center gap-1.5 text-zinc-300 hover:text-amber-400 transition-colors font-medium cursor-pointer"
+                title="Email Overland Athletics"
               >
-                <Mail className="w-3.5 h-3.5 text-rose-400" />
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
                 <span>risnerathletics@gmail.com</span>
               </a>
 
@@ -156,10 +161,10 @@ export default function App() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-zinc-300 hover:text-pink-400 transition-colors font-medium cursor-pointer"
-                title="Instagram: AJ Risner"
+                title="Instagram: @ajrisner"
               >
                 <Instagram className="w-3.5 h-3.5 text-pink-400" />
-                <span>Instagram: AJ Risner</span>
+                <span>@ajrisner</span>
                 <ExternalLink className="w-3 h-3 text-zinc-500" />
               </a>
 
@@ -180,16 +185,23 @@ export default function App() {
 
             <div className="flex items-center gap-2 text-zinc-400">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Risner Performance Athletics • Tactical & Endurance Progression</span>
+              <span>Overland Athletics • Elite Performance</span>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-zinc-900/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-zinc-500 font-mono">
-            <span>Coach Aryan &quot;AJ&quot; Risner • Risner Performance Athletics • All Rights Reserved</span>
-            <span>Designed for Peak Human Performance</span>
+          <div className="pt-4 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-zinc-400 font-mono">
+            <div className="flex items-center gap-3">
+              <span>Overland Athletics • Run • Lift • Ruck • All Rights Reserved</span>
+              <span className="text-zinc-600 hidden md:inline">|</span>
+              <PWAInstallButton variant="pill" />
+            </div>
+            <span className="text-amber-400/80">Elite Performance • Go The Distance</span>
           </div>
         </div>
       </footer>
+
+      {/* Real-time Network Offline Detection Status */}
+      <OfflineIndicator />
     </div>
   );
 }

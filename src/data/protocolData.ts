@@ -26,14 +26,14 @@ export interface HybridStrengthLogItem {
   estimated1RM?: number;
 }
 
-// 12-Week Protocol (Sunday Start + Warmups) - Risner Performance Athletics Template
+// 12-Week Protocol (Sunday Start + Warmups) - Overland Athletics Template
 export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
   phase1: {
     id: 'phase1',
     title: "Phase 1: Foundation",
     weeks: "Weeks 1-4",
     desc: "Establish aerobic base (Zone 2) and build foundational movement strength. Progress by adding 10% volume each week.",
-    coachRule: "Coach Aryan's Overload Laws: +10 lbs on lower compound lifts (Squat, Deadlift) and +5 lbs on upper compound lifts (Bench, OHP, Rows) upon completing top rep range with strict form. Weekly Zone 2 volume increases by 0.5 - 1.0 mile.",
+    coachRule: "Overland Athletics Overload Laws: +10 lbs on lower compound lifts (Squat, Deadlift) and +5 lbs on upper compound lifts (Bench, OHP, Rows) upon completing top rep range with strict form. Weekly Zone 2 volume increases by 0.5 - 1.0 mile.",
     days: [
       {
         day: "Sunday",
@@ -293,7 +293,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     id: 'db_phase1',
     title: "Phase 1: DB Foundation & Muscular Endurance",
     weeks: "Weeks 1-4",
-    desc: "Engineered by Coach Aryan Risner, ISSA-CPT. Base hypertrophy, push-up volume accumulation, and aerobic base building with standard 25-30 lb ruck.",
+    desc: "Engineered by Overland Athletics. Base hypertrophy, push-up volume accumulation, and aerobic base building with standard 25-30 lb ruck.",
     coachRule: "Phase 1 Overload Laws: Floor press +5 lbs when hitting 3x12. Push-ups +1 rep every session. Zone 2 run +0.5 mi/wk. Ruck +5 lbs when pace < 15 min/mi.",
     days: [
       {
@@ -391,7 +391,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     id: 'db_phase2',
     title: "Phase 2: DB Strength Density & Threshold",
     weeks: "Weeks 5-8",
-    desc: "Engineered by Coach Aryan Risner, ISSA-CPT. Heavy dumbbell loading, paused/deficit push-up volume, threshold tempo runs, and 35 lb ruck endurance.",
+    desc: "Engineered by Overland Athletics. Heavy dumbbell loading, paused/deficit push-up volume, threshold tempo runs, and 35 lb ruck endurance.",
     coachRule: "Phase 2 Overload Laws: Floor press +5 lbs on 3x8-10. Push-ups: add 5-10 lbs plate or elevate feet (+1 rep/session). Long run 6-8 mi at Zone 2. 35 lb Ruck March pace target sub-14:30/mi.",
     days: [
       {
@@ -488,7 +488,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     id: 'db_phase3',
     title: "Phase 3: Tactical Peak & Muscular Power",
     weeks: "Weeks 9-12",
-    desc: "Engineered by Coach Aryan Risner, ISSA-CPT. Max dumbbell loads, explosive plyometric push-ups, tactical ruck marching (40-45 lbs), and race pace / time-trial peaking.",
+    desc: "Engineered by Overland Athletics. Max dumbbell loads, explosive plyometric push-ups, tactical ruck marching (40-45 lbs), and race pace / time-trial peaking.",
     coachRule: "Phase 3 Overload Laws: Max DB loads (3x6 heavy). Plyo push-ups for explosive height. 40-45 lb Ruck March at sub-14:30 pace. Week 12: Peak taper and tactical physical fitness test (Max push-ups, 5-mile ruck, 5k time trial).",
     days: [
       {
@@ -585,8 +585,8 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     id: 'hybrid_db',
     title: "Hybrid Dumbbell & Bodyweight Planner",
     weeks: "DB & Bodyweight • Auto-Overload",
-    desc: "Engineered by Coach Aryan Risner, ISSA-CPT. Dedicated dumbbell compound power, chest-to-deck bodyweight volume, and aerobic ruck endurance with automated progressive overload rules.",
-    coachRule: "Aryan Risner's Overload Laws: +5 lbs floor press when completing all sets at 12 reps (max reps). +1 rep on push-ups every session. +0.5 miles weekly on Zone 2 runs. +5 lbs pack load when maintaining sub-15 min/mile ruck pace.",
+    desc: "Engineered by Overland Athletics. Dedicated dumbbell compound power, chest-to-deck bodyweight volume, and aerobic ruck endurance with automated progressive overload rules.",
+    coachRule: "Overland Athletics Overload Laws: +5 lbs floor press when completing all sets at 12 reps (max reps). +1 rep on push-ups every session. +0.5 miles weekly on Zone 2 runs. +5 lbs pack load when maintaining sub-15 min/mile ruck pace.",
     days: [
       {
         day: "Monday",

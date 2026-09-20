@@ -29,7 +29,7 @@ export const COACH_PROFILE: AthleteProfile = {
   name: 'Aryan "AJ" Risner',
   email: 'risneraryan@gmail.com',
   pin: '1234',
-  avatarColor: 'from-rose-600 to-red-700',
+  avatarColor: 'from-amber-600 to-amber-800',
   joinedDate: 'Jan 2026',
   experienceLevel: 'Elite',
   primaryGoal: 'Hybrid Athlete',
@@ -189,7 +189,7 @@ export function registerAthlete(params: {
   const avatarGradients = [
     'from-emerald-600 to-teal-700',
     'from-blue-600 to-indigo-700',
-    'from-rose-600 to-red-700',
+    'from-amber-600 to-amber-800',
     'from-amber-500 to-orange-600',
     'from-purple-600 to-pink-700',
     'from-cyan-600 to-blue-700',

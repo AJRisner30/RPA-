@@ -169,7 +169,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
       return {
         label: 'Absolute Strength & Neuromuscular Drive',
         desc: 'Maximum motor unit recruitment, myofibrillar tension, and CNS potentiation.',
-        color: 'text-rose-400',
+        color: 'text-amber-400',
         badge: '90–100% 1RM • Strength Peak'
       };
     } else if (targetReps <= 6) {
@@ -222,7 +222,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
     const platesPerSide: { weight: number; count: number; color: string }[] = [];
 
     const plateColorsLbs: Record<number, string> = {
-      45: 'bg-rose-600 text-white border-rose-500',
+      45: 'bg-amber-500 text-black font-black border-amber-500',
       35: 'bg-blue-600 text-white border-blue-500',
       25: 'bg-amber-500 text-zinc-950 border-amber-400 font-black',
       10: 'bg-emerald-600 text-white border-emerald-500',
@@ -231,7 +231,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
     };
 
     const plateColorsKg: Record<number, string> = {
-      25: 'bg-rose-600 text-white border-rose-500',
+      25: 'bg-amber-500 text-black font-black border-amber-500',
       20: 'bg-blue-600 text-white border-blue-500',
       15: 'bg-amber-500 text-zinc-950 border-amber-400 font-black',
       10: 'bg-emerald-600 text-white border-emerald-500',
@@ -274,7 +274,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
       const pct = Math.round((wExact / estimated1RM) * 1000) / 10;
       
       let category = 'Max Strength';
-      let tagBg = 'bg-rose-950/60 text-rose-400 border-rose-800/60';
+      let tagBg = 'bg-amber-950/60 text-amber-400 border-amber-700/50';
       if (reps >= 6 && reps <= 12) {
         category = 'Hypertrophy';
         tagBg = 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60';
@@ -384,7 +384,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             onClick={() => setActiveCalculator('strength')}
             className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeCalculator === 'strength'
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/40'
+                ? 'bg-amber-500 text-black font-black shadow-md shadow-amber-950/30'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
             }`}
           >
@@ -397,7 +397,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             onClick={() => setActiveCalculator('cardio')}
             className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeCalculator === 'cardio'
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/40'
+                ? 'bg-amber-500 text-black font-black shadow-md shadow-amber-950/30'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
             }`}
           >
@@ -407,7 +407,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
         </div>
 
         <span className="text-[11px] font-mono text-zinc-500 hidden md:inline px-3">
-          Risner Performance Athletics • Precision Calculators
+          Overland Athletics • Precision Calculators
         </span>
       </div>
 
@@ -419,7 +419,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 shadow-xl">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="px-2.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-wider">
                   Load Intensity Prescription
                 </span>
                 <span className="px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded-full text-[10px] font-mono">
@@ -427,8 +427,8 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                 </span>
               </div>
               <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-white font-athletic flex items-center gap-2.5">
-                <Calculator className="w-7 h-7 text-rose-500" />
-                1RM &amp; <span className="text-rose-500">Rep Load</span> Calculator
+                <Calculator className="w-7 h-7 text-amber-400" />
+                1RM &amp; <span className="text-amber-400">Rep Load</span> Calculator
               </h1>
               <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
                 Prescribe precise working barbell &amp; dumbbell weights for any rep count based on your estimated 1RM, target reps, and RPE effort level.
@@ -444,7 +444,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
               onClick={() => setUnit('lbs')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
                 unit === 'lbs'
-                  ? 'bg-rose-600 text-white shadow-md'
+                  ? 'bg-amber-500 text-black font-black shadow-md'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -455,7 +455,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
               onClick={() => setUnit('kg')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
                 unit === 'kg'
-                  ? 'bg-rose-600 text-white shadow-md'
+                  ? 'bg-amber-500 text-black font-black shadow-md'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -468,7 +468,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             <select
               value={formula}
               onChange={(e) => setFormula(e.target.value as CalculationFormula)}
-              className="bg-zinc-950 text-xs font-bold text-zinc-300 border border-zinc-800 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-rose-500 cursor-pointer"
+              className="bg-zinc-950 text-xs font-bold text-zinc-300 border border-zinc-800 rounded-xl px-3 py-2 pr-8 appearance-none focus:outline-none focus:border-amber-500 cursor-pointer"
               title="Select Exercise Science Formula"
             >
               <option value="consensus">Consensus (Epley + Brzycki)</option>
@@ -500,7 +500,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-rose-500" />
+                <Target className="w-4 h-4 text-amber-400" />
                 <h2 className="text-sm sm:text-base font-black uppercase text-white tracking-wider font-athletic">
                   Target Prescription Parameters
                 </h2>
@@ -514,11 +514,11 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Scale className="w-3.5 h-3.5 text-rose-400" />
+                  <Scale className="w-3.5 h-3.5 text-amber-400" />
                   Estimated 1 Rep Max (1RM)
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-rose-400">
+                  <span className="text-xs font-mono font-bold text-amber-400">
                     {estimated1RM} {unit}
                   </span>
                   <button
@@ -539,7 +539,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                   step={5}
                   value={estimated1RM || ''}
                   onChange={(e) => setEstimated1RM(Math.max(0, Number(e.target.value)))}
-                  className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-4 py-2.5 text-lg font-mono font-black text-white focus:outline-none transition-all"
+                  className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-4 py-2.5 text-lg font-mono font-black text-white focus:outline-none transition-all"
                   placeholder="e.g. 225"
                 />
                 <span className="absolute right-3.5 text-xs font-mono font-bold text-zinc-500 uppercase">
@@ -560,7 +560,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                     }}
                     className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold transition-all cursor-pointer ${
                       estimated1RM === preset
-                        ? 'bg-rose-600 text-white font-black'
+                        ? 'bg-amber-500 text-black font-black font-black'
                         : 'bg-zinc-950 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
                     }`}
                   >
@@ -590,7 +590,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                 step={1}
                 value={targetReps}
                 onChange={(e) => setTargetReps(Number(e.target.value))}
-                className="w-full accent-rose-500 bg-zinc-950 h-2 rounded-lg cursor-pointer"
+                className="w-full accent-amber-500 bg-zinc-950 h-2 rounded-lg cursor-pointer"
               />
 
               {/* Quick Rep Range Selector Pills */}
@@ -619,7 +619,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-rose-500" />
+                  <Flame className="w-3.5 h-3.5 text-amber-400" />
                   Target Effort (RPE / Reps In Reserve)
                 </label>
                 <span className="text-xs font-mono text-zinc-300">
@@ -643,7 +643,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                     }}
                     className={`p-2 rounded-xl text-left border transition-all cursor-pointer ${
                       targetRpe === item.rpe
-                        ? 'bg-rose-500/15 border-rose-500 text-white shadow-sm'
+                        ? 'bg-amber-500/15 border-amber-500 text-white shadow-sm'
                         : 'bg-zinc-950 border-zinc-800/80 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                     }`}
                   >
@@ -707,7 +707,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                     placeholder="Lift Name (e.g. Front Squat)"
                     value={customLiftName}
                     onChange={(e) => setCustomLiftName(e.target.value)}
-                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500"
+                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
                     required
                   />
                   <input
@@ -715,13 +715,13 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                     placeholder="1RM in LBS"
                     value={customLift1RM || ''}
                     onChange={(e) => setCustomLift1RM(Number(e.target.value))}
-                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-rose-500"
+                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
                     required
                   />
                   <select
                     value={customLiftCategory}
                     onChange={(e) => setCustomLiftCategory(e.target.value as SavedLift['category'])}
-                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-rose-500"
+                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500"
                   >
                     <option value="Barbell">Barbell</option>
                     <option value="Dumbbell">Dumbbell</option>
@@ -731,7 +731,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs cursor-pointer"
+                  className="w-full py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-black font-bold rounded-lg text-xs cursor-pointer"
                 >
                   Save Exercise 1RM
                 </button>
@@ -749,7 +749,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                     onClick={() => handleSelectSavedLift(lift)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
                       isSelected
-                        ? 'bg-rose-500/15 border-rose-500 shadow-sm'
+                        ? 'bg-amber-500/15 border-amber-500 shadow-sm'
                         : 'bg-zinc-950/80 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900'
                     }`}
                   >
@@ -759,7 +759,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                           {lift.category}
                         </span>
                         {isSelected && (
-                          <span className="text-[10px] font-mono text-rose-400 font-bold">Active</span>
+                          <span className="text-[10px] font-mono text-amber-400 font-bold">Active</span>
                         )}
                       </div>
                       <span className="text-xs font-bold text-zinc-200 block truncate mt-1">
@@ -787,7 +787,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                         <button
                           type="button"
                           onClick={(e) => handleDeleteSavedLift(lift.id, e)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-rose-400 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-amber-400 transition-opacity"
                           title="Remove saved lift"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -804,12 +804,12 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
         {/* Right Column: Calculated Load Results & Visual Plate Loader (5 Cols) */}
         <div className="lg:col-span-5 space-y-5">
           {/* Main Hero Result Card */}
-          <div className="bg-gradient-to-b from-zinc-900 via-zinc-900 to-zinc-950 border-2 border-rose-500/40 rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-rose-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="bg-gradient-to-b from-zinc-900 via-zinc-900 to-zinc-950 border-2 border-amber-500/40 rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
             
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 Prescribed Target Load
               </span>
               <span className="text-[11px] font-mono text-zinc-400">
@@ -821,7 +821,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             <div className="text-center py-4 border-y border-zinc-800/80 my-2">
               <div className="text-5xl sm:text-6xl font-black font-mono text-white tracking-tight">
                 {roundedBarbellWeight}
-                <span className="text-xl sm:text-2xl font-bold text-rose-500 ml-1.5 uppercase">
+                <span className="text-xl sm:text-2xl font-bold text-amber-400 ml-1.5 uppercase">
                   {unit}
                 </span>
               </div>
@@ -829,7 +829,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
               <div className="text-xs text-zinc-400 mt-1 font-mono">
                 Exact Calculated: <span className="text-zinc-200 font-bold">{calculatedWeightExact.toFixed(1)} {unit}</span>
                 <span className="mx-1.5">•</span>
-                <span className="text-rose-400 font-bold">{percentageOf1RM}% of 1RM</span>
+                <span className="text-amber-400 font-bold">{percentageOf1RM}% of 1RM</span>
               </div>
 
               {/* Target Reps Badge */}
@@ -862,7 +862,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-md">
             <div className="flex items-center justify-between mb-3 border-b border-zinc-800 pb-2.5">
               <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-rose-500" />
+                <Layers className="w-4 h-4 text-amber-400" />
                 <h3 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider font-athletic">
                   Barbell Plate Loading Guide
                 </h3>
@@ -968,7 +968,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b border-zinc-800 pb-3">
           <div>
             <h3 className="text-sm sm:text-base font-black uppercase text-white tracking-wider font-athletic flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-rose-500" />
+              <BarChart3 className="w-4 h-4 text-amber-400" />
               Full Rep-to-Weight Matrix (1 to 20 Reps)
             </h3>
             <p className="text-xs text-zinc-400 mt-0.5">
@@ -976,7 +976,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             </p>
           </div>
           <span className="text-xs font-mono text-zinc-400">
-            Formula: <span className="text-rose-400 font-bold uppercase">{formula}</span>
+            Formula: <span className="text-amber-400 font-bold uppercase">{formula}</span>
           </span>
         </div>
 
@@ -1005,15 +1005,15 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                     }}
                     className={`transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-rose-500/15 font-bold text-white'
+                        ? 'bg-amber-500/15 font-bold text-white'
                         : 'hover:bg-zinc-800/50 text-zinc-300'
                     }`}
                   >
                     <td className="py-2.5 px-3 font-bold text-white flex items-center gap-1.5">
-                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-rose-400" />}
+                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />}
                       <span>{item.reps} {item.reps === 1 ? 'Rep' : 'Reps'}</span>
                     </td>
-                    <td className="py-2.5 px-3 text-rose-400 font-bold">
+                    <td className="py-2.5 px-3 text-amber-400 font-bold">
                       {item.pct}%
                     </td>
                     <td className="py-2.5 px-3">
@@ -1037,7 +1037,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
                         }}
                         className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-rose-600 text-white'
+                            ? 'bg-amber-500 text-black font-black'
                             : 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'
                         }`}
                       >

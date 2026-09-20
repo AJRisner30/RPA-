@@ -296,9 +296,9 @@ export const RunPaceHrCalculator: React.FC = () => {
         minBpm: getBpm(90),
         maxBpm: getBpm(100),
         rpe: 'RPE 9-10',
-        color: 'text-rose-500',
-        bgColor: 'bg-rose-500/15',
-        borderColor: 'border-rose-500/50',
+        color: 'text-amber-400',
+        bgColor: 'bg-amber-500/15',
+        borderColor: 'border-amber-500/50',
         desc: 'All-out anaerobic capacity, sprint repeats (10x200m / hill bounds). Sustainable only for short bursts.',
       },
     ];
@@ -322,7 +322,7 @@ export const RunPaceHrCalculator: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="px-2.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-wider">
                 Endurance & Aerobic Engine
               </span>
               <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-mono font-bold flex items-center gap-1">
@@ -331,8 +331,8 @@ export const RunPaceHrCalculator: React.FC = () => {
               </span>
             </div>
             <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-white font-athletic flex items-center gap-2.5">
-              <Timer className="w-7 h-7 text-rose-500" />
-              Run Pace &amp; <span className="text-rose-500">Heart Rate</span> Calculator
+              <Timer className="w-7 h-7 text-amber-400" />
+              Run Pace &amp; <span className="text-amber-400">Heart Rate</span> Calculator
             </h2>
             <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
               Calculate exact min/mile paces, target finish splits, and precise physiological heart rate zones (Karvonen HRR &amp; MHR models) for Zone 2 base runs, interval repeats, and tactical rucking.
@@ -352,7 +352,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                 onClick={() => setCalcMode(mode.id as 'pace' | 'time' | 'distance')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   calcMode === mode.id
-                    ? 'bg-rose-600 text-white shadow-md'
+                    ? 'bg-amber-500 text-black font-black shadow-md'
                     : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                 }`}
               >
@@ -369,13 +369,13 @@ export const RunPaceHrCalculator: React.FC = () => {
         <div className="lg:col-span-6 space-y-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xl">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
             <div className="flex items-center gap-2">
-              <Compass className="w-5 h-5 text-rose-500" />
+              <Compass className="w-5 h-5 text-amber-400" />
               <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-white font-athletic">
                 Pace Parameters
               </h3>
             </div>
             <span className="text-[11px] font-mono text-zinc-400">
-              Mode: <strong className="text-rose-400 uppercase">{calcMode}</strong>
+              Mode: <strong className="text-amber-400 uppercase">{calcMode}</strong>
             </span>
           </div>
 
@@ -397,7 +397,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     }}
                     className={`p-2 rounded-xl border text-[11px] font-bold text-center transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-rose-600/20 border-rose-500 text-white shadow-sm'
+                        ? 'bg-amber-500/20 border-amber-500 text-white shadow-sm'
                         : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
                     }`}
                   >
@@ -420,7 +420,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     type="button"
                     onClick={() => setDistanceUnit('miles')}
                     className={`px-2 py-0.5 rounded font-mono font-bold cursor-pointer ${
-                      distanceUnit === 'miles' ? 'bg-rose-600 text-white' : 'text-zinc-400'
+                      distanceUnit === 'miles' ? 'bg-amber-500 text-black font-black' : 'text-zinc-400'
                     }`}
                   >
                     Miles
@@ -429,7 +429,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     type="button"
                     onClick={() => setDistanceUnit('km')}
                     className={`px-2 py-0.5 rounded font-mono font-bold cursor-pointer ${
-                      distanceUnit === 'km' ? 'bg-rose-600 text-white' : 'text-zinc-400'
+                      distanceUnit === 'km' ? 'bg-amber-500 text-black font-black' : 'text-zinc-400'
                     }`}
                   >
                     KM
@@ -442,7 +442,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                 min="0.1"
                 value={distanceVal}
                 onChange={(e) => setDistanceVal(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-4 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-4 py-2.5 text-sm font-mono text-white outline-none transition-colors"
                 placeholder="e.g. 3.0"
               />
             </div>
@@ -463,7 +463,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     max="24"
                     value={hours}
                     onChange={(e) => setHours(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
+                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
                   />
                 </div>
                 <div>
@@ -474,7 +474,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     max="59"
                     value={minutes}
                     onChange={(e) => setMinutes(Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)))}
-                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
+                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
                   />
                 </div>
                 <div>
@@ -485,7 +485,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     max="59"
                     value={seconds}
                     onChange={(e) => setSeconds(Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)))}
-                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
+                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
                   />
                 </div>
               </div>
@@ -504,7 +504,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     type="button"
                     onClick={() => setPaceUnit('min/mile')}
                     className={`px-2 py-0.5 rounded font-mono font-bold cursor-pointer ${
-                      paceUnit === 'min/mile' ? 'bg-rose-600 text-white' : 'text-zinc-400'
+                      paceUnit === 'min/mile' ? 'bg-amber-500 text-black font-black' : 'text-zinc-400'
                     }`}
                   >
                     /mile
@@ -513,7 +513,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     type="button"
                     onClick={() => setPaceUnit('min/km')}
                     className={`px-2 py-0.5 rounded font-mono font-bold cursor-pointer ${
-                      paceUnit === 'min/km' ? 'bg-rose-600 text-white' : 'text-zinc-400'
+                      paceUnit === 'min/km' ? 'bg-amber-500 text-black font-black' : 'text-zinc-400'
                     }`}
                   >
                     /km
@@ -529,7 +529,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     max="30"
                     value={paceMinutes}
                     onChange={(e) => setPaceMinutes(Math.max(1, parseInt(e.target.value, 10) || 0))}
-                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
+                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
                   />
                 </div>
                 <div>
@@ -540,7 +540,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                     max="59"
                     value={paceSeconds}
                     onChange={(e) => setPaceSeconds(Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)))}
-                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
+                    className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-center text-sm font-mono text-white outline-none"
                   />
                 </div>
               </div>
@@ -563,7 +563,7 @@ export const RunPaceHrCalculator: React.FC = () => {
               </div>
               <div>
                 <span className="text-zinc-500">5K Race Peaking:</span>{' '}
-                <span className="text-rose-400 font-mono font-bold">6:00 - 7:00 /mi</span>
+                <span className="text-amber-400 font-mono font-bold">6:00 - 7:00 /mi</span>
               </div>
               <div>
                 <span className="text-zinc-500">Tactical Ruck (35-45 lb):</span>{' '}
@@ -582,7 +582,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                   Calculated Results
                 </span>
-                <span className="text-xs font-mono text-rose-400 font-bold">
+                <span className="text-xs font-mono text-amber-400 font-bold">
                   {results.speedMph} MPH / {results.speedKph} KM/H
                 </span>
               </div>
@@ -607,7 +607,7 @@ export const RunPaceHrCalculator: React.FC = () => {
 
                 <div className="p-3.5 bg-zinc-950 rounded-xl border border-zinc-800 col-span-2 sm:col-span-1">
                   <span className="text-[10px] text-zinc-500 uppercase font-mono block">Total Time</span>
-                  <div className="text-2xl sm:text-3xl font-black font-mono text-rose-500 mt-1">
+                  <div className="text-2xl sm:text-3xl font-black font-mono text-amber-400 mt-1">
                     {results.totalTimeFormatted}
                   </div>
                   <span className="text-[10px] text-zinc-400 font-mono">
@@ -636,7 +636,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                       <span className="text-zinc-300 font-bold">{row.marker}</span>
                       <div className="flex items-center gap-4">
                         <span className="text-zinc-500">{row.splitTime}/split</span>
-                        <span className="text-rose-400 font-bold">{row.cumulativeTime}</span>
+                        <span className="text-amber-400 font-bold">{row.cumulativeTime}</span>
                       </div>
                     </div>
                   ))}
@@ -651,8 +651,8 @@ export const RunPaceHrCalculator: React.FC = () => {
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-600/20 border border-rose-500/40 flex items-center justify-center">
-              <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+              <Heart className="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
             <div>
               <h3 className="text-lg sm:text-2xl font-black uppercase tracking-wider text-white font-athletic">
@@ -677,7 +677,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                 onClick={() => setHrFormula(f.id as 'karvonen' | 'tanaka' | 'standard')}
                 className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
                   hrFormula === f.id
-                    ? 'bg-rose-600 text-white shadow-md'
+                    ? 'bg-amber-500 text-black font-black shadow-md'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -699,7 +699,7 @@ export const RunPaceHrCalculator: React.FC = () => {
               max="90"
               value={age}
               onChange={(e) => setAge(Math.max(14, Math.min(90, parseInt(e.target.value, 10) || 25)))}
-              className="w-full bg-zinc-900 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-sm font-mono text-white outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-sm font-mono text-white outline-none"
             />
           </div>
 
@@ -713,7 +713,7 @@ export const RunPaceHrCalculator: React.FC = () => {
               max="110"
               value={restingHr}
               onChange={(e) => setRestingHr(Math.max(35, Math.min(110, parseInt(e.target.value, 10) || 60)))}
-              className="w-full bg-zinc-900 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-sm font-mono text-white outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-sm font-mono text-white outline-none"
               placeholder="e.g. 54"
             />
           </div>
@@ -729,7 +729,7 @@ export const RunPaceHrCalculator: React.FC = () => {
               value={customMaxHr}
               onChange={(e) => setCustomMaxHr(e.target.value)}
               placeholder={`Auto: ${maxHeartRate} bpm`}
-              className="w-full bg-zinc-900 border border-zinc-800 focus:border-rose-500 rounded-xl px-3 py-2 text-sm font-mono text-white placeholder-zinc-600 outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2 text-sm font-mono text-white placeholder-zinc-600 outline-none"
             />
           </div>
 
@@ -762,7 +762,7 @@ export const RunPaceHrCalculator: React.FC = () => {
               max={maxHeartRate}
               value={currentTestHr}
               onChange={(e) => setCurrentTestHr(parseInt(e.target.value, 10))}
-              className="w-full accent-rose-500 cursor-pointer"
+              className="w-full accent-amber-500 cursor-pointer"
             />
             <span className="font-mono text-lg font-black text-white w-20 text-right">
               {currentTestHr} <span className="text-xs font-normal text-zinc-400">BPM</span>
@@ -787,7 +787,7 @@ export const RunPaceHrCalculator: React.FC = () => {
                   z.coachStandard
                     ? 'border-emerald-500/60 bg-emerald-950/20 ring-1 ring-emerald-500/40 shadow-lg'
                     : isHighlighted
-                    ? `${z.borderColor} ${z.bgColor} ring-1 ring-rose-500/40`
+                    ? `${z.borderColor} ${z.bgColor} ring-1 ring-amber-500/40`
                     : 'bg-zinc-950 border-zinc-800'
                 }`}
               >

@@ -101,12 +101,12 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
               onClick={onNavigateToLogs}
               className="px-4 py-1.5 text-zinc-400 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <History className="w-3.5 h-3.5 text-rose-500" />
+              <History className="w-3.5 h-3.5 text-amber-400" />
               <span>Workout Logs & Sets</span>
             </button>
             <button
               type="button"
-              className="px-4 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold shadow-sm"
+              className="px-4 py-1.5 bg-amber-500 text-black font-black rounded-lg text-xs font-bold shadow-sm"
             >
               Progress Graphs & PRs
             </button>
@@ -116,10 +116,10 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
 
       {/* Header Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-        <div className="absolute -right-12 -top-12 w-64 h-64 bg-rose-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-12 -top-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-rose-600/20 text-rose-400 border border-rose-600/30 flex items-center gap-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5" />
               Biomechanical Analytics
             </span>
@@ -133,7 +133,7 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
             Progress Visualization Graphs
           </h1>
           <p className="text-sm text-zinc-300 mt-2 leading-relaxed">
-            Risner Performance Athletics analytical dashboards tracking weight progression curves,
+            Overland Athletics analytical dashboards tracking weight progression curves,
             estimated 1-rep maximums (1RM), and total tonnage density across training mesocycles.
           </p>
 
@@ -152,7 +152,7 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
               <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
                 Logged Workouts
               </span>
-              <span className="font-mono text-xl sm:text-2xl font-black text-rose-500">
+              <span className="font-mono text-xl sm:text-2xl font-black text-amber-400">
                 {logs.length} <span className="text-xs font-normal text-zinc-400">sessions</span>
               </span>
             </div>
@@ -173,7 +173,7 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
               <TrendingUp className="w-4 h-4" />
               Strength & 1RM Trajectory
             </span>
@@ -188,7 +188,7 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
             <select
               value={selectedExercise}
               onChange={(e) => setSelectedExercise(e.target.value)}
-              className="bg-zinc-950 border border-zinc-700 text-white text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-rose-500 max-w-xs truncate"
+              className="bg-zinc-950 border border-zinc-700 text-white text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 max-w-xs truncate"
             >
               {allExercises.map((ex) => (
                 <option key={ex} value={ex}>
@@ -260,7 +260,7 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-zinc-500 text-xs">
-              <Dumbbell className="w-8 h-8 mb-2 opacity-40 text-rose-500" />
+              <Dumbbell className="w-8 h-8 mb-2 opacity-40 text-amber-400" />
               <span>No recorded session logs found for {selectedExercise} yet.</span>
               <span className="text-[11px] text-zinc-600 mt-1">
                 Log a workout containing this exercise to see the curve generate!

@@ -140,13 +140,13 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
       athlete: currentAthlete,
       sessions: athleteLogs,
       exportedAt: new Date().toISOString(),
-      platform: 'Risner Performance Athletics',
+      platform: 'Overland Athletics',
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `rpa_athlete_${currentAthlete.name.toLowerCase().replace(/\s+/g, '_')}_logs.json`;
+    a.download = `overland_athlete_${currentAthlete.name.toLowerCase().replace(/\s+/g, '_')}_logs.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -157,7 +157,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
         {/* Header */}
         <div className="bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-950 px-5 sm:px-6 py-4 border-b border-zinc-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${currentAthlete.avatarColor} flex items-center justify-center text-white font-athletic font-black text-base shadow-lg shadow-rose-950/40 border border-white/15`}>
+            <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${currentAthlete.avatarColor} flex items-center justify-center text-white font-athletic font-black text-base shadow-lg shadow-amber-950/40 border border-white/15`}>
               {currentAthlete.name.charAt(0)}
             </div>
             <div>
@@ -165,7 +165,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 <h3 className="text-base sm:text-lg font-black text-white font-athletic tracking-wide">
                   Athlete Profile & Progress
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
                   Live Sync
                 </span>
               </div>
@@ -201,7 +201,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
             onClick={() => setViewMode('register')}
             className={`py-2 px-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               viewMode === 'register'
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/40'
+                ? 'bg-amber-500 text-black font-black shadow-md shadow-amber-950/40'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -233,7 +233,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 </span>
                 <button
                   onClick={() => setViewMode('login')}
-                  className="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                  className="text-amber-400 hover:text-amber-300 text-xs font-semibold flex items-center gap-1 cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   Sign In with PIN / Email
@@ -253,7 +253,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                       onClick={() => handleSelectAthlete(athlete)}
                       className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${
                         isActive
-                          ? 'bg-rose-950/25 border-rose-500/60 shadow-md'
+                          ? 'bg-amber-950/25 border-amber-500/60 shadow-md'
                           : 'bg-zinc-900/70 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
                       }`}
                     >
@@ -284,7 +284,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
 
                       <div className="shrink-0 flex items-center gap-2">
                         {isActive ? (
-                          <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-xl bg-amber-500 text-black font-black flex items-center justify-center">
                             <Check className="w-4 h-4" />
                           </div>
                         ) : (
@@ -309,7 +309,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   onClick={() => setViewMode('register')}
                   className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
                 >
-                  <Plus className="w-3.5 h-3.5 text-rose-400" />
+                  <Plus className="w-3.5 h-3.5 text-amber-400" />
                   New Athlete
                 </button>
               </div>
@@ -320,7 +320,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
           {viewMode === 'register' && (
             <form onSubmit={handleRegister} className="space-y-3.5">
               <div className="bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-800">
-                <div className="flex items-center gap-2 text-rose-400 font-bold uppercase tracking-wider text-[11px] mb-1">
+                <div className="flex items-center gap-2 text-amber-400 font-bold uppercase tracking-wider text-[11px] mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   Create Your Personal Athlete Account
                 </div>
@@ -346,7 +346,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     placeholder="e.g. Alex Morgan"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500"
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
@@ -360,7 +360,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     placeholder="athlete@example.com"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500"
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -373,7 +373,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   <select
                     value={regGoal}
                     onChange={(e) => setRegGoal(e.target.value as any)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-rose-500"
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-amber-500"
                   >
                     <option value="Hybrid Athlete">Hybrid Athlete</option>
                     <option value="Strength & Power">Strength & Power</option>
@@ -390,7 +390,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   <select
                     value={regLevel}
                     onChange={(e) => setRegLevel(e.target.value as any)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-rose-500"
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-amber-500"
                   >
                     <option value="Beginner">Beginner (0-1 yr)</option>
                     <option value="Intermediate">Intermediate (1-3 yrs)</option>
@@ -407,7 +407,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     type="number"
                     value={regWeight}
                     onChange={(e) => setRegWeight(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-rose-500"
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -423,7 +423,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   placeholder="e.g. 1234"
                   value={regPin}
                   onChange={(e) => setRegPin(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs font-mono tracking-widest focus:outline-none focus:border-rose-500"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs font-mono tracking-widest focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -437,7 +437,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-rose-950/40 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold rounded-xl text-xs shadow-lg shadow-amber-950/40 transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   Save & Activate Athlete
@@ -450,7 +450,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
           {viewMode === 'login' && (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div className="bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-800">
-                <div className="text-rose-400 font-bold uppercase tracking-wider text-[11px] mb-1">
+                <div className="text-amber-400 font-bold uppercase tracking-wider text-[11px] mb-1">
                   Athlete Quick Sign-In
                 </div>
                 <p className="text-zinc-400 text-xs">
@@ -474,7 +474,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   placeholder="e.g. athlete@example.com or athlete name"
                   value={loginQuery}
                   onChange={(e) => setLoginQuery(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -487,7 +487,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   placeholder="4 digits"
                   value={loginPin}
                   onChange={(e) => setLoginPin(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs font-mono tracking-widest focus:outline-none focus:border-rose-500"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs font-mono tracking-widest focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -501,7 +501,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-rose-950/40 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl text-xs shadow-lg shadow-amber-950/40 transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <LogIn className="w-4 h-4" />
                   Sign In
@@ -529,7 +529,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 </div>
 
                 <div className="text-right">
-                  <span className="px-2 py-1 bg-rose-950/60 border border-rose-800/60 text-rose-300 rounded-lg text-xs font-bold uppercase">
+                  <span className="px-2 py-1 bg-amber-950/60 border border-amber-700/50 text-amber-300 rounded-lg text-xs font-bold uppercase">
                     {currentAthlete.experienceLevel}
                   </span>
                 </div>
@@ -569,7 +569,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
               <div className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-2xl space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-white">
-                    <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                    <Trash2 className="w-3.5 h-3.5 text-amber-400" />
                     <span>Workout Log Management</span>
                   </div>
                   <span className="text-[10px] text-zinc-500 font-mono">
@@ -585,22 +585,22 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setConfirmClearAction('current')}
-                      className="px-3 py-1.5 bg-zinc-800 hover:bg-rose-950/40 text-zinc-300 hover:text-rose-300 border border-zinc-700 hover:border-rose-800/60 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      className="px-3 py-1.5 bg-zinc-800 hover:bg-amber-950/40 text-zinc-300 hover:text-amber-300 border border-zinc-700 hover:border-amber-700/50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                     >
                       Clear {currentAthlete.name.split(' ')[0]}'s Logs
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmClearAction('all')}
-                      className="px-3 py-1.5 bg-rose-950/30 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      className="px-3 py-1.5 bg-amber-950/30 hover:bg-amber-900/60 text-amber-300 border border-amber-700/50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                     >
                       Clear All Athletes (Fresh Start)
                     </button>
                   </div>
                 ) : (
-                  <div className="p-3 bg-rose-950/30 border border-rose-800/60 rounded-xl space-y-2">
-                    <div className="flex items-start gap-2 text-xs text-rose-200">
-                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="p-3 bg-amber-950/30 border border-amber-700/50 rounded-xl space-y-2">
+                    <div className="flex items-start gap-2 text-xs text-amber-200">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       <span>
                         {confirmClearAction === 'all'
                           ? 'Are you sure you want to clear ALL workout logs across all athletes? This cannot be undone.'
@@ -618,7 +618,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleExecuteAthleteClear(confirmClearAction)}
-                        className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                        className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs font-bold transition-colors cursor-pointer"
                       >
                         Confirm Clear
                       </button>
@@ -648,7 +648,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setViewMode('switch')}
-                  className="w-full sm:w-auto px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center"
+                  className="w-full sm:w-auto px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl font-bold text-xs transition-colors cursor-pointer text-center"
                 >
                   Switch / Change Athlete
                 </button>

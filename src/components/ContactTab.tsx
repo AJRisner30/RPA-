@@ -4,7 +4,7 @@ import {
   ShieldCheck, Award, MessageSquare, Dumbbell, Sparkles, 
   Flame, CheckCircle2, User, ArrowRight
 } from 'lucide-react';
-import { RisnerLogo, IssaCertifiedBadge, RpaCompanyEmblem } from './BrandingLogos';
+import { OverlandLogo, IssaCertifiedBadge, OverlandCompanyEmblem } from './BrandingLogos';
 
 export const ContactTab: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -32,28 +32,28 @@ export const ContactTab: React.FC = () => {
   const handleSendEmail = (e: React.FormEvent) => {
     e.preventDefault();
     const subjectMap: Record<string, string> = {
-      coaching: '1-on-1 Hybrid Coaching Inquiry',
+      coaching: '1-on-1 Overland Hybrid Coaching Inquiry',
       programming: 'Custom Programming & Protocol Question',
-      form_check: 'Form Check & Movement Review',
+      form_check: 'Lift Form & Movement Review',
       supplements: 'Bucked Up Supplement & Nutrition Advice',
-      general: 'Inquiry for Coach AJ Risner',
+      general: 'Inquiry for Overland Athletics',
     };
 
     const subject = encodeURIComponent(
-      `[Risner Athletics] ${subjectMap[inquiryType] || 'Coaching Inquiry'} - ${senderName || 'Athlete'}`
+      `[Overland Athletics] ${subjectMap[inquiryType] || 'Coaching Inquiry'} - ${senderName || 'Athlete'}`
     );
 
-    const bodyText = `Hi Coach AJ,
+    const bodyText = `Hi Coach,
 
 Name: ${senderName || 'Athlete'}
 Primary Goal: ${trainingGoal}
 Inquiry Type: ${subjectMap[inquiryType] || inquiryType}
 
 Message:
-${senderMessage || 'I would like to inquire about coaching / programming with Risner Performance Athletics.'}
+${senderMessage || 'I would like to inquire about training, programming, or coaching with Overland Athletics.'}
 
 ---
-Sent via Risner Performance Athletics App`;
+Sent via Overland Athletics App (Run • Lift • Ruck)`;
 
     const body = encodeURIComponent(bodyText);
     window.location.href = `mailto:${coachEmail}?subject=${subject}&body=${body}`;
@@ -61,37 +61,37 @@ Sent via Risner Performance Athletics App`;
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">
-      {/* Top Header Card: Coach Aryan "AJ" Risner */}
+      {/* Top Header Card: Overland Athletics & Coaching */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-        <div className="absolute -right-16 -top-16 w-64 h-64 bg-rose-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
             <div className="relative shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-950 border-2 border-rose-500/50 p-2 flex items-center justify-center shadow-lg shadow-rose-950/30 overflow-hidden">
-                <RpaCompanyEmblem size="md" />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-950 border-2 border-amber-500/50 p-2 flex items-center justify-center shadow-lg shadow-amber-950/30 overflow-hidden">
+                <OverlandCompanyEmblem size="md" />
               </div>
-              <span className="absolute -bottom-1.5 -right-1.5 px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-black uppercase tracking-wider rounded-md shadow">
-                ISSA CPT
+              <span className="absolute -bottom-1.5 -right-1.5 px-2 py-0.5 bg-amber-500 text-black text-[10px] font-black uppercase tracking-wider rounded-md shadow">
+                OVERLAND
               </span>
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-rose-600/20 text-rose-400 border border-rose-600/30">
-                  Head Coach & Founder
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  Overland Athletics
                 </span>
-                <span className="text-xs text-amber-400 font-semibold flex items-center gap-1">
+                <span className="text-xs text-zinc-400 font-semibold flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  ISSA Certified Personal Trainer
+                  Run • Lift • Ruck • Go The Distance
                 </span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-black text-white font-athletic uppercase tracking-wide">
-                Aryan <span className="text-rose-500">&quot;AJ&quot;</span> Risner
+                Overland <span className="text-amber-400">Athletics</span>
               </h1>
               <p className="text-xs sm:text-sm text-zinc-300 mt-1 max-w-xl leading-relaxed">
-                Specializing in hybrid strength, endurance rucking, progressive overload periodization, and high-performance conditioning.
+                Elite performance conditioning, hybrid compound strength, rucking endurance, and progressive overload periodization.
               </p>
             </div>
           </div>
@@ -99,10 +99,10 @@ Sent via Risner Performance Athletics App`;
           <div className="flex flex-wrap sm:flex-col gap-2.5 shrink-0 w-full sm:w-auto">
             <a
               href={`mailto:${coachEmail}`}
-              className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-950/50 cursor-pointer active:scale-95"
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-950/50 cursor-pointer active:scale-95"
             >
               <Mail className="w-4 h-4" />
-              <span>Email Coach AJ</span>
+              <span>Email Overland Athletics</span>
             </a>
             <a
               href={instagramUrl}
@@ -111,7 +111,7 @@ Sent via Risner Performance Athletics App`;
               className="flex items-center justify-center gap-2 px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 hover:text-white border border-zinc-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
             >
               <Instagram className="w-4 h-4 text-pink-400" />
-              <span>Instagram: AJ Risner</span>
+              <span>Instagram: @ajrisner</span>
               <ExternalLink className="w-3 h-3 text-zinc-400 ml-0.5" />
             </a>
           </div>
@@ -123,10 +123,10 @@ Sent via Risner Performance Athletics App`;
         {/* Email Card */}
         <div className="bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition-all">
           <div>
-            <div className="w-10 h-10 rounded-xl bg-rose-600/20 border border-rose-500/30 flex items-center justify-center mb-3">
-              <Mail className="w-5 h-5 text-rose-400" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-3">
+              <Mail className="w-5 h-5 text-amber-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-rose-400">Direct Contact</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">Direct Contact</span>
             <h3 className="text-lg font-bold text-white mt-0.5">Email Coach AJ</h3>
             <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
               Have questions regarding programs, 1RM calculator, custom coaching, or training feedback? Send an email directly.
@@ -150,7 +150,7 @@ Sent via Risner Performance Athletics App`;
             <span className="text-[11px] text-zinc-500 font-medium">Response: &lt;24 hours</span>
             <a
               href={`mailto:${coachEmail}`}
-              className="text-xs font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer"
             >
               <span>Open Mail</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -235,7 +235,7 @@ Sent via Risner Performance Athletics App`;
         {/* Left Column: Direct Email Composer Form */}
         <div className="lg:col-span-7 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-xl">
           <div className="flex items-center gap-2.5 mb-2">
-            <MessageSquare className="w-5 h-5 text-rose-500" />
+            <MessageSquare className="w-5 h-5 text-amber-400" />
             <h2 className="text-xl font-bold text-white font-athletic uppercase tracking-wide">
               Send an Inquiry Directly to Coach AJ
             </h2>
@@ -267,11 +267,11 @@ Sent via Risner Performance Athletics App`;
                       onClick={() => setInquiryType(item.id)}
                       className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-rose-600/20 border-rose-500 text-white shadow-sm'
+                          ? 'bg-amber-500/20 border-amber-500 text-white shadow-sm'
                           : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
                       }`}
                     >
-                      <Icon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-rose-400' : 'text-zinc-500'}`} />
+                      <Icon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-amber-400' : 'text-zinc-500'}`} />
                       <span className="truncate">{item.label}</span>
                     </button>
                   );
@@ -290,7 +290,7 @@ Sent via Risner Performance Athletics App`;
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none transition-colors"
+                  className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none transition-colors"
                 />
               </div>
 
@@ -301,7 +301,7 @@ Sent via Risner Performance Athletics App`;
                 <select
                   value={trainingGoal}
                   onChange={(e) => setTrainingGoal(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition-colors"
+                  className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition-colors"
                 >
                   <option value="Hybrid Strength & Ruck Stamina">Hybrid Strength & Ruck Stamina</option>
                   <option value="Push-Up & Upper Body Density">Push-Up & Upper Body Density</option>
@@ -322,7 +322,7 @@ Sent via Risner Performance Athletics App`;
                 onChange={(e) => setSenderMessage(e.target.value)}
                 rows={4}
                 placeholder="Describe your current training background, injuries or constraints, or specific questions for Coach AJ..."
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-rose-500 rounded-xl p-3.5 text-xs text-white placeholder-zinc-600 outline-none transition-colors resize-none"
+                className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl p-3.5 text-xs text-white placeholder-zinc-600 outline-none transition-colors resize-none"
               />
             </div>
 
@@ -330,7 +330,7 @@ Sent via Risner Performance Athletics App`;
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
               <button
                 type="submit"
-                className="w-full sm:w-auto flex-1 py-3 px-6 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                className="w-full sm:w-auto flex-1 py-3 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-950/40 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <Send className="w-4 h-4" />
                 <span>Send Email to risnerathletics@gmail.com</span>
@@ -353,12 +353,12 @@ Sent via Risner Performance Athletics App`;
           {/* Coach Standards Box */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <RpaCompanyEmblem size="sm" />
+              <OverlandCompanyEmblem size="sm" />
               <div>
                 <h3 className="text-base font-bold text-white uppercase tracking-wider font-athletic">
-                  Risner Performance Athletics
+                  Overland Athletics
                 </h3>
-                <span className="text-[11px] text-zinc-400">ISSA Certified Standards</span>
+                <span className="text-[11px] text-amber-400 font-semibold">Run • Lift • Ruck</span>
               </div>
             </div>
 
@@ -381,7 +381,7 @@ Sent via Risner Performance Athletics App`;
               <span className="text-xs text-zinc-400 font-medium">Direct Inquiries:</span>
               <a
                 href={`mailto:${coachEmail}`}
-                className="text-xs font-bold text-rose-400 hover:text-rose-300 underline font-mono"
+                className="text-xs font-bold text-amber-400 hover:text-amber-300 underline font-mono"
               >
                 {coachEmail}
               </a>

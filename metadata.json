@@ -1,6 +1,6 @@
 {
-  "name": "Risner Performance Athletics",
-  "description": "Elite workout programming, dynamic warm-ups, auto-overload progression, run pace & HR calculations, athlete login progress tracking, and performance visualization by Coach Aryan 'AJ' Risner.",
+  "name": "Overland Athletics",
+  "description": "Overland Athletics — Run • Lift • Ruck • Go The Distance. Elite performance training, tactical conditioning, hybrid strength, and endurance progression engineered to go the distance.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
