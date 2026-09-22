@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import {registerSW} from 'virtual:pwa-register';
+import {FirebaseProvider} from './context/FirebaseContext.tsx';
 
 // Register PWA Service Worker for offline capability & automatic background updates
 registerSW({
@@ -41,7 +42,9 @@ if ('serviceWorker' in navigator) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <FirebaseProvider>
+      <App />
+    </FirebaseProvider>
   </StrictMode>,
 );
 

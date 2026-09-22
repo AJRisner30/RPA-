@@ -3,7 +3,7 @@ import {
   History, Calendar, Clock, Dumbbell, Trash2, ChevronDown, 
   ChevronUp, Search, Download, Plus, Award, CheckCircle2, 
   Flame, TrendingUp, Sparkles, Pause, Play, Timer, X,
-  AlertTriangle, RotateCcw, Filter, Check, ShieldAlert
+  AlertTriangle, RotateCcw, Filter, Check, ShieldAlert, Footprints
 } from 'lucide-react';
 import { WorkoutSessionLog, MuscleGroup } from '../types';
 import { 
@@ -12,27 +12,44 @@ import {
   saveWorkoutLog,
   clearAllWorkoutLogs,
   clearAthleteWorkoutLogs,
-  clearHybridStrengthLogs
+  clearHybridStrengthLogs,
+  clearAllRuckLogs,
+  clearAthleteRuckLogs
 } from '../utils/storage';
 import { soundManager } from '../utils/audio';
 import { TEMPLATE_EXERCISES, HybridStrengthLogItem, getDefaultRestPeriod } from '../data/protocolData';
 import { getCurrentAthlete, getAthletes, AthleteProfile } from '../utils/athleteAuth';
+import { useFirebase } from '../context/FirebaseContext';
+import { saveWorkoutLogToFirestore, deleteWorkoutLogFromFirestore } from '../utils/firebaseSync';
 
 interface WorkoutLogsTabProps {
   logs: WorkoutSessionLog[];
+  currentAthlete?: AthleteProfile;
   onUpdateLogs: (logs: WorkoutSessionLog[]) => void;
   onOpenLiveWorkout?: () => void;
   onNavigateToGraphs?: () => void;
+  onNavigateToRuck?: () => void;
 }
 
 export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
   logs,
+  currentAthlete: propAthlete,
   onUpdateLogs,
   onOpenLiveWorkout,
   onNavigateToGraphs,
+  onNavigateToRuck,
 }) => {
+  const { user } = useFirebase();
   // Current active athlete & filter
-  const [currentAthlete, setCurrentAthlete] = useState<AthleteProfile>(() => getCurrentAthlete());
+  const [currentAthleteState, setCurrentAthleteState] = useState<AthleteProfile>(() => propAthlete || getCurrentAthlete());
+  const currentAthlete = propAthlete || currentAthleteState;
+
+  useEffect(() => {
+    if (propAthlete) {
+      setCurrentAthleteState(propAthlete);
+    }
+  }, [propAthlete]);
+
   const [athleteFilter, setAthleteFilter] = useState<'current' | 'all'>('current');
   const athletes = getAthletes();
 
@@ -66,7 +83,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
     const handleAthleteChanged = (e: Event) => {
       const customEvent = e as CustomEvent<AthleteProfile>;
       if (customEvent.detail) {
-        setCurrentAthlete(customEvent.detail);
+        setCurrentAthleteState(customEvent.detail);
       }
     };
 
@@ -205,6 +222,12 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
     const updatedSessionLogs = saveWorkoutLog(newSessionLog);
     onUpdateLogs(updatedSessionLogs);
 
+    if (user) {
+      saveWorkoutLogToFirestore(newSessionLog, user.uid).catch((err) => {
+        console.warn('[Firebase] Lift set Firestore sync note:', err);
+      });
+    }
+
     setWeight('');
     setReps('');
   };
@@ -228,26 +251,33 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
     if (window.confirm('Delete this workout log entry?')) {
       const updated = deleteWorkoutLog(logId);
       onUpdateLogs(updated);
+      if (user) {
+        deleteWorkoutLogFromFirestore(logId).catch((err) => {
+          console.warn('[Firebase] Delete Firestore log note:', err);
+        });
+      }
     }
   };
 
   const handleExecuteClear = () => {
     if (clearScope === 'all') {
       const updated = clearAllWorkoutLogs();
+      clearAllRuckLogs();
       onUpdateLogs(updated);
       if (clearLiftsToo) {
         clearHybridStrengthLogs();
         setHybridLogs([]);
       }
-      setToastMessage('All workout logs & lift records cleared across all athletes.');
+      setToastMessage('All workout logs, ruck sessions & lift records cleared across all athletes.');
     } else {
       const updated = clearAthleteWorkoutLogs(currentAthlete.id);
+      clearAthleteRuckLogs(currentAthlete.id);
       onUpdateLogs(updated);
       if (clearLiftsToo) {
         clearHybridStrengthLogs();
         setHybridLogs([]);
       }
-      setToastMessage(`Cleared all workout history for ${currentAthlete.name}.`);
+      setToastMessage(`Cleared all workout & ruck history for ${currentAthlete.name}.`);
     }
 
     setIsClearModalOpen(false);
@@ -291,23 +321,36 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
   return (
     <div className="space-y-6">
       {/* Sub-Navigation Switcher between Logs and Progress */}
-      {onNavigateToGraphs && (
+      {(onNavigateToGraphs || onNavigateToRuck) && (
         <div className="flex justify-center">
-          <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+          <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-lg">
             <button
               type="button"
-              className="px-4 py-1.5 bg-amber-500 text-black font-black rounded-lg text-xs font-bold shadow-sm"
+              className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-950/40"
             >
-              Workout Logs & Sets
+              <History className="w-3.5 h-3.5 text-black" />
+              <span>Workout Logs & Sets</span>
             </button>
-            <button
-              type="button"
-              onClick={onNavigateToGraphs}
-              className="px-4 py-1.5 text-zinc-400 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
-              <span>Progress Graphs & PRs</span>
-            </button>
+            {onNavigateToGraphs && (
+              <button
+                type="button"
+                onClick={onNavigateToGraphs}
+                className="px-3.5 sm:px-4 py-2 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                <span>Progress Graphs</span>
+              </button>
+            )}
+            {onNavigateToRuck && (
+              <button
+                type="button"
+                onClick={onNavigateToRuck}
+                className="px-3.5 sm:px-4 py-2 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Footprints className="w-3.5 h-3.5 text-amber-400" />
+                <span>Ruck Progression</span>
+              </button>
+            )}
           </div>
         </div>
       )}

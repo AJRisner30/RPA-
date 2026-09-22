@@ -562,12 +562,12 @@ export const RunPaceHrCalculator: React.FC = () => {
                 <span className="text-amber-400 font-mono font-bold">6:45 - 7:30 /mi</span>
               </div>
               <div>
-                <span className="text-zinc-500">5K Race Peaking:</span>{' '}
-                <span className="text-amber-400 font-mono font-bold">6:00 - 7:00 /mi</span>
+                <span className="text-zinc-500">Army 12-Mi (4 hrs):</span>{' '}
+                <span className="text-sky-400 font-mono font-bold">&lt; 20:00 /mi</span>
               </div>
               <div>
-                <span className="text-zinc-500">Tactical Ruck (35-45 lb):</span>{' '}
-                <span className="text-sky-400 font-mono font-bold">&lt; 14:30 /mi</span>
+                <span className="text-zinc-500">SOF / Schools (3 hrs):</span>{' '}
+                <span className="text-amber-400 font-mono font-bold">&lt; 15:00 /mi</span>
               </div>
             </div>
           </div>

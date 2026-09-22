@@ -5,50 +5,68 @@ import {
 } from 'recharts';
 import { 
   TrendingUp, Award, Dumbbell, Calendar, Flame, 
-  Zap, Trophy, ShieldCheck, ChevronDown, History 
+  Zap, Trophy, ShieldCheck, ChevronDown, History, Footprints 
 } from 'lucide-react';
-import { WorkoutSessionLog, PersonalRecord } from '../types';
+import { WorkoutSessionLog, PersonalRecord, AthleteProfile } from '../types';
 import { extractPersonalRecords, calculate1RM } from '../utils/storage';
 
 interface ProgressGraphsTabProps {
   logs: WorkoutSessionLog[];
+  currentAthlete?: AthleteProfile;
   onNavigateToLogs?: () => void;
+  onNavigateToRuck?: () => void;
 }
 
 export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({ 
   logs,
+  currentAthlete,
   onNavigateToLogs,
+  onNavigateToRuck,
 }) => {
+  const [athleteFilter, setAthleteFilter] = useState<'current' | 'all'>('current');
+
+  // Scope logs to active athlete so everyone starts fresh until they create their own
+  const activeLogs = useMemo(() => {
+    if (!currentAthlete || athleteFilter === 'all') return logs;
+    return logs.filter(
+      (l) => l.athleteId === currentAthlete.id || (!l.athleteId && (currentAthlete.id === 'athlete-default' || currentAthlete.id === 'athlete-aj-risner'))
+    );
+  }, [logs, currentAthlete, athleteFilter]);
+
   // Extract all unique exercise names from logs
   const allExercises = useMemo(() => {
     const set = new Set<string>();
-    logs.forEach((session) => {
+    activeLogs.forEach((session) => {
       session.exercises.forEach((ex) => set.add(ex.exerciseName));
     });
     return Array.from(set).sort();
-  }, [logs]);
+  }, [activeLogs]);
 
   // Selected exercise for progression graph (defaults to Bench Press or Squat or first)
-  const [selectedExercise, setSelectedExercise] = useState<string>(() => {
+  const [selectedExercise, setSelectedExercise] = useState<string>('Barbell Flat Bench Press');
+
+  // Keep selectedExercise in sync with available exercises
+  const activeSelectedExercise = useMemo(() => {
+    if (allExercises.includes(selectedExercise)) return selectedExercise;
     return allExercises.find((e) => e.toLowerCase().includes('bench')) || allExercises[0] || 'Barbell Flat Bench Press';
-  });
+  }, [allExercises, selectedExercise]);
 
   // Calculate PRs
   const personalRecords = useMemo(() => {
-    return extractPersonalRecords(logs);
-  }, [logs]);
+    return extractPersonalRecords(activeLogs);
+  }, [activeLogs]);
 
   // Build progression data for the selected exercise across sessions
   const exerciseProgressionData = useMemo(() => {
     // Sort logs chronologically (oldest to newest)
-    const sortedLogs = [...logs].sort(
+    const sortedLogs = [...activeLogs].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
     return sortedLogs
       .map((session) => {
         const foundEx = session.exercises.find(
-          (e) => e.exerciseName.toLowerCase() === selectedExercise.toLowerCase()
+          (e) => e.exerciseName.toLowerCase() === activeSelectedExercise.toLowerCase()
         );
         if (!foundEx || foundEx.sets.length === 0) return null;
 
@@ -67,11 +85,11 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
-  }, [logs, selectedExercise]);
+  }, [activeLogs, activeSelectedExercise]);
 
   // Build total session volume over time data
   const sessionVolumeData = useMemo(() => {
-    const sortedLogs = [...logs].sort(
+    const sortedLogs = [...activeLogs].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
@@ -83,33 +101,46 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
       duration: s.durationMinutes,
       sets: s.totalSetsCompleted,
     }));
-  }, [logs]);
+  }, [activeLogs]);
 
   // Calculate total volume all-time
   const totalAllTimeVolume = useMemo(() => {
-    return logs.reduce((acc, l) => acc + l.totalVolumeLbs, 0);
-  }, [logs]);
+    return activeLogs.reduce((acc, l) => acc + l.totalVolumeLbs, 0);
+  }, [activeLogs]);
 
   return (
     <div className="space-y-6">
-      {/* Sub-Navigation Switcher between Logs and Progress */}
-      {onNavigateToLogs && (
+      {/* Sub-Navigation Switcher between Logs, Progress, and Ruck */}
+      {(onNavigateToLogs || onNavigateToRuck) && (
         <div className="flex justify-center">
-          <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+          <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-lg">
+            {onNavigateToLogs && (
+              <button
+                type="button"
+                onClick={onNavigateToLogs}
+                className="px-3.5 sm:px-4 py-2 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <History className="w-3.5 h-3.5 text-amber-400" />
+                <span>Workout Logs</span>
+              </button>
+            )}
             <button
               type="button"
-              onClick={onNavigateToLogs}
-              className="px-4 py-1.5 text-zinc-400 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-950/40"
             >
-              <History className="w-3.5 h-3.5 text-amber-400" />
-              <span>Workout Logs & Sets</span>
+              <TrendingUp className="w-3.5 h-3.5 text-black" />
+              <span>Progress Graphs</span>
             </button>
-            <button
-              type="button"
-              className="px-4 py-1.5 bg-amber-500 text-black font-black rounded-lg text-xs font-bold shadow-sm"
-            >
-              Progress Graphs & PRs
-            </button>
+            {onNavigateToRuck && (
+              <button
+                type="button"
+                onClick={onNavigateToRuck}
+                className="px-3.5 sm:px-4 py-2 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Footprints className="w-3.5 h-3.5 text-amber-400" />
+                <span>Ruck Progression</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -137,67 +168,121 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
             estimated 1-rep maximums (1RM), and total tonnage density across training mesocycles.
           </p>
 
-          {/* High Level Metrics */}
-          <div className="grid grid-cols-3 gap-3 mt-5">
-            <div className="p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
-                Total Lifted Volume
-              </span>
-              <span className="font-mono text-xl sm:text-2xl font-black text-amber-400">
-                {(totalAllTimeVolume / 1000).toFixed(1)}k <span className="text-xs font-normal text-zinc-400">lbs</span>
-              </span>
+          {/* High Level Metrics & Athlete Scope Switcher */}
+          <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
+            <div className="grid grid-cols-3 gap-3 flex-1 min-w-[280px]">
+              <div className="p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  Total Lifted Volume
+                </span>
+                <span className="font-mono text-xl sm:text-2xl font-black text-amber-400">
+                  {(totalAllTimeVolume / 1000).toFixed(1)}k <span className="text-xs font-normal text-zinc-400">lbs</span>
+                </span>
+              </div>
+
+              <div className="p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  Logged Sessions
+                </span>
+                <span className="font-mono text-xl sm:text-2xl font-black text-amber-400">
+                  {activeLogs.length} <span className="text-xs font-normal text-zinc-400">logs</span>
+                </span>
+              </div>
+
+              <div className="p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  Personal Records
+                </span>
+                <span className="font-mono text-xl sm:text-2xl font-black text-emerald-400">
+                  {personalRecords.length} <span className="text-xs font-normal text-zinc-400">PRs</span>
+                </span>
+              </div>
             </div>
 
-            <div className="p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
-                Logged Workouts
-              </span>
-              <span className="font-mono text-xl sm:text-2xl font-black text-amber-400">
-                {logs.length} <span className="text-xs font-normal text-zinc-400">sessions</span>
-              </span>
-            </div>
-
-            <div className="p-3 bg-zinc-950/80 rounded-2xl border border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
-                Personal Records
-              </span>
-              <span className="font-mono text-xl sm:text-2xl font-black text-emerald-400">
-                {personalRecords.length} <span className="text-xs font-normal text-zinc-400">PRs</span>
-              </span>
-            </div>
+            {/* Athlete Scope Toggle */}
+            {currentAthlete && (
+              <div className="inline-flex p-1 bg-zinc-950/80 border border-zinc-800 rounded-xl self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setAthleteFilter('current')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    athleteFilter === 'current'
+                      ? 'bg-amber-400 text-black shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {currentAthlete.name} ({activeLogs.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAthleteFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    athleteFilter === 'all'
+                      ? 'bg-amber-400 text-black shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  All Athletes ({logs.length})
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Chart 1: Exercise Strength & 1RM Progression Curve */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4" />
-              Strength & 1RM Trajectory
-            </span>
-            <h2 className="text-2xl font-black text-white font-athletic tracking-wide mt-0.5">
-              {selectedExercise}
-            </h2>
+      {activeLogs.length === 0 ? (
+        <div className="text-center py-12 px-6 bg-zinc-900 border border-zinc-800 rounded-3xl shadow-xl">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-amber-400">
+            <TrendingUp className="w-7 h-7" />
           </div>
-
-          {/* Exercise Picker */}
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-zinc-400 font-semibold">Select Exercise:</label>
-            <select
-              value={selectedExercise}
-              onChange={(e) => setSelectedExercise(e.target.value)}
-              className="bg-zinc-950 border border-zinc-700 text-white text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 max-w-xs truncate"
+          <h3 className="text-xl font-black text-white uppercase tracking-wide font-athletic">
+            New Athlete Logbook for {currentAthlete?.name || 'Athlete'}
+          </h3>
+          <p className="text-sm text-zinc-400 max-w-md mx-auto mt-2 mb-6 leading-relaxed">
+            Every athlete starts fresh with new logs until they create their own. Complete a workout session or record your sets to populate and view your 1RM strength curves.
+          </p>
+          {onNavigateToLogs && (
+            <button
+              type="button"
+              onClick={onNavigateToLogs}
+              className="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-950/40 inline-flex items-center gap-2 cursor-pointer transition-all active:scale-95"
             >
-              {allExercises.map((ex) => (
-                <option key={ex} value={ex}>
-                  {ex}
-                </option>
-              ))}
-            </select>
-          </div>
+              <History className="w-4 h-4 text-black" />
+              <span>Go to Workout Logs</span>
+            </button>
+          )}
         </div>
+      ) : (
+        <>
+          {/* Main Chart 1: Exercise Strength & 1RM Progression Curve */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4" />
+                  Strength & 1RM Trajectory
+                </span>
+                <h2 className="text-2xl font-black text-white font-athletic tracking-wide mt-0.5">
+                  {activeSelectedExercise}
+                </h2>
+              </div>
+
+              {/* Exercise Picker */}
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-zinc-400 font-semibold">Select Exercise:</label>
+                <select
+                  value={activeSelectedExercise}
+                  onChange={(e) => setSelectedExercise(e.target.value)}
+                  className="bg-zinc-950 border border-zinc-700 text-white text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 max-w-xs truncate"
+                >
+                  {allExercises.map((ex) => (
+                    <option key={ex} value={ex}>
+                      {ex}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
         {/* Chart Canvas */}
         <div className="mt-6 h-72 sm:h-84 w-full">
@@ -380,6 +465,8 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };

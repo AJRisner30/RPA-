@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   X, User, ShieldCheck, Dumbbell, Award, Plus, LogIn, 
   Check, ChevronRight, Lock, Mail, Activity, Sparkles, Download, ArrowRight,
-  Trash2, AlertTriangle
+  Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog } from '../types';
 import { 
@@ -18,8 +18,12 @@ import {
   getStoredWorkoutLogs, 
   clearAllWorkoutLogs, 
   clearAthleteWorkoutLogs, 
-  clearHybridStrengthLogs 
+  clearHybridStrengthLogs,
+  clearAllRuckLogs,
+  clearAthleteRuckLogs
 } from '../utils/storage';
+import { useFirebase } from '../context/FirebaseContext';
+import { saveAthleteToFirestore } from '../utils/firebaseSync';
 
 interface AthleteLoginModalProps {
   isOpen: boolean;
@@ -32,6 +36,8 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
   onClose,
   onAthleteChanged,
 }) => {
+  const { user, isCloudConnected, signInWithGoogle, signOutUser } = useFirebase();
+  const [isSigningInGoogle, setIsSigningInGoogle] = useState(false);
   const [athletes, setAthletes] = useState<AthleteProfile[]>(() => getSelectableAthletes());
   const [currentAthlete, setCurrentAthleteState] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [viewMode, setViewMode] = useState<'switch' | 'register' | 'login' | 'profile'>('switch');
@@ -67,10 +73,12 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     if (scope === 'all') {
       clearAllWorkoutLogs();
       clearHybridStrengthLogs();
-      setClearSuccessMsg('All workout logs cleared successfully across all athletes.');
+      clearAllRuckLogs();
+      setClearSuccessMsg('All workout and ruck logs cleared successfully across all athletes.');
     } else {
       clearAthleteWorkoutLogs(currentAthlete.id);
-      setClearSuccessMsg(`${currentAthlete.name}'s workout logs cleared successfully.`);
+      clearAthleteRuckLogs(currentAthlete.id);
+      setClearSuccessMsg(`${currentAthlete.name}'s logs cleared successfully.`);
     }
     setConfirmClearAction('none');
     setTimeout(() => setClearSuccessMsg(null), 3500);
@@ -133,6 +141,44 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     } else {
       setLoginError('No matching athlete profile found, or incorrect PIN.');
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsSigningInGoogle(true);
+    try {
+      const googleUser = await signInWithGoogle();
+      if (googleUser) {
+        const name = googleUser.displayName || 'Google Athlete';
+        const email = googleUser.email || '';
+
+        let athlete = athletes.find((a) => (a.email || '').toLowerCase() === email.toLowerCase());
+        if (!athlete) {
+          athlete = registerAthlete({
+            name,
+            email,
+            experienceLevel: 'Intermediate',
+            primaryGoal: 'Hybrid Athlete',
+            weightLbs: 185,
+          });
+        }
+        setAthletes(getSelectableAthletes());
+        setCurrentAthleteState(athlete);
+        onAthleteChanged(athlete);
+
+        // Sync with Firestore
+        saveAthleteToFirestore(athlete, googleUser.uid).catch((err) => {
+          console.warn('[Firebase] Athlete profile sync note:', err);
+        });
+      }
+    } catch (err) {
+      console.error('[Firebase] Sign-in failed:', err);
+    } finally {
+      setIsSigningInGoogle(false);
+    }
+  };
+
+  const handleGoogleSignOut = async () => {
+    await signOutUser();
   };
 
   const exportAthleteData = () => {
@@ -224,6 +270,68 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
+          {/* Firebase Cloud Sync Card */}
+          <div className="bg-gradient-to-r from-[#141b22] to-[#1a232e] border border-amber-500/30 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                user ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+              }`}>
+                <Cloud className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white text-xs sm:text-sm">
+                    {user ? 'Firebase Cloud Sync Active' : 'Firebase Cloud Backup & Sync'}
+                  </span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                    user ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  }`}>
+                    {user ? 'Synced' : isCloudConnected ? 'Cloud Ready' : 'Local'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-0.5">
+                  {user ? (
+                    <span>Signed in as <strong className="text-zinc-200">{user.email}</strong>. Workouts & biometrics auto-persist to Firestore.</span>
+                  ) : (
+                    <span>Sign in with Google to automatically backup and sync your workout logs across devices in real-time.</span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="shrink-0 w-full sm:w-auto">
+              {user ? (
+                <button
+                  type="button"
+                  onClick={handleGoogleSignOut}
+                  className="w-full sm:w-auto px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Disconnect</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSigningInGoogle}
+                  className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-950/40 cursor-pointer disabled:opacity-50"
+                >
+                  {isSigningInGoogle ? (
+                    <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                  ) : (
+                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                  )}
+                  <span>Sign in with Google</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* VIEW: SWITCH ATHLETE */}
           {viewMode === 'switch' && (
             <div className="space-y-3">

@@ -1,28 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   getStoredPrograms, savePrograms, 
-  getStoredWorkoutLogs
+  getStoredWorkoutLogs,
+  getStoredRuckLogs, saveRuckLog, deleteRuckLog
 } from './utils/storage';
-import { WorkoutProgram, WorkoutSessionLog } from './types';
+import { WorkoutProgram, WorkoutSessionLog, RuckSessionLog } from './types';
 import { Navbar, TabType } from './components/Navbar';
 import { WorkoutsTab } from './components/WorkoutsTab';
 import { WarmupsTab } from './components/WarmupsTab';
 import { RepLoadCalculatorTab } from './components/RepLoadCalculatorTab';
 import { ProgressGraphsTab } from './components/ProgressGraphsTab';
 import { WorkoutLogsTab } from './components/WorkoutLogsTab';
+import { RuckProgressTab } from './components/RuckProgressTab';
 import { ContactTab } from './components/ContactTab';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { AthleteLoginModal } from './components/AthleteLoginModal';
-import { getCurrentAthlete, AthleteProfile } from './utils/athleteAuth';
-import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone } from 'lucide-react';
+import { getCurrentAthlete, AthleteProfile, updateAthleteProfile } from './utils/athleteAuth';
+import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone, Footprints } from 'lucide-react';
 import { OverlandCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PWAInstallButton } from './components/PWAInstallButton';
+import { useFirebase } from './context/FirebaseContext';
+import { 
+  subscribeToUserWorkoutLogs, 
+  subscribeToUserAthlete, 
+  saveWorkoutLogToFirestore,
+  subscribeToUserRuckLogs,
+  saveRuckLogToFirestore,
+  deleteRuckLogFromFirestore
+} from './utils/firebaseSync';
 
 export default function App() {
+  const { user } = useFirebase();
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
   const [programs, setPrograms] = useState<WorkoutProgram[]>(() => getStoredPrograms());
   const [logs, setLogs] = useState<WorkoutSessionLog[]>(() => getStoredWorkoutLogs());
+  const [ruckLogs, setRuckLogs] = useState<RuckSessionLog[]>(() => getStoredRuckLogs());
   const [currentAthlete, setCurrentAthlete] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [isAthleteModalOpen, setIsAthleteModalOpen] = useState<boolean>(false);
 
@@ -31,6 +44,41 @@ export default function App() {
 
   // Pre-selected warmup flow
   const [targetWarmupId, setTargetWarmupId] = useState<string | null>(null);
+
+  // Real-time Firestore sync when authenticated
+  useEffect(() => {
+    if (!user) return;
+
+    // 1. Subscribe to workout logs in Firestore
+    const unsubscribeLogs = subscribeToUserWorkoutLogs(user.uid, (cloudLogs) => {
+      setLogs(cloudLogs);
+      try {
+        localStorage.setItem('rpa_workout_logs_v1', JSON.stringify(cloudLogs));
+      } catch {}
+    });
+
+    // 2. Subscribe to athlete profile in Firestore
+    const unsubscribeAthlete = subscribeToUserAthlete(user.uid, (cloudAthlete) => {
+      if (cloudAthlete) {
+        setCurrentAthlete(cloudAthlete);
+        updateAthleteProfile(cloudAthlete.id, cloudAthlete);
+      }
+    });
+
+    // 3. Subscribe to rucking logs in Firestore
+    const unsubscribeRucks = subscribeToUserRuckLogs(user.uid, (cloudRucks) => {
+      setRuckLogs(cloudRucks);
+      try {
+        localStorage.setItem('rpa_ruck_logs_v1', JSON.stringify(cloudRucks));
+      } catch {}
+    });
+
+    return () => {
+      unsubscribeLogs();
+      unsubscribeAthlete();
+      unsubscribeRucks();
+    };
+  }, [user]);
 
   const handleUpdatePrograms = (updated: WorkoutProgram[]) => {
     setPrograms(updated);
@@ -50,6 +98,73 @@ export default function App() {
     setLogs((prev) => [newLog, ...prev]);
     setActiveLiveProgram(null);
     setActiveTab('logs');
+
+    if (user) {
+      saveWorkoutLogToFirestore(newLog, user.uid).catch((err) => {
+        console.warn('[Firebase] Background log sync note:', err);
+      });
+    }
+  };
+
+  const handleSaveRuckLog = (newRuckLog: RuckSessionLog, syncToWorkoutLogs: boolean) => {
+    const updatedRucks = saveRuckLog(newRuckLog);
+    setRuckLogs(updatedRucks);
+
+    if (syncToWorkoutLogs) {
+      const companionWorkoutLog: WorkoutSessionLog = {
+        id: `workout-sync-${newRuckLog.id}`,
+        userId: user?.uid,
+        athleteId: newRuckLog.athleteId,
+        workoutTitle: `🎒 ${newRuckLog.title} (${newRuckLog.weightLbs}# / ${newRuckLog.distanceMiles}mi)`,
+        date: newRuckLog.date,
+        startTime: '07:00',
+        endTime: '08:00',
+        durationMinutes: newRuckLog.durationMinutes,
+        totalVolumeLbs: Math.round(newRuckLog.distanceMiles * newRuckLog.weightLbs),
+        totalSetsCompleted: 1,
+        rating: 5,
+        notes: `Tactical ruck march on ${newRuckLog.terrain || 'pavement'}. Pace: ${newRuckLog.paceMinPerMile ? newRuckLog.paceMinPerMile.toFixed(2) : '--'} min/mi. Workload: ${newRuckLog.workloadIndex || (newRuckLog.distanceMiles * newRuckLog.weightLbs)} lb-mi. ${newRuckLog.notes || ''}`.trim(),
+        exercises: [
+          {
+            exerciseName: `Weighted Ruck March (${newRuckLog.weightLbs} lbs)`,
+            muscleGroup: 'Full Body',
+            isTimed: true,
+            sets: [
+              {
+                setNumber: 1,
+                weightLbs: newRuckLog.weightLbs,
+                reps: 1,
+                distanceMiles: newRuckLog.distanceMiles,
+                timeSeconds: newRuckLog.durationMinutes * 60,
+                timeFormatted: `${newRuckLog.durationMinutes}:00`,
+                rpe: newRuckLog.rpe,
+                estimated1RM: newRuckLog.weightLbs,
+              }
+            ]
+          }
+        ]
+      };
+      setLogs((prev) => [companionWorkoutLog, ...prev]);
+      if (user) {
+        saveWorkoutLogToFirestore(companionWorkoutLog, user.uid).catch(console.warn);
+      }
+    }
+
+    if (user) {
+      saveRuckLogToFirestore(newRuckLog, user.uid).catch((err) => {
+        console.warn('[Firebase] Save ruck log Firestore error:', err);
+      });
+    }
+  };
+
+  const handleDeleteRuckLog = (ruckId: string) => {
+    const updated = deleteRuckLog(ruckId);
+    setRuckLogs(updated);
+    if (user) {
+      deleteRuckLogFromFirestore(ruckId).catch((err) => {
+        console.warn('[Firebase] Delete ruck log Firestore error:', err);
+      });
+    }
   };
 
   return (
@@ -67,7 +182,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-5">
         {activeTab === 'workouts' && (
           <WorkoutsTab
             programs={programs}
@@ -88,16 +203,32 @@ export default function App() {
         {activeTab === 'logs' && (
           <WorkoutLogsTab
             logs={logs}
+            currentAthlete={currentAthlete}
             onUpdateLogs={setLogs}
             onOpenLiveWorkout={() => handleStartWorkout(programs[0])}
             onNavigateToGraphs={() => setActiveTab('graphs')}
+            onNavigateToRuck={() => setActiveTab('ruck')}
           />
         )}
 
         {activeTab === 'graphs' && (
           <ProgressGraphsTab 
             logs={logs} 
+            currentAthlete={currentAthlete}
             onNavigateToLogs={() => setActiveTab('logs')}
+            onNavigateToRuck={() => setActiveTab('ruck')}
+          />
+        )}
+
+        {activeTab === 'ruck' && (
+          <RuckProgressTab
+            ruckLogs={ruckLogs}
+            workoutLogs={logs}
+            currentAthlete={currentAthlete}
+            onSaveRuckLog={handleSaveRuckLog}
+            onDeleteRuckLog={handleDeleteRuckLog}
+            onNavigateToWorkoutLogs={() => setActiveTab('logs')}
+            onNavigateToGraphs={() => setActiveTab('graphs')}
           />
         )}
 
@@ -122,6 +253,7 @@ export default function App() {
         onAthleteChanged={(athlete) => {
           setCurrentAthlete(athlete);
           setLogs(getStoredWorkoutLogs());
+          setRuckLogs(getStoredRuckLogs());
         }}
       />
 

@@ -1,0 +1,188 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ----------------------------------------------------
+    // Hardened Global Helpers
+    // ----------------------------------------------------
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'risneraryan@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Diagnostics / Connection verification
+    match /test/connection {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ----------------------------------------------------
+    // Athlete Profiles
+    // ----------------------------------------------------
+    function isValidAthlete(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'email', 'experienceLevel', 'primaryGoal']) &&
+        data.id is string && isValidId(data.id) &&
+        data.userId is string && data.userId == request.auth.uid &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.email is string && data.email.size() <= 150 &&
+        data.experienceLevel in ['Beginner', 'Intermediate', 'Advanced', 'Elite'] &&
+        data.primaryGoal in ['Hybrid Athlete', 'Strength & Power', 'Hypertrophy', 'Tactical & Rucking', 'Endurance & Running'] &&
+        (!('weightLbs' in data) || (data.weightLbs is number && data.weightLbs >= 0 && data.weightLbs <= 1000)) &&
+        (!('restingHr' in data) || (data.restingHr is number && data.restingHr >= 20 && data.restingHr <= 250)) &&
+        (!('maxHr' in data) || (data.maxHr is number && data.maxHr >= 50 && data.maxHr <= 260)) &&
+        (!('avatarColor' in data) || (data.avatarColor is string && data.avatarColor.size() <= 80)) &&
+        (!('joinedDate' in data) || (data.joinedDate is string && data.joinedDate.size() <= 40)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+    }
+
+    match /athletes/{athleteId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(athleteId) && isValidAthlete(incoming());
+      allow update: if isSignedIn() && isValidId(athleteId) &&
+        isValidAthlete(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().id == existing().id &&
+        (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isValidId(athleteId) &&
+        (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // ----------------------------------------------------
+    // Workout Session Logs
+    // ----------------------------------------------------
+    function isValidWorkoutLog(data) {
+      return data.keys().hasAll(['id', 'userId', 'workoutTitle', 'date', 'durationMinutes', 'totalVolumeLbs', 'totalSetsCompleted']) &&
+        data.id is string && isValidId(data.id) &&
+        data.userId is string && data.userId == request.auth.uid &&
+        data.workoutTitle is string && data.workoutTitle.size() > 0 && data.workoutTitle.size() <= 150 &&
+        data.date is string && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        data.durationMinutes is number && data.durationMinutes >= 0 && data.durationMinutes <= 1440 &&
+        data.totalVolumeLbs is number && data.totalVolumeLbs >= 0 && data.totalVolumeLbs <= 2000000 &&
+        data.totalSetsCompleted is number && data.totalSetsCompleted >= 0 && data.totalSetsCompleted <= 300 &&
+        (!('athleteId' in data) || (data.athleteId is string && data.athleteId.size() <= 128)) &&
+        (!('programId' in data) || (data.programId is string && data.programId.size() <= 128)) &&
+        (!('startTime' in data) || (data.startTime is string && data.startTime.size() <= 50)) &&
+        (!('endTime' in data) || (data.endTime is string && data.endTime.size() <= 50)) &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 1 && data.rating <= 5)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+        (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 50)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+    }
+
+    match /workoutLogs/{logId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(logId) && isValidWorkoutLog(incoming());
+      allow update: if isSignedIn() && isValidId(logId) &&
+        isValidWorkoutLog(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().id == existing().id &&
+        (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isValidId(logId) &&
+        (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // ----------------------------------------------------
+    // Custom Workout Programs
+    // ----------------------------------------------------
+    function isValidCustomProgram(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'category', 'exercises']) &&
+        data.id is string && isValidId(data.id) &&
+        data.userId is string && data.userId == request.auth.uid &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+        data.category is string && data.category.size() <= 60 &&
+        data.exercises is list && data.exercises.size() <= 50 &&
+        (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 200)) &&
+        (!('frequency' in data) || (data.frequency is string && data.frequency.size() <= 80)) &&
+        (!('estimatedDurationMinutes' in data) || (data.estimatedDurationMinutes is number && data.estimatedDurationMinutes >= 0 && data.estimatedDurationMinutes <= 360)) &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+    }
+
+    match /customPrograms/{programId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(programId) && isValidCustomProgram(incoming());
+      allow update: if isSignedIn() && isValidId(programId) &&
+        isValidCustomProgram(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().id == existing().id &&
+        (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isValidId(programId) &&
+        (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // ----------------------------------------------------
+    // Rucking Progression Logs
+    // ----------------------------------------------------
+    function isValidRuckLog(data) {
+      return data.keys().hasAll(['id', 'userId', 'date', 'distanceMiles', 'weightLbs', 'durationMinutes']) &&
+        data.id is string && isValidId(data.id) &&
+        data.userId is string && data.userId == request.auth.uid &&
+        data.date is string && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        data.distanceMiles is number && data.distanceMiles >= 0 && data.distanceMiles <= 100 &&
+        data.weightLbs is number && data.weightLbs >= 0 && data.weightLbs <= 300 &&
+        data.durationMinutes is number && data.durationMinutes >= 0 && data.durationMinutes <= 1440 &&
+        (!('title' in data) || (data.title is string && data.title.size() <= 150)) &&
+        (!('athleteId' in data) || (data.athleteId is string && data.athleteId.size() <= 128)) &&
+        (!('paceMinPerMile' in data) || (data.paceMinPerMile is number && data.paceMinPerMile >= 0 && data.paceMinPerMile <= 120)) &&
+        (!('workloadIndex' in data) || (data.workloadIndex is number && data.workloadIndex >= 0 && data.workloadIndex <= 30000)) &&
+        (!('terrain' in data) || (data.terrain is string && data.terrain.size() <= 60)) &&
+        (!('heartRateAvg' in data) || (data.heartRateAvg is number && data.heartRateAvg >= 30 && data.heartRateAvg <= 250)) &&
+        (!('rpe' in data) || (data.rpe is number && data.rpe >= 1 && data.rpe <= 10)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+    }
+
+    match /ruckLogs/{ruckId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(ruckId) && isValidRuckLog(incoming());
+      allow update: if isSignedIn() && isValidId(ruckId) &&
+        isValidRuckLog(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().id == existing().id &&
+        (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isValidId(ruckId) &&
+        (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // ----------------------------------------------------
+    // Admin Directory
+    // ----------------------------------------------------
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+  }
+}

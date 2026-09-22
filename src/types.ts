@@ -107,6 +107,7 @@ export interface LiveExerciseSession {
 export interface WorkoutSessionLog {
   id: string;
   athleteId?: string;
+  userId?: string;
   programId?: string;
   workoutTitle: string;
   date: string; // ISO format YYYY-MM-DD
@@ -132,6 +133,27 @@ export interface WorkoutSessionLog {
       estimated1RM: number;
     }[];
   }[];
+}
+
+export type RuckTerrainType = 'Pavement / Road' | 'Trails / Forest' | 'Hilly Terrain' | 'Mixed Tactical' | 'Treadmill / Incline';
+
+export interface RuckSessionLog {
+  id: string;
+  userId?: string;
+  athleteId?: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  distanceMiles: number;
+  weightLbs: number;
+  durationMinutes: number;
+  paceMinPerMile?: number; // Minutes per mile
+  workloadIndex?: number; // distanceMiles * weightLbs (lb-miles)
+  terrain?: RuckTerrainType | string;
+  heartRateAvg?: number;
+  rpe?: number; // 1-10
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WarmUpStep {

@@ -60,6 +60,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   const [activeDbPhaseKey, setActiveDbPhaseKey] = useState<'db_phase1' | 'db_phase2' | 'db_phase3'>('db_phase1');
   
   const [showCoachNotes, setShowCoachNotes] = useState<boolean>(false);
+  const [showOverloadRules, setShowOverloadRules] = useState<boolean>(false);
   const [dayViewMode, setDayViewMode] = useState<number | 'all'>('all');
 
   // Inline exercise countdown timer state (replaces the floating bottom timer)
@@ -652,158 +653,134 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Sleek Tactical Coach & Overland System Header */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-[#182028] to-[#12171d] border border-amber-500/25 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-        <div className="flex items-start gap-4">
-          <div className="shrink-0 hidden sm:flex">
-            <OverlandCompanyEmblem size="lg" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                <Zap className="w-3 h-3 text-amber-400" />
-                Overland Athletics
-              </span>
-              <span className="text-xs text-amber-400 font-bold flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                Run • Lift • Ruck
-              </span>
-              <span className="text-zinc-500 hidden sm:inline">•</span>
-              <span className="text-xs text-zinc-400 hidden sm:inline font-mono">
-                Go The Distance
-              </span>
+      {/* Sleek, Compact Command Deck: Combines Identity, Status, and 3-Program Selector */}
+      <div className="bg-[#141a22] border-2 border-zinc-700/80 hover:border-zinc-600 rounded-2xl p-3 sm:p-4 shadow-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Identity & Status */}
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 hidden sm:flex">
+              <OverlandCompanyEmblem size="sm" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white font-athletic uppercase tracking-wide">
-              {selectedProgram === 'apex_protocol' ? (
-                 <>The Apex <span className="text-emerald-400">Protocol</span> (26-Week Master)</>
-              ) : selectedProgram === 'hybrid_protocol' ? (
-                <>Hybrid <span className="text-amber-400">Protocol</span> (12-Week Master)</>
-              ) : (
-                <>Hybrid <span className="text-amber-400">Dumbbell & Bodyweight</span> (12-Week Master)</>
-              )}
-            </h1>
-            <p className="text-xs sm:text-sm text-zinc-300 mt-1 max-w-2xl leading-relaxed">
-              {selectedProgram === 'apex_protocol'
-                ? "The definitive 26-week tactical conditioning blueprint by Overland Athletics. Built to forge elite combat chassis durability, massive compound strength, high-velocity running, and load carriage mastery."
-                : selectedProgram === 'hybrid_protocol'
-                ? 'Concurrently periodized 12-week master protocol condensing all 3 phases (Foundation, Build, Peak) with automated progressive overload benchmarks.'
-                : 'Concurrently periodized 12-week dumbbell compound power, chest-to-deck bodyweight volume, and aerobic ruck endurance with automated progressive overload rules.'}
-            </p>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-amber-400" />
+                  Overland Athletics
+                </span>
+                <span className="text-xs text-amber-400 font-bold flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  Run • Lift • Ruck
+                </span>
+                <span className="text-zinc-500 hidden md:inline">•</span>
+                <span className="text-xs text-zinc-400 hidden md:inline font-mono">
+                  Go The Distance
+                </span>
+              </div>
+              <h1 className="text-lg sm:text-xl font-black text-white font-athletic uppercase tracking-wide mt-0.5 flex items-center gap-2">
+                <span>
+                  {selectedProgram === 'apex_protocol' ? (
+                    <>The Apex <span className="text-emerald-400">Protocol</span></>
+                  ) : selectedProgram === 'hybrid_protocol' ? (
+                    <>Hybrid <span className="text-amber-400">Protocol</span></>
+                  ) : (
+                    <>Hybrid <span className="text-amber-400">DB & Bodyweight</span></>
+                  )}
+                </span>
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  {currentPhase.weeks}
+                </span>
+              </h1>
+            </div>
+          </div>
+
+          {/* Quick Action Toggles: Overload Rules & Coach Directives buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowOverloadRules(!showOverloadRules)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border ${
+                showOverloadRules
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-sm'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+              }`}
+              title="Toggle Auto-Overload Guidelines"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Auto-Overload</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showOverloadRules ? 'rotate-180' : ''}`} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowCoachNotes(!showCoachNotes)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border ${
+                showCoachNotes
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-sm'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+              }`}
+              title="Toggle Coach Directives"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Coach Cues</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showCoachNotes ? 'rotate-180' : ''}`} />
+            </button>
           </div>
         </div>
 
-        {/* Live Active Program Meta Chip */}
-        <div className="shrink-0 bg-[#0d1217] px-4 py-2.5 rounded-xl border border-amber-500/30 flex items-center gap-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Active Track</span>
-            <span className="text-xs font-black text-amber-300 font-mono">
-              {selectedProgram === 'apex_protocol'
-                ? `The Apex Protocol (${currentPhase.weeks})`
-                : selectedProgram === 'hybrid_protocol' 
-                ? `Hybrid Protocol (${currentPhase.title.split(':')[0]})`
-                : `DB & Bodyweight (${currentPhase.title.split(':')[0]})`}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* PRIMARY PROGRAM SELECTOR: 3 Programs side-by-side */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-wider text-zinc-400 font-athletic flex items-center gap-1.5">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
-            Select Training Program
-          </span>
-          <span className="text-xs font-mono text-zinc-400">
-            {currentPhase.weeks}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          {/* Program 1: The Apex Protocol (26-Week Master) */}
+        {/* Compact 3-Program Selector Bar (Replaces 3 huge cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 pt-3 border-t border-zinc-800/80">
+          {/* Program 1: The Apex Protocol */}
           <button
             type="button"
             onClick={() => {
               setSelectedProgram('apex_protocol');
               setDayViewMode('all');
             }}
-            className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between shadow-md active:scale-[0.99] ${
+            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'apex_protocol'
-                ? 'bg-emerald-950/40 border-emerald-400 shadow-xl shadow-emerald-950/50 ring-2 ring-emerald-400/30'
-                : 'bg-[#141a22] border-zinc-700 hover:border-emerald-400/80 hover:bg-[#19222c]'
+                ? 'bg-emerald-950/60 border-emerald-400 shadow-md ring-1 ring-emerald-400/40 text-white'
+                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center justify-between gap-1 mb-2">
-              <span className={`text-[10px] font-mono font-black uppercase tracking-wider px-2.5 py-0.5 rounded ${
-                selectedProgram === 'apex_protocol'
-                  ? 'bg-emerald-400 text-black font-black'
-                  : 'bg-zinc-800 text-zinc-300'
-              }`}>
-                Auto-Overload • {selectedProgram === 'apex_protocol' ? currentPhase.weeks : 'Weeks 1-26'}
-              </span>
-              <Sparkles className={`w-4 h-4 ${selectedProgram === 'apex_protocol' ? 'text-emerald-400' : 'text-zinc-500'}`} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'apex_protocol' ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">The Apex Protocol</span>
+              </div>
+              <span className="text-[10px] text-zinc-400 block font-mono truncate">26-Wk Master • Barbell & VO2</span>
             </div>
-
-            <div>
-              <span className={`text-base font-black tracking-wide block font-athletic uppercase ${
-                selectedProgram === 'apex_protocol' ? 'text-white' : 'text-zinc-200'
-              }`}>
-                The Apex Protocol (26-Week Master)
-              </span>
-              <span className="text-xs text-zinc-300 block mt-1 leading-snug">
-                Elite tactical conditioning blueprint. Barbell compounds, strict linear overload, VO2 max intervals & 45 lb heavy rucks.
-              </span>
-            </div>
-
-            {selectedProgram === 'apex_protocol' ? (
-              <div className="h-1.5 w-full mt-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
-            ) : (
-              <div className="h-1 w-full mt-3 rounded-full bg-zinc-800" />
-            )}
+            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+              selectedProgram === 'apex_protocol' ? 'bg-emerald-400 text-black' : 'bg-zinc-800 text-zinc-400'
+            }`}>
+              26 WKS
+            </span>
           </button>
 
-          {/* Program 2: Hybrid Protocol (12-Week Master - Condenses all 3 phases into 1 tab) */}
+          {/* Program 2: Hybrid Protocol */}
           <button
             type="button"
             onClick={() => {
               setSelectedProgram('hybrid_protocol');
               setDayViewMode('all');
             }}
-            className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between shadow-md active:scale-[0.99] ${
+            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'hybrid_protocol'
-                ? 'bg-amber-950/40 border-amber-400 shadow-xl shadow-amber-950/50 ring-2 ring-amber-400/30'
-                : 'bg-[#141a22] border-zinc-700 hover:border-amber-400/80 hover:bg-[#19222c]'
+                ? 'bg-amber-950/60 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
+                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center justify-between gap-1 mb-2">
-              <span className={`text-[10px] font-mono font-black uppercase tracking-wider px-2.5 py-0.5 rounded ${
-                selectedProgram === 'hybrid_protocol'
-                  ? 'bg-amber-400 text-black font-black'
-                  : 'bg-zinc-800 text-zinc-300'
-              }`}>
-                Auto-Overload • {selectedProgram === 'hybrid_protocol' ? currentPhase.weeks : 'Weeks 1-12'}
-              </span>
-              <Sparkles className={`w-4 h-4 ${selectedProgram === 'hybrid_protocol' ? 'text-amber-400' : 'text-zinc-500'}`} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_protocol' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid Protocol</span>
+              </div>
+              <span className="text-[10px] text-zinc-400 block font-mono truncate">12-Wk Master • Strength/Run</span>
             </div>
-
-            <div>
-              <span className={`text-base font-black tracking-wide block font-athletic uppercase ${
-                selectedProgram === 'hybrid_protocol' ? 'text-white' : 'text-zinc-200'
-              }`}>
-                Hybrid Protocol (12-Week Master)
-              </span>
-              <span className="text-xs text-zinc-300 block mt-1 leading-snug">
-                Barbell strength, speed intervals, tempo running & aerobic base. Condenses all 3 phases (Foundation, Build, Peak) in 1 unified tab.
-              </span>
-            </div>
-
-            {selectedProgram === 'hybrid_protocol' ? (
-              <div className="h-1.5 w-full mt-3 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50" />
-            ) : (
-              <div className="h-1 w-full mt-3 rounded-full bg-zinc-800" />
-            )}
+            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+              selectedProgram === 'hybrid_protocol' ? 'bg-amber-400 text-black' : 'bg-zinc-800 text-zinc-400'
+            }`}>
+              12 WKS
+            </span>
           </button>
 
           {/* Program 3: Hybrid DB & Bodyweight */}
@@ -813,240 +790,39 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               setSelectedProgram('hybrid_db');
               setDayViewMode('all');
             }}
-            className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between shadow-md active:scale-[0.99] ${
+            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'hybrid_db'
-                ? 'bg-amber-950/40 border-amber-400 shadow-xl shadow-amber-950/50 ring-2 ring-amber-400/30'
-                : 'bg-[#141a22] border-zinc-700 hover:border-amber-400/80 hover:bg-[#19222c]'
+                ? 'bg-amber-950/60 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
+                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center justify-between gap-1 mb-2">
-              <span className={`text-[10px] font-mono font-black uppercase tracking-wider px-2.5 py-0.5 rounded ${
-                selectedProgram === 'hybrid_db'
-                  ? 'bg-amber-400 text-black font-black'
-                  : 'bg-zinc-800 text-zinc-300'
-              }`}>
-                Auto-Overload • {selectedProgram === 'hybrid_db' ? currentPhase.weeks : 'Weeks 1-12'}
-              </span>
-              <Sparkles className={`w-4 h-4 ${selectedProgram === 'hybrid_db' ? 'text-amber-400' : 'text-zinc-500'}`} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_db' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid DB & BW</span>
+              </div>
+              <span className="text-[10px] text-zinc-400 block font-mono truncate">12-Wk Master • DB & Calisthenics</span>
             </div>
-
-            <div>
-              <span className={`text-base font-black tracking-wide block font-athletic uppercase ${
-                selectedProgram === 'hybrid_db' ? 'text-white' : 'text-zinc-200'
-              }`}>
-                Hybrid Dumbbell & Bodyweight
-              </span>
-              <span className="text-xs text-zinc-300 block mt-1 leading-snug">
-                Dumbbell power, high-volume push-ups, Zone 2 running & weighted rucking. Condenses all 3 phases in 1 unified tab.
-              </span>
-            </div>
-
-            {selectedProgram === 'hybrid_db' ? (
-              <div className="h-1.5 w-full mt-3 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50" />
-            ) : (
-              <div className="h-1 w-full mt-3 rounded-full bg-zinc-800" />
-            )}
+            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+              selectedProgram === 'hybrid_db' ? 'bg-amber-400 text-black' : 'bg-zinc-800 text-zinc-400'
+            }`}>
+              12 WKS
+            </span>
           </button>
         </div>
       </div>
 
-      {/* AUTOMATED OVERLOAD BENCHMARKS STRIP */}
-      {selectedProgram === 'apex_protocol' ? (
-        /* The Apex Protocol Overload Benchmarks */
-        <div className="bg-zinc-900/95 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
-                The Apex Protocol Auto-Overload Laws ({currentPhase.weeks})
-              </h3>
-            </div>
-            <span className="text-[11px] text-zinc-400 font-mono">
-              ISSACPT Tactical Standard: Strict linear increments & progressive volume
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Strict OHP & Pull-Ups</span>
-              <span className="text-sm font-black text-emerald-400 font-mono">+2.5 lbs</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">Strict linear progression each week</span>
-            </div>
-
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Squat & Trap Bar DL</span>
-              <span className="text-sm font-black text-emerald-400 font-mono">+10 lbs / +5 lbs</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">+10 lbs if RPE ≤ 7.5; else +5 lbs</span>
-            </div>
-
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Incline, Rows & Push Press</span>
-              <span className="text-sm font-black text-emerald-400 font-mono">+5 lbs</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing all target reps</span>
-            </div>
-
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Aerobic Run & Ruck</span>
-              <span className="text-sm font-black text-emerald-400 font-mono">+5 min / +2 min / +1 mi</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">Dynamic weekly prescription</span>
-            </div>
-          </div>
-        </div>
-      ) : selectedProgram === 'hybrid_protocol' ? (
-        /* Hybrid Protocol Overload Benchmarks */
-        <div className="bg-zinc-900/95 border border-amber-500/30 rounded-2xl p-4 sm:p-5 shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <h3 className="text-xs sm:text-sm font-black uppercase text-amber-400 tracking-wider font-athletic">
-                Hybrid Protocol Auto-Overload Benchmarks
-              </h3>
-            </div>
-            <span className="text-[11px] text-zinc-400 font-mono">
-              Apply triggers directly upon completing top rep targets
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Squat & Deadlift</span>
-              <span className="text-sm font-black text-amber-400 font-mono">+10 lbs</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">Upon hitting top rep ceiling</span>
-            </div>
-
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Bench, OHP & Rows</span>
-              <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">Upon hitting target reps</span>
-            </div>
-
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Weighted Pull-Ups</span>
-              <span className="text-sm font-black text-amber-400 font-mono">+2.5 - 5 lbs</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing 6-8 reps</span>
-            </div>
-
-            <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Zone 2 Aerobic Base</span>
-              <span className="text-sm font-black text-amber-400 font-mono">+0.5 - 1.0 mi/wk</span>
-              <span className="text-[10px] text-zinc-400 block mt-0.5">Continuous base expansion</span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Hybrid DB & Bodyweight Overload Benchmarks */
-        <div className="bg-zinc-900/95 border border-amber-500/30 rounded-2xl p-4 sm:p-5 shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <h3 className="text-xs sm:text-sm font-black uppercase text-amber-400 tracking-wider font-athletic">
-                Hybrid DB & Bodyweight Auto-Overload ({currentPhase.weeks})
-              </h3>
-            </div>
-            <span className="text-[11px] text-zinc-400 font-mono">
-              Apply triggers directly upon session completion
-            </span>
-          </div>
-
-          {activeDbPhaseKey === 'db_phase1' ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">DB Floor Press</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon 3 sets × 12 reps</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Push-ups</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+1 rep</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Every workout session</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Zone 2 Run</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+0.5 mi / wk</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Conversational base pace</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Ruck March (30 lbs)</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs pack</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">When pace is &lt; 15 min/mi</span>
-              </div>
-            </div>
-          ) : activeDbPhaseKey === 'db_phase2' ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Heavy Floor Press</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon 3 sets × 8-10 reps</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Deficit / Weighted Push</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+1 rep / +5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Elevate feet or weight vest</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Threshold Tempo</span>
-                <span className="text-sm font-black text-amber-400 font-mono">3.5 - 4.0 mi</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">RPE 7-8 comfortably hard</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Heavy Ruck (35 lbs)</span>
-                <span className="text-sm font-black text-amber-400 font-mono">Sub-14:30 pace</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">5.0-6.0 mi target</span>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Heavy DB Press</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon 4 sets × 6 reps</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Plyo Clapping Push</span>
-                <span className="text-sm font-black text-amber-400 font-mono">Max Height</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Explosive power drive</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Tactical Ruck (40-45#)</span>
-                <span className="text-sm font-black text-amber-400 font-mono">Sub-14:30 pace</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">6.0-8.0 mi heavy carry</span>
-              </div>
-
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Week 12 Fitness Test</span>
-                <span className="text-sm font-black text-amber-400 font-mono">Peak Assess</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">5K trial + max push-up test</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 26-WEEK MESOCYCLE & WEEK SELECTOR (For The Apex Protocol) */}
+      {/* COMPACT MESOCYCLE & WEEK SELECTOR RAIL */}
       {selectedProgram === 'apex_protocol' && (
-        <div className="bg-zinc-900 border border-emerald-500/30 rounded-2xl p-3 sm:p-4 shadow-md space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-black uppercase tracking-wider text-emerald-400 font-athletic flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-emerald-400" />
-              26-Week Mesocycle Progression (5 Phases)
+        <div className="bg-[#141a22] border border-emerald-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
+          {/* Phase Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 shrink-0 flex items-center gap-1 mr-1">
+              <Activity className="w-3 h-3" />
+              Phase:
             </span>
-            <span className="text-[11px] text-emerald-400 font-mono font-bold">
-              {currentPhase.weeks} • Week {activeApexWeek} Active
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {apexMesocycles.map((m) => {
               const isSelected = activeApexPhaseKey === m.id;
-
               return (
                 <button
                   key={m.id}
@@ -1056,224 +832,232 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     setActiveApexWeek(m.defaultWeek);
                     setDayViewMode('all');
                   }}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-emerald-500/15 border-emerald-500 shadow-md shadow-emerald-950/30'
-                      : 'bg-zinc-950 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900'
+                      ? 'bg-emerald-400 text-black border-emerald-300 shadow-sm font-black'
+                      : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
-                      isSelected ? 'bg-emerald-500 text-zinc-950 font-black' : 'bg-zinc-800 text-zinc-400'
-                    }`}>
-                      {m.weeks}
-                    </span>
-                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-                  </div>
-
-                  <div>
-                    <span className={`text-xs sm:text-sm font-black block tracking-wide ${
-                      isSelected ? 'text-white' : 'text-zinc-300'
-                    }`}>
-                      {m.label}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5 truncate">
-                      {m.badge}
-                    </span>
-                  </div>
+                  <span>{m.weeks}</span>
+                  <span className="text-[10px] opacity-80 hidden md:inline">({m.badge.split('&')[0].trim()})</span>
+                  {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
                 </button>
               );
             })}
           </div>
 
-          {/* Interactive Week Pill Row for Current Mesocycle */}
-          <div className="pt-2.5 border-t border-zinc-800/80 flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Select Week:</span>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {(apexMesocycles.find((m) => m.id === activeApexPhaseKey)?.weekRange || [1, 2, 3, 4]).map((w) => {
-                const isSelectedWeek = activeApexWeek === w;
-                return (
-                  <button
-                    key={w}
-                    type="button"
-                    onClick={() => {
-                      setActiveApexWeek(w);
-                      setDayViewMode('all');
-                    }}
-                    className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border ${
-                      isSelectedWeek
-                        ? 'bg-emerald-400 text-zinc-950 border-emerald-300 shadow-sm'
-                        : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
-                    }`}
-                  >
-                    Week {w}
-                  </button>
-                );
-              })}
-            </div>
-            <span className="text-[10px] font-mono text-emerald-400 ml-auto hidden sm:inline">
-              Conditioning dynamically tailored to Week {activeApexWeek}
+          {/* Week Selector inlined cleanly */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-zinc-800/80 scrollbar-none">
+            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 shrink-0 mr-1">
+              Week:
+            </span>
+            {(apexMesocycles.find((m) => m.id === activeApexPhaseKey)?.weekRange || [1, 2, 3, 4]).map((w) => {
+              const isSelectedWeek = activeApexWeek === w;
+              return (
+                <button
+                  key={w}
+                  type="button"
+                  onClick={() => {
+                    setActiveApexWeek(w);
+                    setDayViewMode('all');
+                  }}
+                  className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border ${
+                    isSelectedWeek
+                      ? 'bg-emerald-400 text-black border-emerald-300 shadow-sm font-black'
+                      : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                  }`}
+                >
+                  W{w}
+                </button>
+              );
+            })}
+            <span className="text-[10px] font-mono text-emerald-400 ml-auto hidden sm:inline shrink-0">
+              Week {activeApexWeek} Active
             </span>
           </div>
         </div>
       )}
 
-      {/* CONDENSED 3-PHASE MESOCYCLE SWITCHER (For Hybrid Protocol) */}
       {selectedProgram === 'hybrid_protocol' && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 sm:p-4 shadow-md">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-xs font-black uppercase tracking-wider text-zinc-300 font-athletic flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-amber-400" />
-              12-Week Mesocycle Progression
-            </span>
-            <span className="text-[11px] text-amber-400 font-mono font-bold">
-              {currentPhase.weeks} Active
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {protocolMesocycles.map((m) => {
-              const isSelected = activeProtocolPhaseKey === m.id;
-
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveProtocolPhaseKey(m.id);
-                    setDayViewMode('all');
-                  }}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-amber-500/15 border-amber-500 shadow-md shadow-amber-950/30'
-                      : 'bg-zinc-950 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
-                      isSelected ? 'bg-amber-500 text-black font-black' : 'bg-zinc-800 text-zinc-400'
-                    }`}>
-                      {m.weeks}
-                    </span>
-                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />}
-                  </div>
-
-                  <div>
-                    <span className={`text-xs sm:text-sm font-black block tracking-wide ${
-                      isSelected ? 'text-white' : 'text-zinc-300'
-                    }`}>
-                      {m.label}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">
-                      {m.badge}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="bg-[#141a22] border border-amber-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 mr-1">
+            <Activity className="w-3 h-3" />
+            Phase:
+          </span>
+          {protocolMesocycles.map((m) => {
+            const isSelected = activeProtocolPhaseKey === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setActiveProtocolPhaseKey(m.id);
+                  setDayViewMode('all');
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-amber-400 text-black border-amber-300 font-black shadow-sm'
+                    : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                }`}
+              >
+                <span>{m.label} ({m.weeks})</span>
+                {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* 12-WEEK MESOCYCLE PROGRESSION BAR (For Hybrid DB & Bodyweight) */}
       {selectedProgram === 'hybrid_db' && (
-        <div className="bg-zinc-900 border border-amber-500/30 rounded-2xl p-3 sm:p-4 shadow-md">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-xs font-black uppercase tracking-wider text-amber-400 font-athletic flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-amber-500" />
-              12-Week Mesocycle Progression
-            </span>
-            <span className="text-[11px] text-amber-400 font-mono font-bold">
-              {currentPhase.weeks} Active
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {dbMesocycles.map((m) => {
-              const isSelected = activeDbPhaseKey === m.id;
-
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveDbPhaseKey(m.id);
-                    setDayViewMode('all');
-                  }}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-amber-500/15 border-amber-500 shadow-md shadow-amber-950/30'
-                      : 'bg-zinc-950 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
-                      isSelected ? 'bg-amber-500 text-zinc-950 font-black' : 'bg-zinc-800 text-zinc-400'
-                    }`}>
-                      {m.weeks}
-                    </span>
-                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />}
-                  </div>
-
-                  <div>
-                    <span className={`text-xs sm:text-sm font-black block tracking-wide ${
-                      isSelected ? 'text-white' : 'text-zinc-300'
-                    }`}>
-                      {m.label}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">
-                      {m.badge}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="bg-[#141a22] border border-amber-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 mr-1">
+            <Activity className="w-3 h-3" />
+            Phase:
+          </span>
+          {dbMesocycles.map((m) => {
+            const isSelected = activeDbPhaseKey === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setActiveDbPhaseKey(m.id);
+                  setDayViewMode('all');
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-amber-400 text-black border-amber-300 font-black shadow-sm'
+                    : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                }`}
+              >
+                <span>{m.label} ({m.weeks})</span>
+                {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* Collapsible Coach's Tactical Directives Bar */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 shadow-sm">
-        <button
-          type="button"
-          onClick={() => setShowCoachNotes(!showCoachNotes)}
-          className="w-full flex items-center justify-between text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
+      {/* COLLAPSIBLE AUTO-OVERLOAD BENCHMARKS (Expands cleanly on user request) */}
+      {showOverloadRules && (
+        <div className="bg-zinc-900/95 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-lg animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2.5 border-b border-zinc-800">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
+                {selectedProgram === 'apex_protocol' 
+                  ? `The Apex Protocol Auto-Overload Laws (${currentPhase.weeks})`
+                  : selectedProgram === 'hybrid_protocol'
+                  ? 'Hybrid Protocol Auto-Overload Benchmarks'
+                  : `Hybrid DB & Bodyweight Auto-Overload (${currentPhase.weeks})`}
+              </h3>
+            </div>
+            <span className="text-[11px] text-zinc-400 font-mono">
+              Apply linear increments upon completing target reps
+            </span>
+          </div>
+
+          {selectedProgram === 'apex_protocol' ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Strict OHP & Pull-Ups</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">+2.5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Strict linear progression each week</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Squat & Trap Bar DL</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">+10 lbs / +5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">+10 lbs if RPE ≤ 7.5; else +5 lbs</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Incline, Rows & Push Press</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">+5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing all target reps</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Aerobic Run & Ruck</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">+5 min / +2 min / +1 mi</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Dynamic weekly prescription</span>
+              </div>
+            </div>
+          ) : selectedProgram === 'hybrid_protocol' ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Squat & Deadlift</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+10 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon hitting top rep ceiling</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Bench, OHP & Rows</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon hitting target reps</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Weighted Pull-Ups</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+2.5 - 5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing 6-8 reps</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Zone 2 Aerobic Base</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+0.5 - 1.0 mi/wk</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Continuous base expansion</span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">DB Floor Press</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon 3 sets × 12 reps</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Push-ups</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+1 rep</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Every workout session</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Zone 2 Run</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+0.5 mi / wk</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Conversational base pace</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Ruck March</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs pack</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">When pace is &lt; 15 min/mi</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* COLLAPSIBLE COACH'S DIRECTIVES */}
+      {showCoachNotes && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 shadow-sm animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 mb-2">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
             <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
               {currentPhase.coachRule ? "Coach Aryan's Tactical Directives & Overload Laws" : "Order of Operations & Recovery Guidelines"}
             </span>
           </div>
-
-          <div className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white">
-            <span>{showCoachNotes ? 'Hide rules' : 'View coaching cues'}</span>
-            {showCoachNotes ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </div>
-        </button>
-
-        {showCoachNotes && (
-          <div className="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-300 space-y-2 animate-in fade-in duration-200">
-            <p className="leading-relaxed text-zinc-300">
-              {currentPhase.coachRule ? currentPhase.coachRule : COACH_RULES.orderOfOperations.splitSessions}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-              <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800">
-                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-0.5">
-                  {COACH_RULES.zone2Guidance.title}
-                </span>
-                <span className="text-[11px] text-zinc-400">{COACH_RULES.zone2Guidance.rule}</span>
-              </div>
-              <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800">
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-0.5">
-                  {COACH_RULES.progressiveOverload.title}
-                </span>
-                <span className="text-[11px] text-zinc-400">{COACH_RULES.progressiveOverload.rule}</span>
-              </div>
+          <p className="leading-relaxed text-xs text-zinc-300">
+            {currentPhase.coachRule ? currentPhase.coachRule : COACH_RULES.orderOfOperations.splitSessions}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-2 border-t border-zinc-800">
+            <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800">
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-0.5">
+                {COACH_RULES.zone2Guidance.title}
+              </span>
+              <span className="text-[11px] text-zinc-400">{COACH_RULES.zone2Guidance.rule}</span>
+            </div>
+            <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-0.5">
+                {COACH_RULES.progressiveOverload.title}
+              </span>
+              <span className="text-[11px] text-zinc-400">{COACH_RULES.progressiveOverload.rule}</span>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Day Navigator Filter Bar */}
       <div className="bg-[#141a22] border-2 border-zinc-700 rounded-2xl p-2.5 sm:p-3 shadow-md">

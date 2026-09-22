@@ -1,9 +1,11 @@
-import { WorkoutProgram, WorkoutSessionLog, SupplementProtocol, PersonalRecord } from '../types';
+import { WorkoutProgram, WorkoutSessionLog, SupplementProtocol, PersonalRecord, RuckSessionLog } from '../types';
 import { INITIAL_PROGRAMS, INITIAL_PAST_LOGS, INITIAL_SUPPLEMENTS } from '../data/initialData';
+import { DEFAULT_RUCK_LOGS } from '../data/ruckData';
 import { getCurrentAthlete } from './athleteAuth';
 
 const PROGRAMS_KEY = 'rpa_programs_v1';
 const LOGS_KEY = 'rpa_workout_logs_v1';
+const RUCK_LOGS_KEY = 'rpa_ruck_logs_v1';
 const SUPPLEMENTS_KEY = 'rpa_supplements_v1';
 const TIMER_CONFIG_KEY = 'rpa_timer_config_v1';
 
@@ -86,6 +88,11 @@ export function getStoredWorkoutLogs(): WorkoutSessionLog[] {
   }
 }
 
+export function getAthleteWorkoutLogs(athleteId: string): WorkoutSessionLog[] {
+  const allLogs = getStoredWorkoutLogs();
+  return allLogs.filter((l) => l.athleteId === athleteId);
+}
+
 export function saveWorkoutLog(log: WorkoutSessionLog): WorkoutSessionLog[] {
   let taggedLog = { ...log };
   if (!taggedLog.athleteId) {
@@ -154,6 +161,109 @@ export function clearHybridStrengthLogs(): void {
     localStorage.removeItem('hybridStrengthLogs');
   }
 }
+
+// ---------------------------------------------------------------------------
+// Ruck Progression Logs Storage
+// ---------------------------------------------------------------------------
+
+const FRESH_RUCK_RESET_KEY = 'rpa_fresh_ruck_clean_reset_v2';
+
+export function getStoredRuckLogs(): RuckSessionLog[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const hasReset = localStorage.getItem(FRESH_RUCK_RESET_KEY);
+    if (!hasReset) {
+      localStorage.setItem(FRESH_RUCK_RESET_KEY, 'true');
+      localStorage.setItem(RUCK_LOGS_KEY, JSON.stringify([]));
+      return [];
+    }
+
+    const data = localStorage.getItem(RUCK_LOGS_KEY);
+    if (!data) {
+      localStorage.setItem(RUCK_LOGS_KEY, JSON.stringify([]));
+      return [];
+    }
+    const parsed = JSON.parse(data);
+    if (Array.isArray(parsed)) {
+      // Purge any legacy mock logs so all athletes start with new logs until creating their own
+      const cleaned = parsed.filter((l) => typeof l.id === 'string' && !/^ruck-log-[1-6]$/.test(l.id));
+      if (cleaned.length !== parsed.length) {
+        localStorage.setItem(RUCK_LOGS_KEY, JSON.stringify(cleaned));
+        return cleaned;
+      }
+      return cleaned;
+    }
+    return [];
+  } catch (e) {
+    console.error('Failed to load ruck logs', e);
+    return [];
+  }
+}
+
+export function getAthleteRuckLogs(athleteId: string): RuckSessionLog[] {
+  const allLogs = getStoredRuckLogs();
+  return allLogs.filter((l) => l.athleteId === athleteId);
+}
+
+export function saveRuckLog(ruckLog: RuckSessionLog): RuckSessionLog[] {
+  let taggedLog = { ...ruckLog };
+  if (!taggedLog.athleteId) {
+    try {
+      const currentAthlete = getCurrentAthlete();
+      taggedLog.athleteId = currentAthlete.id;
+    } catch {
+      // fallback
+    }
+  }
+
+  // Calculate workloadIndex if missing
+  if (!taggedLog.workloadIndex && taggedLog.distanceMiles && taggedLog.weightLbs) {
+    taggedLog.workloadIndex = Math.round(taggedLog.distanceMiles * taggedLog.weightLbs * 10) / 10;
+  }
+
+  // Calculate pace if missing
+  if (!taggedLog.paceMinPerMile && taggedLog.durationMinutes && taggedLog.distanceMiles > 0) {
+    taggedLog.paceMinPerMile = Math.round((taggedLog.durationMinutes / taggedLog.distanceMiles) * 100) / 100;
+  }
+
+  const currentLogs = getStoredRuckLogs();
+  const updated = [taggedLog, ...currentLogs];
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(RUCK_LOGS_KEY, JSON.stringify(updated));
+  }
+  return updated;
+}
+
+export function deleteRuckLog(ruckId: string): RuckSessionLog[] {
+  const currentLogs = getStoredRuckLogs();
+  const updated = currentLogs.filter(l => l.id !== ruckId);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(RUCK_LOGS_KEY, JSON.stringify(updated));
+  }
+  return updated;
+}
+
+export function clearAllRuckLogs(): RuckSessionLog[] {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(RUCK_LOGS_KEY, JSON.stringify([]));
+  }
+  return [];
+}
+
+export function clearAthleteRuckLogs(athleteId: string): RuckSessionLog[] {
+  const currentLogs = getStoredRuckLogs();
+  const updated = currentLogs.filter((l) => {
+    if (l.athleteId === athleteId) return false;
+    if (!l.athleteId && (athleteId === 'athlete-default' || athleteId === 'athlete-aj-risner')) return false;
+    return true;
+  });
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(RUCK_LOGS_KEY, JSON.stringify(updated));
+  }
+  return updated;
+}
+
 
 
 export function getStoredSupplements(): SupplementProtocol[] {

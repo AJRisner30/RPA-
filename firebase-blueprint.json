@@ -1,0 +1,119 @@
+{
+  "entities": {
+    "Athlete": {
+      "title": "Athlete",
+      "description": "Athlete profile for personal stats, biometrics, training goals, and performance tracking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the athlete" },
+        "userId": { "type": "string", "description": "Firebase Auth user ID of the owner" },
+        "name": { "type": "string", "maxLength": 100, "description": "Athlete full name or callsign" },
+        "email": { "type": "string", "maxLength": 150, "description": "Athlete email address" },
+        "avatarColor": { "type": "string", "maxLength": 60, "description": "Gradient visual theme class" },
+        "joinedDate": { "type": "string", "maxLength": 40, "description": "Date or month joined" },
+        "experienceLevel": {
+          "type": "string",
+          "enum": ["Beginner", "Intermediate", "Advanced", "Elite"],
+          "description": "Training background experience level"
+        },
+        "primaryGoal": {
+          "type": "string",
+          "enum": ["Hybrid Athlete", "Strength & Power", "Hypertrophy", "Tactical & Rucking", "Endurance & Running"],
+          "description": "Primary fitness goal focus"
+        },
+        "weightLbs": { "type": "number", "description": "Bodyweight in pounds" },
+        "restingHr": { "type": "number", "description": "Resting heart rate in beats per minute" },
+        "maxHr": { "type": "number", "description": "Estimated maximum heart rate" },
+        "notes": { "type": "string", "maxLength": 1000, "description": "Personal athlete notes" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["id", "userId", "name", "email", "experienceLevel", "primaryGoal"]
+    },
+    "WorkoutSessionLog": {
+      "title": "WorkoutSessionLog",
+      "description": "Recorded workout session log with completed sets, tonnage volume, time, and exercise performance metrics.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the workout log session" },
+        "userId": { "type": "string", "description": "Firebase Auth user ID of the athlete who completed the workout" },
+        "athleteId": { "type": "string", "description": "Associated athlete identifier" },
+        "programId": { "type": "string", "description": "Optional program identifier" },
+        "workoutTitle": { "type": "string", "maxLength": 150, "description": "Workout name or protocol focus" },
+        "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "Workout date in YYYY-MM-DD format" },
+        "startTime": { "type": "string", "maxLength": 40, "description": "Session start timestamp or time string" },
+        "endTime": { "type": "string", "maxLength": 40, "description": "Session end timestamp or time string" },
+        "durationMinutes": { "type": "number", "description": "Total workout duration in minutes" },
+        "totalVolumeLbs": { "type": "number", "description": "Accumulated tonnage volume lifted in pounds" },
+        "totalSetsCompleted": { "type": "number", "description": "Count of successfully completed sets" },
+        "rating": { "type": "number", "description": "Subjective session rating 1-5" },
+        "notes": { "type": "string", "maxLength": 1000, "description": "Session reflections and coaching notes" },
+        "exercises": { "type": "array", "description": "Array of exercise performance records with set details" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["id", "userId", "workoutTitle", "date", "durationMinutes", "totalVolumeLbs", "totalSetsCompleted"]
+    },
+    "CustomProgram": {
+      "title": "CustomProgram",
+      "description": "User custom workout program and exercise templates.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the workout program" },
+        "userId": { "type": "string", "description": "Firebase Auth user ID of the program creator" },
+        "title": { "type": "string", "maxLength": 120, "description": "Program title" },
+        "subtitle": { "type": "string", "maxLength": 200, "description": "Program subtitle" },
+        "category": { "type": "string", "maxLength": 60, "description": "Training category" },
+        "frequency": { "type": "string", "maxLength": 80, "description": "Training days and frequency" },
+        "estimatedDurationMinutes": { "type": "number", "description": "Estimated workout duration" },
+        "description": { "type": "string", "maxLength": 2000, "description": "Program overview and instructions" },
+        "exercises": { "type": "array", "description": "List of template exercises" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["id", "userId", "title", "category", "exercises"]
+    },
+    "RuckSessionLog": {
+      "title": "RuckSessionLog",
+      "description": "Logged rucking session tracking distance, pack weight, duration, pace, workload, and terrain.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the rucking session log" },
+        "userId": { "type": "string", "description": "Firebase Auth user ID of the athlete" },
+        "athleteId": { "type": "string", "description": "Athlete profile identifier" },
+        "title": { "type": "string", "maxLength": 150, "description": "Title or route name" },
+        "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "Date in YYYY-MM-DD format" },
+        "distanceMiles": { "type": "number", "description": "Distance rucked in miles" },
+        "weightLbs": { "type": "number", "description": "Ruck pack weight in pounds" },
+        "durationMinutes": { "type": "number", "description": "Duration in minutes" },
+        "paceMinPerMile": { "type": "number", "description": "Calculated or logged pace in minutes per mile" },
+        "workloadIndex": { "type": "number", "description": "Calculated workload index (distance * weight)" },
+        "terrain": { "type": "string", "maxLength": 60, "description": "Terrain type" },
+        "heartRateAvg": { "type": "number", "description": "Average heart rate in BPM" },
+        "rpe": { "type": "number", "description": "Rate of perceived exertion 1-10" },
+        "notes": { "type": "string", "maxLength": 1000, "description": "Coaching points, weather, or notes" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["id", "userId", "date", "distanceMiles", "weightLbs", "durationMinutes"]
+    }
+  },
+  "firestore": {
+    "/athletes/{athleteId}": {
+      "schema": "Athlete",
+      "description": "Collection of athlete profiles storing biometrics and personal goals, scoped to authenticated users."
+    },
+    "/workoutLogs/{logId}": {
+      "schema": "WorkoutSessionLog",
+      "description": "Collection of recorded workout logs tracking volume, sets, and exercises, accessible by the logging athlete."
+    },
+    "/customPrograms/{programId}": {
+      "schema": "CustomProgram",
+      "description": "Collection of custom workout programs created by athletes."
+    },
+    "/ruckLogs/{ruckId}": {
+      "schema": "RuckSessionLog",
+      "description": "Collection of rucking progression logs tracking distance, pack weight, and pace."
+    }
+  }
+}
