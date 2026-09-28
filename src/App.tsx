@@ -51,10 +51,20 @@ export default function App() {
 
     // 1. Subscribe to workout logs in Firestore
     const unsubscribeLogs = subscribeToUserWorkoutLogs(user.uid, (cloudLogs) => {
-      setLogs(cloudLogs);
-      try {
-        localStorage.setItem('rpa_workout_logs_v1', JSON.stringify(cloudLogs));
-      } catch {}
+      if (cloudLogs.length > 0) {
+        setLogs(cloudLogs);
+        try {
+          localStorage.setItem('rpa_workout_logs_v1', JSON.stringify(cloudLogs));
+        } catch {}
+      } else {
+        // First-time sync: backfill existing local logs to the user's cloud account
+        const localLogs = getStoredWorkoutLogs();
+        if (localLogs.length > 0) {
+          localLogs.forEach((l) => {
+            saveWorkoutLogToFirestore(l, user.uid).catch(() => {});
+          });
+        }
+      }
     });
 
     // 2. Subscribe to athlete profile in Firestore
@@ -67,10 +77,20 @@ export default function App() {
 
     // 3. Subscribe to rucking logs in Firestore
     const unsubscribeRucks = subscribeToUserRuckLogs(user.uid, (cloudRucks) => {
-      setRuckLogs(cloudRucks);
-      try {
-        localStorage.setItem('rpa_ruck_logs_v1', JSON.stringify(cloudRucks));
-      } catch {}
+      if (cloudRucks.length > 0) {
+        setRuckLogs(cloudRucks);
+        try {
+          localStorage.setItem('rpa_ruck_logs_v1', JSON.stringify(cloudRucks));
+        } catch {}
+      } else {
+        // First-time sync: backfill existing local ruck logs to cloud
+        const localRucks = getStoredRuckLogs();
+        if (localRucks.length > 0) {
+          localRucks.forEach((r) => {
+            saveRuckLogToFirestore(r, user.uid).catch(() => {});
+          });
+        }
+      }
     });
 
     return () => {
@@ -183,58 +203,60 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-5">
-        {activeTab === 'workouts' && (
-          <WorkoutsTab
-            programs={programs}
-            onStartWorkout={handleStartWorkout}
-            onSelectWarmup={handleSelectWarmupFromProgram}
-            onSavePrograms={handleUpdatePrograms}
-          />
-        )}
+        <div key={activeTab} className="animate-tab-fade">
+          {activeTab === 'workouts' && (
+            <WorkoutsTab
+              programs={programs}
+              onStartWorkout={handleStartWorkout}
+              onSelectWarmup={handleSelectWarmupFromProgram}
+              onSavePrograms={handleUpdatePrograms}
+            />
+          )}
 
-        {activeTab === 'warmups' && (
-          <WarmupsTab selectedWarmupId={targetWarmupId} />
-        )}
+          {activeTab === 'warmups' && (
+            <WarmupsTab selectedWarmupId={targetWarmupId} />
+          )}
 
-        {activeTab === 'calculator' && (
-          <RepLoadCalculatorTab logs={logs} />
-        )}
+          {activeTab === 'calculator' && (
+            <RepLoadCalculatorTab logs={logs} />
+          )}
 
-        {activeTab === 'logs' && (
-          <WorkoutLogsTab
-            logs={logs}
-            currentAthlete={currentAthlete}
-            onUpdateLogs={setLogs}
-            onOpenLiveWorkout={() => handleStartWorkout(programs[0])}
-            onNavigateToGraphs={() => setActiveTab('graphs')}
-            onNavigateToRuck={() => setActiveTab('ruck')}
-          />
-        )}
+          {activeTab === 'logs' && (
+            <WorkoutLogsTab
+              logs={logs}
+              currentAthlete={currentAthlete}
+              onUpdateLogs={setLogs}
+              onOpenLiveWorkout={() => handleStartWorkout(programs[0])}
+              onNavigateToGraphs={() => setActiveTab('graphs')}
+              onNavigateToRuck={() => setActiveTab('ruck')}
+            />
+          )}
 
-        {activeTab === 'graphs' && (
-          <ProgressGraphsTab 
-            logs={logs} 
-            currentAthlete={currentAthlete}
-            onNavigateToLogs={() => setActiveTab('logs')}
-            onNavigateToRuck={() => setActiveTab('ruck')}
-          />
-        )}
+          {activeTab === 'graphs' && (
+            <ProgressGraphsTab 
+              logs={logs} 
+              currentAthlete={currentAthlete}
+              onNavigateToLogs={() => setActiveTab('logs')}
+              onNavigateToRuck={() => setActiveTab('ruck')}
+            />
+          )}
 
-        {activeTab === 'ruck' && (
-          <RuckProgressTab
-            ruckLogs={ruckLogs}
-            workoutLogs={logs}
-            currentAthlete={currentAthlete}
-            onSaveRuckLog={handleSaveRuckLog}
-            onDeleteRuckLog={handleDeleteRuckLog}
-            onNavigateToWorkoutLogs={() => setActiveTab('logs')}
-            onNavigateToGraphs={() => setActiveTab('graphs')}
-          />
-        )}
+          {activeTab === 'ruck' && (
+            <RuckProgressTab
+              ruckLogs={ruckLogs}
+              workoutLogs={logs}
+              currentAthlete={currentAthlete}
+              onSaveRuckLog={handleSaveRuckLog}
+              onDeleteRuckLog={handleDeleteRuckLog}
+              onNavigateToWorkoutLogs={() => setActiveTab('logs')}
+              onNavigateToGraphs={() => setActiveTab('graphs')}
+            />
+          )}
 
-        {activeTab === 'contact' && (
-          <ContactTab />
-        )}
+          {activeTab === 'contact' && (
+            <ContactTab />
+          )}
+        </div>
       </main>
 
       {/* Live Interactive Weights Tracker Modal */}

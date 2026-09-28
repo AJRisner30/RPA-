@@ -36,9 +36,12 @@ export function getAutoOverloadRecommendation(
   const isLowerBodyCompound = 
     nameLower.includes('squat') || 
     nameLower.includes('deadlift') || 
+    nameLower.includes('trap bar') ||
     nameLower.includes('rdl') || 
     nameLower.includes('hip thrust') ||
-    nameLower.includes('leg press');
+    nameLower.includes('leg press') ||
+    nameLower.includes('leg curl') ||
+    nameLower.includes('lunge');
 
   const isUpperBodyCompound = 
     nameLower.includes('bench') || 
@@ -46,7 +49,10 @@ export function getAutoOverloadRecommendation(
     nameLower.includes('row') || 
     nameLower.includes('pull-up') ||
     nameLower.includes('chin-up') ||
-    nameLower.includes('push press');
+    nameLower.includes('push press') ||
+    nameLower.includes('z-press') ||
+    nameLower.includes('face pull') ||
+    nameLower.includes('curl');
 
   const isDumbbell = nameLower.includes('db') || nameLower.includes('dumbbell');
 
@@ -124,17 +130,28 @@ export function getAutoOverloadRecommendation(
     }
   }
 
-  // Determine overload increment based on movement category (exact to The Apex Protocol guidelines)
+  // Determine overload increment based on movement category (exact to Tactical & Apex Protocol guidelines)
   let defaultIncrement = 5;
   if (nameLower.includes('overhead press') || nameLower.includes('ohp') || nameLower.includes('strict overhead')) {
-    defaultIncrement = 2.5; // Exact Apex Protocol manual specification: "+2.5 lbs from last week"
+    defaultIncrement = 2.5; // Exact Protocol manual specification: "+2.5 to 5 lbs on OHP"
   } else if (nameLower.includes('weighted pull-up') || nameLower.includes('pull-up') || nameLower.includes('pullup')) {
-    defaultIncrement = 2.5;
+    defaultIncrement = 2.5; // +2.5 lbs on belt
+  } else if (nameLower.includes('lateral raise')) {
+    defaultIncrement = 2.5; // +2.5 lbs per hand
+  } else if (
+    (nameLower.includes('squat') && !nameLower.includes('split')) ||
+    nameLower.includes('deadlift') ||
+    nameLower.includes('trap bar') ||
+    nameLower.includes('hip thrust') ||
+    nameLower.includes('rdl') ||
+    nameLower.includes('romanian')
+  ) {
+    // Heavy structural compounds: +10 lbs double progression
+    defaultIncrement = 10;
   } else if (isLowerBodyCompound) {
-    // Back Squat & Trap Bar Deadlift: linear +5 lbs, or +10 lbs when top reps exceeded with reserve
-    defaultIncrement = (prevReps > targetRepMax && (highestRpe || avgRpe) <= 7.5) ? 10 : 5;
+    defaultIncrement = 5; // Single leg, calf raises, leg curls: +5 lbs
   } else if (isUpperBodyCompound) {
-    defaultIncrement = 5; // +5 lbs on Bench, Push Press, Rows
+    defaultIncrement = 5; // +5 lbs on Bench, Push Press, Rows, Z-Press, Arms
   } else if (isDumbbell) {
     defaultIncrement = 5; // +5 lbs total
   }

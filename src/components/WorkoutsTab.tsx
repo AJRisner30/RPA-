@@ -8,7 +8,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup } from '../types';
-import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData } from '../data/protocolData';
+import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
 import { OverlandCompanyEmblem } from './BrandingLogos';
 
@@ -42,9 +42,12 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   onStartWorkout,
   onSelectWarmup,
 }) => {
-  // Primary program selector: 'apex_protocol' (26-week tactical blueprint) vs 'hybrid_protocol' (condensed 3 phases) vs 'hybrid_db' (dumbbell & calisthenics)
-  const [selectedProgram, setSelectedProgram] = useState<'apex_protocol' | 'hybrid_protocol' | 'hybrid_db'>('apex_protocol');
+  // Primary program selector: 'apex_protocol' (26-week tactical blueprint) vs 'tactical_hypertrophy' (6-week hypertrophy & ruck) vs 'hybrid_protocol' vs 'hybrid_db'
+  const [selectedProgram, setSelectedProgram] = useState<'apex_protocol' | 'tactical_hypertrophy' | 'hybrid_protocol' | 'hybrid_db'>('apex_protocol');
   
+  // Active week inside Tactical Hypertrophy & Conditioning (Weeks 1 to 6)
+  const [activeTacticalWeek, setActiveTacticalWeek] = useState<number>(1);
+
   // Active phase inside The Apex Protocol (5 Mesocycles)
   const [activeApexPhaseKey, setActiveApexPhaseKey] = useState<
     'apex_phase1' | 'apex_phase2' | 'apex_phase3' | 'apex_phase4' | 'apex_phase5'
@@ -107,11 +110,14 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     if (selectedProgram === 'apex_protocol') {
       return getApexWeekData(activeApexWeek);
     }
+    if (selectedProgram === 'tactical_hypertrophy') {
+      return getTacticalHypertrophyWeekData(activeTacticalWeek);
+    }
     if (selectedProgram === 'hybrid_db') {
       return PROTOCOL_DATA[activeDbPhaseKey] || PROTOCOL_DATA.db_phase1 || PROTOCOL_DATA.hybrid_db;
     }
     return PROTOCOL_DATA[activeProtocolPhaseKey] || PROTOCOL_DATA.phase1;
-  }, [selectedProgram, activeApexWeek, activeDbPhaseKey, activeProtocolPhaseKey]);
+  }, [selectedProgram, activeApexWeek, activeTacticalWeek, activeDbPhaseKey, activeProtocolPhaseKey]);
 
   // Determine current day of week to highlight in schedule
   const todayDayName = useMemo(() => {
@@ -292,49 +298,57 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           muscleGroup = 'Core';
         }
 
-        // Auto-Overload rules for all 3 programs (Apex Protocol, Hybrid Protocol, Hybrid DB & Bodyweight)
+        // Auto-Overload rules for all programs (Tactical Hypertrophy, Apex Protocol, Hybrid Protocol, Hybrid DB & Bodyweight)
         let progressionRuleObj = undefined;
         let defaultWeightLbs: number | undefined = undefined;
 
-        // Strict OHP: 2.5 lbs weekly increment (Apex Protocol explicit)
-        if (lowerName.includes('overhead press') || lowerName.includes('ohp')) {
+        // Strict OHP & Press
+        if (lowerName.includes('overhead press') || lowerName.includes('ohp') || lowerName.includes('strict overhead')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
             trigger: 'complete_max_reps' as const,
             increment_value: 2.5,
-            action: '+2.5 lbs next session',
-          };
-          defaultWeightLbs = 75;
-        } else if (lowerName.includes('pull-up') || lowerName.includes('pullup')) {
-          progressionRuleObj = {
-            metric: 'weight_lbs' as const,
-            trigger: 'complete_max_reps' as const,
-            increment_value: 2.5,
-            action: '+2.5 lbs on belt',
-          };
-          defaultWeightLbs = 0;
-        } else if (lowerName.includes('squat') && !lowerName.includes('split')) {
-          progressionRuleObj = {
-            metric: 'weight_lbs' as const,
-            trigger: 'complete_max_reps' as const,
-            increment_value: 5,
             action: '+2.5 to 5 lbs next session',
           };
-          defaultWeightLbs = 135;
+          defaultWeightLbs = 75;
+        } else if (lowerName.includes('pull-up') || lowerName.includes('pullup') || lowerName.includes('chin-up')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 2.5,
+            action: '+2.5 to 5 lbs on belt',
+          };
+          defaultWeightLbs = 0;
         } else if (lowerName.includes('deadlift') || lowerName.includes('trap bar')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
             trigger: 'complete_max_reps' as const,
             increment_value: 10,
-            action: '+5 to 10 lbs next session',
+            action: '+10 lbs next session',
           };
           defaultWeightLbs = 185;
+        } else if (lowerName.includes('squat') && !lowerName.includes('split')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 10,
+            action: '+10 lbs next session',
+          };
+          defaultWeightLbs = 135;
+        } else if (lowerName.includes('hip thrust')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 10,
+            action: '+10 lbs next session',
+          };
+          defaultWeightLbs = 135;
         } else if (lowerName.includes('rdl') || lowerName.includes('romanian')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
             trigger: 'complete_max_reps' as const,
-            increment_value: 5,
-            action: '+5 lbs next session',
+            increment_value: 10,
+            action: '+10 lbs next session',
           };
           defaultWeightLbs = 115;
         } else if (lowerName.includes('push press')) {
@@ -345,14 +359,78 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             action: '+5 lbs next session',
           };
           defaultWeightLbs = 95;
-        } else if (lowerName.includes('floor press') || lowerName.includes('bench') || lowerName.includes('row')) {
+        } else if (lowerName.includes('z-press') || lowerName.includes('z press')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
             trigger: 'complete_max_reps' as const,
             increment_value: 5,
             action: '+5 lbs next session',
           };
-          defaultWeightLbs = 50;
+          defaultWeightLbs = 65;
+        } else if (lowerName.includes('dip')) {
+          progressionRuleObj = {
+            metric: 'reps' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 1,
+            action: '+1 rep or add weight vest',
+          };
+          defaultWeightLbs = 0;
+        } else if (lowerName.includes('curl')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 25;
+        } else if (lowerName.includes('calf')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 to 10 lbs next session',
+          };
+          defaultWeightLbs = 135;
+        } else if (lowerName.includes('lateral raise')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 2.5,
+            action: '+2.5 to 5 lbs next session',
+          };
+          defaultWeightLbs = 15;
+        } else if (lowerName.includes('face pull')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 35;
+        } else if (lowerName.includes('close-grip') || lowerName.includes('close grip')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = 95;
+        } else if (lowerName.includes('bench') || lowerName.includes('floor press')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = lowerName.includes('barbell') || lowerName.includes('incline') ? 115 : 50;
+        } else if (lowerName.includes('row')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs next session',
+          };
+          defaultWeightLbs = lowerName.includes('barbell') || lowerName.includes('bent') ? 115 : 60;
         } else if (lowerName.includes('split squat') || lowerName.includes('lunge')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
@@ -361,7 +439,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             action: '+5 lbs next session',
           };
           defaultWeightLbs = 30;
-        } else if (lowerName.includes('carry') || lowerName.includes('farmer')) {
+        } else if (lowerName.includes('leg curl')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 to 10 lbs next session',
+          };
+          defaultWeightLbs = 60;
+        } else if (lowerName.includes('carry') || lowerName.includes('farmer') || lowerName.includes('suitcase')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
             trigger: 'complete_max_reps' as const,
@@ -369,6 +455,30 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             action: '+5 lbs next session',
           };
           defaultWeightLbs = 50;
+        } else if (lowerName.includes('wrist') || lowerName.includes('roller') || lowerName.includes('pinch')) {
+          progressionRuleObj = {
+            metric: 'weight_lbs' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 5,
+            action: '+5 lbs or +10s TUT',
+          };
+          defaultWeightLbs = 25;
+        } else if (lowerName.includes('sorensen') || lowerName.includes('hyperextension') || lowerName.includes('back extension')) {
+          progressionRuleObj = {
+            metric: 'reps' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 1,
+            action: '+1 rep next session',
+          };
+          defaultWeightLbs = 0;
+        } else if (lowerName.includes('leg raise') || lowerName.includes('knee raise') || lowerName.includes('hanging')) {
+          progressionRuleObj = {
+            metric: 'reps' as const,
+            trigger: 'complete_max_reps' as const,
+            increment_value: 1,
+            action: '+1 rep next session',
+          };
+          defaultWeightLbs = 0;
         } else if (lowerName.includes('swing')) {
           progressionRuleObj = {
             metric: 'weight_lbs' as const,
@@ -391,8 +501,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           progressionRuleObj = {
             metric: 'seconds' as const,
             trigger: 'per_set' as const,
-            increment_value: 15,
-            action: '+15s hold',
+            increment_value: 5,
+            action: '+5s hold',
           };
           defaultWeightLbs = 0;
         }
@@ -512,12 +622,16 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
     const programTitle = selectedProgram === 'apex_protocol'
       ? `The Apex Protocol (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
+      : selectedProgram === 'tactical_hypertrophy'
+      ? `Tactical Hypertrophy & Conditioning (${currentPhase.weeks} • ${day.day}: ${day.focus})`
       : selectedProgram === 'hybrid_protocol'
       ? `Hybrid Protocol (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
       : `Hybrid DB & Bodyweight (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`;
 
     const recommendedWarmupId = selectedProgram === 'apex_protocol'
       ? 'warmup-apex-sop'
+      : selectedProgram === 'tactical_hypertrophy'
+      ? 'warmup-universal-tactical'
       : 'warmup-upper-primer';
 
     return {
@@ -680,6 +794,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span>
                   {selectedProgram === 'apex_protocol' ? (
                     <>The Apex <span className="text-emerald-400">Protocol</span></>
+                  ) : selectedProgram === 'tactical_hypertrophy' ? (
+                    <>Tactical <span className="text-amber-400">Hypertrophy & Conditioning</span></>
                   ) : selectedProgram === 'hybrid_protocol' ? (
                     <>Hybrid <span className="text-amber-400">Protocol</span></>
                   ) : (
@@ -727,8 +843,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           </div>
         </div>
 
-        {/* Compact 3-Program Selector Bar (Replaces 3 huge cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 pt-3 border-t border-zinc-800/80">
+        {/* Compact 4-Program Selector Bar (Responsive Grid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-zinc-800/80">
           {/* Program 1: The Apex Protocol */}
           <button
             type="button"
@@ -756,7 +872,34 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </span>
           </button>
 
-          {/* Program 2: Hybrid Protocol */}
+          {/* Program 2: Tactical Hypertrophy & Conditioning Protocol */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedProgram('tactical_hypertrophy');
+              setDayViewMode('all');
+            }}
+            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+              selectedProgram === 'tactical_hypertrophy'
+                ? 'bg-amber-950/60 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
+                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'tactical_hypertrophy' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Tactical Hypertrophy</span>
+              </div>
+              <span className="text-[10px] text-zinc-400 block font-mono truncate">6-Wk Cycle • 4-Day Hyper + Ruck</span>
+            </div>
+            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+              selectedProgram === 'tactical_hypertrophy' ? 'bg-amber-400 text-black' : 'bg-zinc-800 text-zinc-400'
+            }`}>
+              6 WKS
+            </span>
+          </button>
+
+          {/* Program 3: Hybrid Protocol */}
           <button
             type="button"
             onClick={() => {
@@ -783,7 +926,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </span>
           </button>
 
-          {/* Program 3: Hybrid DB & Bodyweight */}
+          {/* Program 4: Hybrid DB & Bodyweight */}
           <button
             type="button"
             onClick={() => {
@@ -812,8 +955,49 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         </div>
       </div>
 
-      {/* COMPACT MESOCYCLE & WEEK SELECTOR RAIL */}
-      {selectedProgram === 'apex_protocol' && (
+      {/* Dynamic Program Content - Smooth CSS Fade-in Transition When Switching Programs */}
+      <div key={`${selectedProgram}-${activeApexPhaseKey}-${activeApexWeek}-${activeTacticalWeek}`} className="animate-tab-fade space-y-6">
+        {/* COMPACT TACTICAL HYPERTROPHY WEEK SELECTOR RAIL */}
+        {selectedProgram === 'tactical_hypertrophy' && (
+          <div className="bg-[#141a22] border border-amber-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 mr-1">
+                  <Calendar className="w-3 h-3" />
+                  Tactical Week:
+                </span>
+                {[1, 2, 3, 4, 5, 6].map((w) => {
+                  const isSelectedWeek = activeTacticalWeek === w;
+                  const isDeload = w === 4;
+                  return (
+                    <button
+                      key={w}
+                      type="button"
+                      onClick={() => {
+                        setActiveTacticalWeek(w);
+                        setDayViewMode('all');
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border flex items-center gap-1 ${
+                        isSelectedWeek
+                          ? 'bg-amber-400 text-black border-amber-300 shadow-sm font-black'
+                          : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                      }`}
+                    >
+                      <span>Week {w}</span>
+                      {isDeload && <span className="text-[9px] font-black uppercase bg-zinc-800 text-amber-300 px-1 rounded">Deload</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-[11px] font-mono text-amber-400 font-bold shrink-0">
+                Week {activeTacticalWeek} Active • Saturday Ruck Synced
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* COMPACT MESOCYCLE & WEEK SELECTOR RAIL */}
+        {selectedProgram === 'apex_protocol' && (
         <div className="bg-[#141a22] border border-emerald-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
           {/* Phase Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -947,6 +1131,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
                 {selectedProgram === 'apex_protocol' 
                   ? `The Apex Protocol Auto-Overload Laws (${currentPhase.weeks})`
+                  : selectedProgram === 'tactical_hypertrophy'
+                  ? `Tactical Hypertrophy Auto-Overload Benchmarks (${currentPhase.weeks})`
                   : selectedProgram === 'hybrid_protocol'
                   ? 'Hybrid Protocol Auto-Overload Benchmarks'
                   : `Hybrid DB & Bodyweight Auto-Overload (${currentPhase.weeks})`}
@@ -978,6 +1164,29 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Aerobic Run & Ruck</span>
                 <span className="text-sm font-black text-emerald-400 font-mono">+5 min / +2 min / +1 mi</span>
                 <span className="text-[10px] text-zinc-400 block mt-0.5">Dynamic weekly prescription</span>
+              </div>
+            </div>
+          ) : selectedProgram === 'tactical_hypertrophy' ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Strict OHP & Pull-Ups</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+2.5 - 5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing 8 reps at RPE 8</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Trap Bar, Squat & RDL</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+10 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Double progression on top reps</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Incline, Bench & Rows</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing 10-12 reps with clean tempo</span>
+              </div>
+              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">6-Wk Ruck Progression</span>
+                <span className="text-sm font-black text-amber-400 font-mono">25 → 50 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Sub-15:00/mi Zone 2 pace</span>
               </div>
             </div>
           ) : selectedProgram === 'hybrid_protocol' ? (
@@ -1253,6 +1462,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                       onClick={() => {
                         if (selectedProgram === 'apex_protocol') {
                           onSelectWarmup('warmup-apex-sop');
+                        } else if (selectedProgram === 'tactical_hypertrophy') {
+                          onSelectWarmup('warmup-universal-tactical');
                         } else if (day.focus.toLowerCase().includes('lower') || day.focus.toLowerCase().includes('squat') || day.focus.toLowerCase().includes('deadlift')) {
                           onSelectWarmup('warmup-lower-hip');
                         } else {
@@ -1486,6 +1697,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

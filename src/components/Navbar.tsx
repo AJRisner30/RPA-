@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentAthlete,
   onOpenAthleteModal,
 }) => {
-  const { user, isCloudConnected } = useFirebase();
+  const { user, isCloudConnected, authError } = useFirebase();
 
   const tabs = [
     { id: 'workouts', label: 'Workouts', icon: Dumbbell },
@@ -95,16 +95,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenAthleteModal}
-              className="flex items-center gap-1 px-2 py-1 bg-[#161e27] hover:bg-[#202c3a] border border-zinc-700/80 hover:border-amber-400/60 rounded-lg text-[11px] font-bold transition-all cursor-pointer shrink-0"
-              title={user ? `Firebase Synced: ${user.email}` : isCloudConnected ? 'Firestore Connected (Guest)' : 'Connecting to Firestore...'}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
+                authError
+                  ? 'bg-red-950/40 border border-red-500/50 hover:border-red-400 text-red-300'
+                  : 'bg-[#161e27] hover:bg-[#202c3a] border border-zinc-700/80 hover:border-amber-400/60'
+              }`}
+              title={
+                authError
+                  ? `Google Login Notice: Click to view instructions (${authError.code})`
+                  : user
+                  ? `Firebase Synced: ${user.email}`
+                  : isCloudConnected
+                  ? 'Firestore Connected (Guest)'
+                  : 'Connecting to Firestore...'
+              }
             >
               <span className="relative flex h-2 w-2">
                 {user && (
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${user ? 'bg-emerald-400' : isCloudConnected ? 'bg-amber-400' : 'bg-zinc-500'}`} />
+                {authError && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                )}
+                <span
+                  className={`relative inline-flex rounded-full h-2 w-2 ${
+                    authError
+                      ? 'bg-red-400'
+                      : user
+                      ? 'bg-emerald-400'
+                      : isCloudConnected
+                      ? 'bg-amber-400'
+                      : 'bg-zinc-500'
+                  }`}
+                />
               </span>
-              <Cloud className="w-3 h-3 text-zinc-300" />
+              <Cloud className={`w-3 h-3 ${authError ? 'text-red-400' : 'text-zinc-300'}`} />
             </button>
 
             {/* Athlete Profile Chip */}
@@ -139,14 +164,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id as TabType)}
-                  className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer select-none shrink-0 ${
+                  className={`nav-tab-interactive group relative flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap cursor-pointer select-none shrink-0 ${
                     isActive
                       ? 'bg-amber-400 text-black shadow-md shadow-amber-950/40 border border-amber-300 ring-1 ring-amber-400/30'
                       : 'bg-[#141a22] hover:bg-[#1c2430] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-black stroke-[2.5]' : 'text-amber-400 stroke-[2]'}`} />
-                  <span className="whitespace-nowrap">{tab.label}</span>
+                  <Icon 
+                    className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ease-out ${
+                      isActive 
+                        ? 'text-black stroke-[2.5] scale-110' 
+                        : 'text-amber-400 stroke-[2] group-hover:scale-110'
+                    }`} 
+                  />
+                  <span className="whitespace-nowrap transition-colors duration-200">{tab.label}</span>
+                  {isActive && (
+                    <span 
+                      className="animate-tab-indicator absolute bottom-0 left-2.5 right-2.5 h-[2px] bg-black/60 rounded-full pointer-events-none" 
+                    />
+                  )}
                 </button>
               );
             })}

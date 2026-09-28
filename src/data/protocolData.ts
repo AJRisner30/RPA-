@@ -698,31 +698,63 @@ export const COACH_RULES = {
 };
 
 export const TEMPLATE_EXERCISES = [
-  "Back Squat",
+  "Standing Overhead Barbell Press (OHP)",
+  "Weighted Neutral-Grip Pull-Ups",
+  "Barbell Incline Bench Press (30°)",
+  "Barbell Bent-Over Row (Strict)",
+  "Barbell Z-Press",
+  "Bodyweight Dips",
+  "Incline Dumbbell Hammer Curls",
+  "Trap Bar Deadlift",
   "Front Squat",
-  "Deadlift",
   "Romanian Deadlift (RDL)",
+  "Bulgarian Split Squats",
+  "Standing Barbell Calf Raises",
+  "Hanging Leg / Knee Raises",
+  "Flush & Pace Aerobic Interval",
+  "Sorensen Back Extension",
+  "Copenhagen Side Plank",
+  "Flat Barbell Bench Press",
+  "Chest-Supported T-Bar Row",
+  "Standing Push Press",
+  "Dual Dumbbell Lateral Raises",
+  "Cable Rope Face Pulls",
+  "Close-Grip Barbell Bench Press",
+  "Barbell EZ-Curl",
+  "Barbell Back Squat",
+  "Barbell Hip Thrusts",
+  "Walking Dumbbell Lunges",
+  "Lying or Seated Leg Curls",
+  "Heavy Farmer's Walks",
+  "Suitcase Carry",
+  "Barbell Wrist Rollers",
+  "Back Squat",
+  "Deadlift",
   "Bench Press",
   "Incline Bench",
   "Overhead Press",
   "Pull-Ups (Weighted)",
-  "Hip Thrusts",
-  "Bulgarian Split Squats",
-  "Chest-Supported Row",
-  "Push Press",
-  "Bent Over Row",
-  "Arnold Press",
-  "Trap Bar Deadlift",
   "Other"
 ];
 
 export const getDefaultRestPeriod = (exerciseStr: string): number => {
+  // If explicit rest period is defined in brackets, always respect it
+  const bracketMatch = exerciseStr.match(/rest:\s*(\d+)s?/i);
+  if (bracketMatch) {
+    const val = parseInt(bracketMatch[1], 10);
+    if (!isNaN(val) && val >= 0) return val;
+  }
+
   const lower = exerciseStr.toLowerCase();
+  // 150s for Trap Bar Deadlift in Tactical Hypertrophy
+  if (lower.includes('trap bar') && (lower.includes('150') || lower.includes('tactical'))) {
+    return 150;
+  }
   // 180s (3 Min) for Trap Bar Deadlift & heavy power compounds
   if (lower.includes('trap bar') || lower.includes('deadlift') || lower.includes('speed deadlift')) {
     return 180;
   }
-  // 120s (2 Min) for Barbell Back Squat, Strict OHP, Push Press, Weighted Pull-Ups, and Track Sprints
+  // 120s (2 Min) for Barbell Back Squat, Strict OHP, Push Press, Weighted Pull-Ups, Front Squat, and Track Sprints
   if (
     lower.includes('squat') ||
     lower.includes('overhead press') ||
@@ -732,11 +764,12 @@ export const getDefaultRestPeriod = (exerciseStr: string): number => {
     lower.includes('pullup') ||
     lower.includes('bench') ||
     lower.includes('800m') ||
-    lower.includes('sprint')
+    lower.includes('sprint') ||
+    lower.includes('flush & pace')
   ) {
     return 120;
   }
-  // 90s for Romanian Deadlift, Bulgarian Split Squat, DB Incline Bench, Chest-Supported Row, Farmer's Carry, Walking Lunges
+  // 90s for Romanian Deadlift, Bulgarian Split Squat, DB Incline Bench, Chest-Supported Row, Farmer's Carry, Walking Lunges, Hip Thrusts
   if (
     lower.includes('rdl') ||
     lower.includes('romanian') ||
@@ -750,12 +783,29 @@ export const getDefaultRestPeriod = (exerciseStr: string): number => {
   ) {
     return 90;
   }
-  // 60s for Pallof Press and Kettlebell Swings
-  if (lower.includes('pallof') || lower.includes('swing') || lower.includes('twist') || lower.includes('raise')) {
+  // 75s for Z-Press
+  if (lower.includes('z-press') || lower.includes('z press')) {
+    return 75;
+  }
+  // 60s for Pallof Press, Dips, Curls, Calf Raises, Leg Curls, Face Pulls, Close-Grip Bench, Kettlebell Swings
+  if (
+    lower.includes('dip') ||
+    lower.includes('curl') ||
+    lower.includes('calf') ||
+    lower.includes('face pull') ||
+    lower.includes('close-grip') ||
+    lower.includes('close grip') ||
+    lower.includes('pallof') ||
+    lower.includes('swing') ||
+    lower.includes('twist') ||
+    lower.includes('raise') ||
+    lower.includes('roller') ||
+    lower.includes('pinch')
+  ) {
     return 60;
   }
-  // 45s for Plank Series
-  if (lower.includes('plank')) {
+  // 45s for Copenhagen Plank & Plank Series
+  if (lower.includes('copenhagen') || lower.includes('plank')) {
     return 45;
   }
   return 90;
@@ -1378,3 +1428,211 @@ export function getApexWeekData(weekNumber: number): ProtocolPhase {
 
 // Merge Apex Protocol into PROTOCOL_DATA
 Object.assign(PROTOCOL_DATA, APEX_PROTOCOL_PHASES);
+
+// ---------------------------------------------------------------------------
+// OVERLAND ATHLETICS TACTICAL HYPERTROPHY & CONDITIONING PROTOCOL (6-WEEK)
+// ---------------------------------------------------------------------------
+export interface TacticalRuckWeek {
+  week: number;
+  distance_miles: number;
+  load_lbs: number;
+  target_pace: string;
+  focus: string;
+  is_deload?: boolean;
+}
+
+export const TACTICAL_RUCK_MATRIX: TacticalRuckWeek[] = [
+  {
+    week: 1,
+    distance_miles: 4.0,
+    load_lbs: 30, // 25-30 lbs (~15% BW)
+    target_pace: "15:00-16:00 min/mile",
+    focus: "Stride cadence, posture, rucksack strap tuning",
+    is_deload: false,
+  },
+  {
+    week: 2,
+    distance_miles: 5.0,
+    load_lbs: 35, // 30-35 lbs (~15% BW)
+    target_pace: "15:00-15:30 min/mile",
+    focus: "Sustained pacing and on-the-move hydration management",
+    is_deload: false,
+  },
+  {
+    week: 3,
+    distance_miles: 4.0,
+    load_lbs: 45, // 40-45 lbs (~20% BW)
+    target_pace: "14:30-15:00 min/mile",
+    focus: "Upward load step, upright thoracic spine discipline",
+    is_deload: false,
+  },
+  {
+    week: 4,
+    distance_miles: 3.0,
+    load_lbs: 25, // 25 lbs deload
+    target_pace: "15:30-16:00 min/mile",
+    focus: "Active flush, low systemic fatigue, tissue regeneration",
+    is_deload: true,
+  },
+  {
+    week: 5,
+    distance_miles: 6.0,
+    load_lbs: 40, // 35-40 lbs (~18% BW)
+    target_pace: "14:45-15:15 min/mile",
+    focus: "Extended aerobic duration check under load",
+    is_deload: false,
+  },
+  {
+    week: 6,
+    distance_miles: 5.0,
+    load_lbs: 50, // 45-50 lbs (~20-25% BW)
+    target_pace: "14:00-14:45 min/mile",
+    focus: "Standard field baseline standard benchmark",
+    is_deload: false,
+  }
+];
+
+export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
+  id: 'tactical_hypertrophy_v1',
+  title: 'Overland Athletics Tactical Hypertrophy & Conditioning Protocol',
+  weeks: '6-Week Tactical Cycle',
+  desc: 'A 6-day comprehensive military-style athletic protocol combining a 4-day Upper/Lower hypertrophy split with a 2-day aerobic capacity and progressive load carriage (rucking) system.',
+  coachRule: 'Double Progression Rule: +5 lbs for upper body or +10 lbs for lower body upon achieving top of target rep range at target RPE. Compound structural lifts stay within RPE 7.5-8.5. Accessories reach RPE 9.0-10.0. Conditioning intervals strictly in Zone 3; Rucks strictly in Zone 2 (120-140 BPM).',
+  days: [
+    {
+      day: 'Monday',
+      focus: 'Heavy Upper: Tactical Press & Pull',
+      warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
+      strength: [
+        'Standing Overhead Barbell Press (OHP) (4x6-8) [Overload: +2.5 to 5 lbs on 8 reps - Rest: 120s - Tempo: 2-0-1-0 - Glutes clenched, core braced, head through at lockout]',
+        'Weighted Neutral-Grip Pull-Ups (4x6-8) [Overload: +2.5 to 5 lbs on 8 reps - Rest: 120s - Tempo: 2-1-1-0 - Full dead hang stretch, clear chin above bar]',
+        'Barbell Incline Bench Press (30°) (3x8-10) [Overload: +5 lbs on 10 reps - Rest: 90s - Tempo: 2-0-1-0 - Retract scapulae, touch clavicle line]',
+        'Barbell Bent-Over Row (Strict) (4x8-10) [Overload: +5 lbs on 10 reps - Rest: 90s - Tempo: 2-0-1-1 - Hinged 45 deg, pull to navel, 1s pause]',
+        'Barbell Z-Press (or Seated Dumbbell Press) (3x10-12) [Overload: +5 lbs on 12 reps - Rest: 75s - Tempo: 2-0-1-0 - Seated on floor, strict thoracic posture]',
+        'Bodyweight Dips (3x12-15) [Overload: +1 rep or add weight vest if >15 easy - Rest: 60s - Tempo: 2-0-1-0 - Slight forward lean, 90 deg elbows]',
+        'Incline Dumbbell Hammer Curls (3x10-12) [Overload: +5 lbs DBs on 12 reps - Rest: 60s - Tempo: 2-1-1-0 - Elbows pinned back, palms inward]'
+      ],
+      run: 'Rest from running',
+      pace: 'N/A',
+      progressionRule: 'OHP & Pull-Ups: +2.5-5 lbs upon hitting 8 reps; Incline Bench & Rows: +5 lbs on 10 reps'
+    },
+    {
+      day: 'Tuesday',
+      focus: 'Heavy Lower: Posterior Chain & Base Drive',
+      warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
+      strength: [
+        'Trap Bar Deadlift (High or Low Handles) (4x5-6) [Overload: +10 lbs on 6 reps - Rest: 150s - Tempo: 1-0-X-0 - Full ground reset, pack lats, violent drive]',
+        'Front Squat (Clean Grip or Cross-Arm) (4x6-8) [Overload: +10 lbs on 8 reps - Rest: 120s - Tempo: 3-0-1-0 - High elbows, vertical torso, below parallel]',
+        'Romanian Deadlift (RDL) (3x8-10) [Overload: +10 lbs on 10 reps - Rest: 90s - Tempo: 3-1-1-0 - Push hips back horizontally, hamstring stretch]',
+        'Bulgarian Split Squat (3x10-12/leg) [Overload: +5 lbs DBs on 12 reps - Rest: 75s - Tempo: 2-0-1-0 - Rear foot on bench, drive front midfoot]',
+        'Standing Barbell Calf Raises (4x12-15) [Overload: +5-10 lbs on 15 reps - Rest: 60s - Tempo: 2-2-1-0 - 2s pause peak stretch and contraction]',
+        'Hanging Leg / Knee Raises (4x12-15) [Overload: +1 rep or toes-to-bar - Rest: 60s - Tempo: 2-0-1-1 - Control pelvic tilt, eliminate swing]'
+      ],
+      run: 'Rest from running',
+      pace: 'N/A',
+      progressionRule: 'Trap Bar Deadlift & Front Squat: +10 lbs on top reps; RDL: +10 lbs; Split Squat: +5 lbs'
+    },
+    {
+      day: 'Wednesday',
+      focus: 'Conditioning Session A: Aerobic Engine & Lactate Clearance',
+      warmup: "Dynamic Engine Prep (5 mins): 2 min easy row/bike + 10 diaphragmatic breaths child's pose + 10 alternating Spiderman lunges with thoracic reach.",
+      strength: [
+        'The Flush & Pace Aerobic Interval (Rower or Echo Bike) (5x4 min) [Zone 3 / Threshold (75-80% Max HR) work, 2 min Zone 1 recovery - Rest: 120s]',
+        'Sorensen Back Extension or Reverse Hyperextension (3x12-15) [Overload: +1-2 reps or light band - Rest: 60s - Tempo: 2-2-1-0 - Flush lower back, squeeze glutes]',
+        'Copenhagen Side Plank (3x20-30s/side) [Overload: +5s per set - Rest: 45s - Isometric hold - Top foot on bench, brace groin and lateral core]'
+      ],
+      run: 'The Flush & Pace Aerobic Interval (Rower or Echo Bike - 5 Rounds of 4 min work / 2 min active recovery)',
+      pace: 'Zone 3 / Threshold (75-80% Max HR) work with Zone 1 active recovery. Rest: 120s between rounds.',
+      progressionRule: 'Flush & Pace Intervals: Maintain identical 500m split or RPM output across all 5 rounds'
+    },
+    {
+      day: 'Thursday',
+      focus: 'Density Upper: Armor Building & Volume',
+      warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
+      strength: [
+        'Flat Barbell Bench Press (4x8-10) [Overload: +5 lbs on 10 reps - Rest: 90s - Tempo: 2-0-1-0 - Retract scapulae, touch lower sternum]',
+        'Chest-Supported T-Bar or Dumbbell Row (4x10-12) [Overload: +5 lbs on 12 reps - Rest: 75s - Tempo: 2-0-1-1 - Chest glued to pad, squeeze shoulder blades]',
+        'Standing Push Press (3x6-8) [Overload: +5 lbs on 8 reps - Rest: 90s - Tempo: 1-0-X-0 - Shallow 3-inch dip, violent hip drive, solid lockout]',
+        'Dual Dumbbell Lateral Raises (4x12-15) [Overload: +2.5-5 lbs on 15 reps - Rest: 60s - Tempo: 2-0-1-1 - Slight forward lean, scapular plane]',
+        'Cable / Band Rope Face Pulls (4x15-20) [Overload: +5 lbs on 20 reps - Rest: 60s - Tempo: 2-1-1-1 - Pull to forehead/ears, thumbs back]',
+        'Close-Grip Barbell Bench Press (3x10-12) [Overload: +5 lbs on 12 reps - Rest: 60s - Tempo: 2-0-1-0 - Shoulder-width hands, elbows tucked]',
+        'Barbell EZ-Curl (3x10-12) [Overload: +5 lbs on 12 reps - Rest: 60s - Tempo: 2-0-1-1 - Strict form, peak contraction squeeze]'
+      ],
+      run: 'Rest from running',
+      pace: 'N/A',
+      progressionRule: 'Bench Press & Push Press: +5 lbs on top reps; Rows & Arms: +5 lbs'
+    },
+    {
+      day: 'Friday',
+      focus: 'Power Lower: Grip, Carries & Squat Drive',
+      warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
+      strength: [
+        'Barbell Back Squat (4x6-8) [Overload: +10 lbs on 8 reps - Rest: 120s - Tempo: 2-1-1-0 - Tight upper back shelf, knees over toes, drive hips up]',
+        'Barbell Hip Thrusts (3x8-10) [Overload: +10 lbs on 10 reps - Rest: 90s - Tempo: 2-1-1-1 - Chin tucked, full posterior pelvic tilt and lockout]',
+        'Walking Dumbbell Lunges (3x10-12 steps/leg) [Overload: +5 lbs DBs on 12 reps - Rest: 75s - Controlled cadence - Vertical chest, tap back knee]',
+        'Lying or Seated Leg Curls (3x12-15) [Overload: +5-10 lbs on 15 reps - Rest: 60s - Tempo: 2-0-1-1 - Direct knee flexion isolation]',
+        "Heavy Farmer's Walks (4x50m) [Overload: +5 lbs/hand on completed 50m - Rest: 90s - Rapid short strides - Shoulders down and back, zero sway]",
+        'Suitcase Carry (3x30m/side) [Overload: +5 lbs on completed 30m - Rest: 60s - Controlled walk - Vertical spine, resist lateral flexion]',
+        'Barbell Wrist Rollers or Plate Pinches (3xTo failure) [Overload: +5 lbs or +10s TUT - Rest: 60s - Continuous - Build forearm armor & grip endurance]'
+      ],
+      run: 'Rest from running',
+      pace: 'N/A',
+      progressionRule: 'Back Squat & Hip Thrusts: +10 lbs upon hitting top reps; Carries: +5 lbs'
+    },
+    {
+      day: 'Saturday',
+      focus: 'Conditioning Session B: Tactical Ruck Progression & Zone 2 Base',
+      warmup: 'Pre-Ruck Foot & Hip Prep (5 mins): Banded ankle distractions (10/side) + Tibialis raises (20 reps) + Glute bridges with mini-band (15 reps).',
+      strength: [
+        'Progressive Load Carriage Ruck (1xDynamic) [Zone 2 HR (60-70% Max HR, approx 120-140 BPM) - Rest: 0s - Tempo: 14:00-16:00 min/mile pace - Weight strapped high & tight, smooth heel-to-toe turnover]',
+        'Post-Ruck Mandatory Tissue Decompression (1xCircuit) [Passive recovery - Rest: 0s - Legs-Up-On-Wall 3-5 min + Couch Stretch 90s/side + Foam roll calves/T-spine 2 min]'
+      ],
+      run: '4.0 Mile Tactical Ruck (25-30 lbs / ~15% BW)',
+      pace: '15:00-16:00 min/mile (Zone 2 HR)',
+      progressionRule: 'Zone 2 Load Carriage: Maintain target pace without exceeding Zone 2 HR (120-140 BPM)'
+    },
+    {
+      day: 'Sunday',
+      focus: 'Full Rest & Tissue Regeneration',
+      warmup: 'None. Passive rest and recovery.',
+      strength: [
+        'Complete physiological reset, systemic CNS recovery, hydration, and nutritional replenishment.'
+      ],
+      run: 'Complete Rest',
+      pace: 'N/A',
+      progressionRule: 'Rest, 8+ hours sleep, optimal protein & micronutrient intake'
+    }
+  ]
+};
+
+/**
+ * Returns customized week data for any week 1 through 6 of the Tactical Hypertrophy & Conditioning Protocol.
+ * Dynamically injects the exact weekly Day 6 Ruck prescription from the 6-week progression matrix.
+ */
+export function getTacticalHypertrophyWeekData(weekNumber: number): ProtocolPhase {
+  const week = Math.max(1, Math.min(6, weekNumber));
+  const ruckPrescription = TACTICAL_RUCK_MATRIX[week - 1] || TACTICAL_RUCK_MATRIX[0];
+
+  const clonedDays = JSON.parse(JSON.stringify(TACTICAL_HYPERTROPHY_BASE_PHASE.days)) as ProtocolDay[];
+
+  // Dynamically configure Day 6 (Saturday Ruck)
+  const deloadBadge = ruckPrescription.is_deload ? ' (DELOAD FLUSH)' : '';
+  clonedDays[5].run = `${ruckPrescription.distance_miles.toFixed(1)} Mile Tactical Ruck (${ruckPrescription.load_lbs} lbs Pack Load)${deloadBadge}`;
+  clonedDays[5].pace = `Target: ${ruckPrescription.target_pace} • Zone 2 HR (120-140 BPM). Week ${week}: ${ruckPrescription.focus}.`;
+  clonedDays[5].progressionRule = `Week ${week} Benchmark: ${ruckPrescription.distance_miles} miles @ ${ruckPrescription.load_lbs} lbs. If HR > Zone 2, reduce pace or drop pack load by 5 lbs.`;
+  
+  // Update strength array ruck item
+  clonedDays[5].strength[0] = `Progressive Load Carriage Ruck (${ruckPrescription.distance_miles} Miles - ${ruckPrescription.load_lbs} lbs) [Zone 2 HR - Target Pace: ${ruckPrescription.target_pace} - Rest: 0s]`;
+
+  return {
+    ...TACTICAL_HYPERTROPHY_BASE_PHASE,
+    id: `tactical_week_${week}`,
+    title: `Tactical Hypertrophy & Conditioning — Week ${week}`,
+    weeks: `Week ${week} of 6`,
+    days: clonedDays
+  };
+}
+
+// Add base tactical hypertrophy into PROTOCOL_DATA
+PROTOCOL_DATA.tactical_hypertrophy = TACTICAL_HYPERTROPHY_BASE_PHASE;
+

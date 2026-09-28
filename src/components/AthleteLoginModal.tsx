@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   X, User, ShieldCheck, Dumbbell, Award, Plus, LogIn, 
   Check, ChevronRight, Lock, Mail, Activity, Sparkles, Download, ArrowRight,
-  Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw
+  Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw, Copy, ExternalLink
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog } from '../types';
 import { 
@@ -36,8 +36,19 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
   onClose,
   onAthleteChanged,
 }) => {
-  const { user, isCloudConnected, signInWithGoogle, signOutUser } = useFirebase();
+  const { 
+    user, 
+    isCloudConnected, 
+    isAuthenticating, 
+    isIframe, 
+    authError, 
+    clearAuthError, 
+    signInWithGoogle, 
+    signInWithGoogleRedirect, 
+    signOutUser 
+  } = useFirebase();
   const [isSigningInGoogle, setIsSigningInGoogle] = useState(false);
+  const [copiedDomain, setCopiedDomain] = useState(false);
   const [athletes, setAthletes] = useState<AthleteProfile[]>(() => getSelectableAthletes());
   const [currentAthlete, setCurrentAthleteState] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [viewMode, setViewMode] = useState<'switch' | 'register' | 'login' | 'profile'>('switch');
@@ -143,8 +154,28 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     }
   };
 
+  const handleCopyDomain = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        navigator.clipboard.writeText(window.location.hostname);
+        setCopiedDomain(true);
+        setTimeout(() => setCopiedDomain(false), 2500);
+      } catch {
+        setCopiedDomain(true);
+        setTimeout(() => setCopiedDomain(false), 2500);
+      }
+    }
+  };
+
+  const handleOpenStandalone = () => {
+    if (typeof window !== 'undefined') {
+      window.open(window.location.href, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setIsSigningInGoogle(true);
+    clearAuthError();
     try {
       const googleUser = await signInWithGoogle();
       if (googleUser) {
@@ -171,13 +202,26 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
         });
       }
     } catch (err) {
-      console.error('[Firebase] Sign-in failed:', err);
+      console.warn('[Firebase] Sign-in note:', err);
+    } finally {
+      setIsSigningInGoogle(false);
+    }
+  };
+
+  const handleGoogleRedirectSignIn = async () => {
+    setIsSigningInGoogle(true);
+    clearAuthError();
+    try {
+      await signInWithGoogleRedirect();
+    } catch (err) {
+      console.warn('[Firebase] Redirect sign-in note:', err);
     } finally {
       setIsSigningInGoogle(false);
     }
   };
 
   const handleGoogleSignOut = async () => {
+    clearAuthError();
     await signOutUser();
   };
 
@@ -299,7 +343,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
               </div>
             </div>
 
-            <div className="shrink-0 w-full sm:w-auto">
+            <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               {user ? (
                 <button
                   type="button"
@@ -310,27 +354,210 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   <span>Disconnect</span>
                 </button>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={isSigningInGoogle}
-                  className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-950/40 cursor-pointer disabled:opacity-50"
-                >
-                  {isSigningInGoogle ? (
-                    <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                  ) : (
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                    </svg>
+                <>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isSigningInGoogle || isAuthenticating}
+                    className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-950/40 cursor-pointer disabled:opacity-50"
+                  >
+                    {isSigningInGoogle || isAuthenticating ? (
+                      <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                    ) : (
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                      </svg>
+                    )}
+                    <span>{isSigningInGoogle || isAuthenticating ? 'Signing In...' : 'Sign in with Google'}</span>
+                  </button>
+
+                  {isIframe && (
+                    <button
+                      type="button"
+                      onClick={handleOpenStandalone}
+                      className="px-2.5 py-1.5 bg-[#141b22] hover:bg-zinc-800 text-zinc-300 hover:text-amber-400 border border-zinc-700/80 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                      title="Open application in standalone tab for unrestricted authentication"
+                    >
+                      <span>Full Tab</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
                   )}
-                  <span>Sign in with Google</span>
-                </button>
+                </>
               )}
             </div>
           </div>
+
+          {/* Iframe Helper Tip */}
+          {isIframe && !user && !authError && (
+            <div className="bg-amber-950/20 border border-amber-500/25 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-[11px] text-zinc-300">
+              <span className="flex items-center gap-1.5">
+                <span className="text-amber-400">💡</span>
+                <span>Running in preview frame. If Google sign-in is blocked by browser security:</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleOpenStandalone}
+                className="text-amber-400 hover:text-amber-300 font-bold underline flex items-center gap-1 shrink-0 cursor-pointer"
+              >
+                <span>Launch in Full Tab</span>
+                <ExternalLink className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {/* Dedicated Diagnostic & Troubleshooting Panel when Auth Error Occurs */}
+          {authError && (
+            <div className="bg-red-950/40 border border-red-500/50 rounded-2xl p-4 text-xs space-y-2.5 animate-in fade-in duration-200">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 text-red-300 font-bold">
+                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                  <span>
+                    {authError.isDomainError
+                      ? 'Firebase Domain Authorization Needed'
+                      : authError.isPopupBlocked
+                      ? 'Browser Sign-In Popup Blocked'
+                      : authError.isOperationDisabled
+                      ? 'Google Sign-In Provider Disabled'
+                      : authError.isCancelled
+                      ? 'Google Sign-In Window Closed'
+                      : 'Google Authentication Error'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearAuthError}
+                  className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                  title="Dismiss error message"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* DOMAIN AUTHORIZATION GUIDANCE */}
+              {authError.isDomainError && (
+                <div className="space-y-2 text-zinc-300">
+                  <p className="leading-relaxed">
+                    Firebase Authentication rejected the request because the current domain is not yet on the authorized list for project <strong className="text-white font-mono">teak-router-m53bd</strong>.
+                  </p>
+                  <div className="p-2.5 bg-black/50 border border-zinc-800 rounded-xl space-y-1.5">
+                    <div className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">
+                      Current App Domain To Authorize:
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <code className="text-amber-300 font-mono text-xs font-bold break-all">
+                        {typeof window !== 'undefined' ? window.location.hostname : 'run.app'}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={handleCopyDomain}
+                        className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 border border-zinc-700 cursor-pointer shrink-0"
+                      >
+                        {copiedDomain ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                        <span>{copiedDomain ? 'Copied!' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <a
+                      href="https://console.firebase.google.com/project/teak-router-m53bd/authentication/settings"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-lg text-[11px] flex items-center gap-1.5 cursor-pointer shadow-md transition-all"
+                    >
+                      <span>1. Open Firebase Console Settings</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <span className="text-[11px] text-zinc-400">
+                      2. Paste into <strong>Authorized Domains</strong> & Save.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* POPUP BLOCKED GUIDANCE */}
+              {authError.isPopupBlocked && (
+                <div className="space-y-2 text-zinc-300">
+                  <p className="leading-relaxed">
+                    Your web browser or the embedded development frame prevented the Google login window from opening.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleOpenStandalone}
+                      className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+                    >
+                      <span>Open in Full Browser Tab to Sign In</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGoogleRedirectSignIn}
+                      className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl font-bold text-xs cursor-pointer flex items-center gap-1"
+                    >
+                      <span>Try Redirect Sign-In</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* OPERATION DISABLED GUIDANCE */}
+              {authError.isOperationDisabled && (
+                <div className="space-y-2 text-zinc-300">
+                  <p className="leading-relaxed">
+                    Google Sign-In is disabled for Firebase project <strong className="text-white font-mono">teak-router-m53bd</strong>.
+                  </p>
+                  <a
+                    href="https://console.firebase.google.com/project/teak-router-m53bd/authentication/providers"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs cursor-pointer"
+                  >
+                    <span>Enable Google Sign-In Provider in Console</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              )}
+
+              {/* CANCELLED */}
+              {authError.isCancelled && (
+                <div className="text-zinc-300">
+                  <p className="leading-relaxed">
+                    The sign-in window was closed before completion. Click <strong>Sign in with Google</strong> above to try again.
+                  </p>
+                </div>
+              )}
+
+              {/* OTHER / GENERIC ERRORS */}
+              {!authError.isDomainError && !authError.isPopupBlocked && !authError.isOperationDisabled && !authError.isCancelled && (
+                <div className="space-y-2 text-zinc-300">
+                  <div className="font-mono text-[11px] text-red-200 bg-black/40 p-2 rounded-lg border border-red-900/50 break-all">
+                    [{authError.code}] {authError.message}
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleOpenStandalone}
+                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Try in Standalone Tab</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGoogleRedirectSignIn}
+                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl font-bold text-xs cursor-pointer"
+                    >
+                      <span>Try Redirect Flow</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* VIEW: SWITCH ATHLETE */}
           {viewMode === 'switch' && (
