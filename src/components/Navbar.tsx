@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
-  Instagram, ExternalLink, Zap, UserCheck, Cloud, Footprints
+  Instagram, ExternalLink, Zap, UserCheck, Cloud, Footprints, LogOut
 } from 'lucide-react';
 import { OverlandCompanyEmblem } from './BrandingLogos';
 import { AthleteProfile } from '../utils/athleteAuth';
@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentAthlete,
   onOpenAthleteModal,
 }) => {
-  const { user, isCloudConnected, authError } = useFirebase();
+  const { user, isCloudConnected, authError, signOutUser } = useFirebase();
 
   const tabs = [
     { id: 'workouts', label: 'Workouts', icon: Dumbbell },
@@ -137,16 +137,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={onOpenAthleteModal}
               className="flex items-center gap-1.5 px-2.5 py-1 bg-[#161e27] hover:bg-[#202c3a] text-white border border-amber-500/60 hover:border-amber-400 rounded-lg text-[11px] font-black transition-all shadow-sm cursor-pointer active:scale-95 shrink-0"
-              title="Switch athlete profile or sign in"
+              title="View athlete profile and cloud sync details"
             >
               <div className={`w-4 h-4 rounded-full bg-gradient-to-tr ${currentAthlete?.avatarColor || 'from-amber-500 to-amber-300'} flex items-center justify-center text-[9px] font-black text-black shrink-0`}>
                 {currentAthlete ? currentAthlete.name.charAt(0).toUpperCase() : 'A'}
               </div>
               <span className="font-bold text-white whitespace-nowrap truncate max-w-[80px] sm:max-w-none">
-                {currentAthlete ? currentAthlete.name : 'Sign In'}
+                {currentAthlete ? currentAthlete.name : 'Athlete'}
               </span>
               <UserCheck className="w-3 h-3 text-amber-400 shrink-0" />
             </button>
+
+            {/* Quick Sign Out Button */}
+            {user && (
+              <button
+                type="button"
+                onClick={signOutUser}
+                className="flex items-center gap-1 px-2 py-1 bg-[#161e27] hover:bg-red-950/50 text-zinc-400 hover:text-red-300 border border-zinc-700/80 hover:border-red-500/50 rounded-lg text-[11px] font-bold transition-all shadow-sm cursor-pointer shrink-0"
+                title={`Signed in as ${user.email}. Click to sign out.`}
+              >
+                <LogOut className="w-3 h-3 text-red-400 shrink-0" />
+                <span className="hidden md:inline">Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
 

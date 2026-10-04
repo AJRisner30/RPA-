@@ -15,7 +15,9 @@ import { RuckProgressTab } from './components/RuckProgressTab';
 import { ContactTab } from './components/ContactTab';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { AthleteLoginModal } from './components/AthleteLoginModal';
-import { getCurrentAthlete, AthleteProfile, updateAthleteProfile } from './utils/athleteAuth';
+import { SignInGate } from './components/SignInGate';
+import { LoadingSplash } from './components/LoadingSplash';
+import { getCurrentAthlete, AthleteProfile, updateAthleteProfile, registerAthlete } from './utils/athleteAuth';
 import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone, Footprints } from 'lucide-react';
 import { OverlandCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -27,11 +29,12 @@ import {
   saveWorkoutLogToFirestore,
   subscribeToUserRuckLogs,
   saveRuckLogToFirestore,
-  deleteRuckLogFromFirestore
+  deleteRuckLogFromFirestore,
+  saveAthleteToFirestore
 } from './utils/firebaseSync';
 
 export default function App() {
-  const { user } = useFirebase();
+  const { user, loading } = useFirebase();
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
   const [programs, setPrograms] = useState<WorkoutProgram[]>(() => getStoredPrograms());
   const [logs, setLogs] = useState<WorkoutSessionLog[]>(() => getStoredWorkoutLogs());
@@ -72,6 +75,20 @@ export default function App() {
       if (cloudAthlete) {
         setCurrentAthlete(cloudAthlete);
         updateAthleteProfile(cloudAthlete.id, cloudAthlete);
+      } else {
+        const athleteName = user.displayName || user.email?.split('@')[0] || 'Overland Athlete';
+        const athleteEmail = user.email || '';
+        const newAthlete = registerAthlete({
+          name: athleteName,
+          email: athleteEmail,
+          experienceLevel: 'Intermediate',
+          primaryGoal: 'Hybrid Athlete',
+          weightLbs: 185,
+        });
+        setCurrentAthlete(newAthlete);
+        saveAthleteToFirestore(newAthlete, user.uid).catch((err) => {
+          console.warn('[Firebase] Initial athlete save note:', err);
+        });
       }
     });
 
@@ -186,6 +203,16 @@ export default function App() {
       });
     }
   };
+
+  // 1. Initial page boot: display branded loading splash while auth state is resolving
+  if (loading) {
+    return <LoadingSplash />;
+  }
+
+  // 2. Strict Authentication Gate: Require everyone to sign in before being able to use the app
+  if (!user) {
+    return <SignInGate />;
+  }
 
   return (
     <div className="min-h-screen bg-[#10151a] text-zinc-100 flex flex-col font-sans selection:bg-amber-500 selection:text-black">
