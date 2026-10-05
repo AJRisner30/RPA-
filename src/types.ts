@@ -212,7 +212,7 @@ export interface AthleteProfile {
   avatarColor: string;
   joinedDate: string;
   experienceLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Elite';
-  primaryGoal: 'Hybrid Athlete' | 'Strength & Power' | 'Hypertrophy' | 'Tactical & Rucking' | 'Endurance & Running';
+  primaryGoal: 'Hybrid Athlete' | 'Strength & Power' | 'Hypertrophy' | 'Tactical Conditioning & Pursuit' | 'Tactical & Rucking' | 'Endurance & Running';
   weightLbs?: number;
   restingHr?: number;
   maxHr?: number;
@@ -220,7 +220,7 @@ export interface AthleteProfile {
 }
 
 /**
- * Checks if an exercise is timed (cardio runs, rucking, planks, sprints, isometric holds)
+ * Checks if an exercise is timed (cardio runs, interval sprints, planks, isometric holds)
  * rather than traditional barbell/dumbbell repetitions.
  */
 export function isExerciseTimed(
@@ -266,14 +266,13 @@ export function isExerciseTimed(
     return true;
   }
 
-  // Name matching for runs, rucks, holds, carries, sprints
+  // Name matching for runs, holds, carries, sprints
   const timedKeywords = [
     'run',
     'jog',
     'sprint',
     'tempo',
     'intervals',
-    'ruck',
     'plank',
     'hollow body',
     'bear crawl hold',

@@ -12,7 +12,7 @@ export const DEFAULT_ATHLETES: AthleteProfile[] = [
     name: 'Tactical Athlete',
     email: '',
     pin: '',
-    avatarColor: 'from-emerald-600 to-teal-700',
+    avatarColor: 'from-blue-600 to-slate-800',
     joinedDate: 'Jan 2026',
     experienceLevel: 'Intermediate',
     primaryGoal: 'Hybrid Athlete',
@@ -29,7 +29,7 @@ export const COACH_PROFILE: AthleteProfile = {
   name: 'Aryan "AJ" Risner',
   email: 'risneraryan@gmail.com',
   pin: '1234',
-  avatarColor: 'from-amber-600 to-amber-800',
+  avatarColor: 'from-blue-700 to-indigo-950',
   joinedDate: 'Jan 2026',
   experienceLevel: 'Elite',
   primaryGoal: 'Hybrid Athlete',
@@ -187,12 +187,12 @@ export function registerAthlete(params: {
   const athletes = getAthletes();
   
   const avatarGradients = [
-    'from-emerald-600 to-teal-700',
     'from-blue-600 to-indigo-700',
-    'from-amber-600 to-amber-800',
-    'from-amber-500 to-orange-600',
-    'from-purple-600 to-pink-700',
-    'from-cyan-600 to-blue-700',
+    'from-blue-700 to-slate-900',
+    'from-sky-600 to-blue-800',
+    'from-slate-700 to-blue-900',
+    'from-indigo-600 to-slate-900',
+    'from-blue-500 to-cyan-700',
   ];
   const colorIndex = athletes.length % avatarGradients.length;
 

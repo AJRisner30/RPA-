@@ -9,7 +9,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
     frequency: '6 Days / Week',
     estimatedDurationMinutes: 70,
     recommendedWarmupId: 'warmup-apex-sop',
-    description: 'The definitive 26-week tactical conditioning blueprint by Overland Athletics. Built to forge elite combat chassis durability, massive compound strength, high-velocity running, and load carriage mastery.',
+    description: 'The definitive 26-week tactical conditioning blueprint by Patrol Ready Performance. Built to forge elite law enforcement combat chassis durability, massive compound strength, foot pursuit sprint velocity, and tactical load carriage mastery.',
     schedule: [
       {
         day: 1,
@@ -299,13 +299,13 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-strength-upper',
-    title: 'Overland Upper Body Strength & Hypertrophy',
+    title: 'Patrol Ready Upper Body Strength & Hypertrophy',
     subtitle: 'Compound Power + Shoulder Integrity',
     category: 'Strength',
     frequency: '2x / week',
     estimatedDurationMinutes: 65,
     recommendedWarmupId: 'warmup-upper-primer',
-    description: 'Designed by Overland Athletics. Focuses on horizontal/vertical pressing power, back thickness, and rotator cuff stability with structured progressive overload.',
+    description: 'Designed by Patrol Ready Performance. Focuses on horizontal/vertical pressing power, back thickness, and rotator cuff stability with structured progressive overload.',
     exercises: [
       {
         id: 'ex-bench-press',
@@ -365,7 +365,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
         targetReps: '15',
         targetRpe: 8,
         restPeriodSeconds: 60,
-        notes: 'Overland Prehab protocol: pull rope towards forehead and rotate thumbs back to target rear delts & lower traps.'
+        notes: 'Patrol Ready Prehab protocol: pull rope towards forehead and rotate thumbs back to target rear delts & lower traps.'
       },
       {
         id: 'ex-tricep-skullcrushers',
@@ -381,7 +381,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-lower-squat',
-    title: 'Overland Lower Body Posterior & Quad Drive',
+    title: 'Patrol Ready Lower Body Posterior & Quad Drive',
     subtitle: 'Hip Extension & Knee Dominance',
     category: 'Power',
     frequency: '2x / week',
@@ -443,7 +443,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-pull-deadlift',
-    title: 'Overland Pull & Posterior Chain Engine',
+    title: 'Patrol Ready Pull & Posterior Chain Engine',
     subtitle: 'Deadlift Velocity & Lat Width',
     category: 'Strength',
     frequency: '1-2x / week',
@@ -505,7 +505,7 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'rpa-athletic-power',
-    title: 'Overland Athletic Potentiation & Speed',
+    title: 'Patrol Ready Tactical Potentiation & Pursuit Speed',
     subtitle: 'Triphasic Plyometrics & Rate of Force',
     category: 'Athletic Conditioning',
     frequency: '1x / week',
@@ -558,12 +558,12 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   {
     id: 'hybrid-dumbbell-bodyweight-v2',
     title: 'Hybrid Dumbbell & Bodyweight Planner v2',
-    subtitle: 'Automated Overload Rules • Strength & Aerobic Ruck Engine',
+    subtitle: 'Automated Overload Rules • Strength & Aerobic Pursuit Engine',
     category: 'Hybrid',
     frequency: '2 Days / Week Programmed (Days 1 & 3)',
     estimatedDurationMinutes: 55,
     recommendedWarmupId: 'warmup-upper-primer',
-    description: 'Advanced hybrid athletic protocol with automated progression rules: +5 lbs floor press when completing max reps, +1 rep on push-ups every session, +0.5 miles weekly Zone 2 running, and +5 lbs on ruck march when sub-15 min/mi pace is maintained.',
+    description: 'Advanced hybrid athletic protocol with automated progression rules: +5 lbs floor press when completing max reps, +1 rep on push-ups every session, +0.5 miles weekly Zone 2 running, and +0.5 miles progression on foot pursuit conditioning.',
     schedule: [
       {
         day: 1,
@@ -622,25 +622,24 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
       },
       {
         day: 3,
-        focus: 'Rucking',
+        focus: 'Foot Pursuit & Aerobic Intervals',
         exercises: [
           {
-            id: 'hdb-v2-d3-ruck-march',
-            name: 'Ruck March',
+            id: 'hdb-v2-d3-pursuit-run',
+            name: 'Foot Pursuit Intervals & Tempo Run',
             muscleGroup: 'Full Body',
             type: 'cardio',
             defaultSets: 1,
-            targetReps: '5 miles',
+            targetReps: '4 miles',
             restPeriodSeconds: 0,
-            distance_miles: 5,
-            weight_lbs: 30,
-            pace: '15-20 min/mi',
+            distance_miles: 4,
+            pace: '8:00-9:00 min/mi',
             progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'pace_under_15_min',
-              increment_value: 5
+              metric: 'distance_miles',
+              trigger: 'per_week',
+              increment_value: 0.5
             },
-            notes: 'Load: 30 lbs pack. Maintain upright posture and cadence. Progression rule: +5 lbs load when pace drops under 15 min/mi.'
+            notes: 'Frontline foot pursuit conditioning: Alternate 400m fast pursuit surge with 400m aerobic recovery stride. Progression: +0.5 miles weekly.'
           }
         ]
       }
@@ -696,34 +695,33 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
         notes: 'Pace: conversational. Progression: +0.5 miles per week.'
       },
       {
-        id: 'hdb-v2-d3-ruck-march',
-        name: 'Ruck March (Day 3 Focus)',
+        id: 'hdb-v2-d3-pursuit-run',
+        name: 'Foot Pursuit Intervals (Day 3 Focus)',
         muscleGroup: 'Full Body',
         type: 'cardio',
         defaultSets: 1,
-        targetReps: '5 miles',
+        targetReps: '4 miles',
         restPeriodSeconds: 0,
-        distance_miles: 5,
-        weight_lbs: 30,
-        pace: '15-20 min/mi',
+        distance_miles: 4,
+        pace: '8:00-9:00 min/mi',
         progression_rules: {
-          metric: 'weight_lbs',
-          trigger: 'pace_under_15_min',
-          increment_value: 5
+          metric: 'distance_miles',
+          trigger: 'per_week',
+          increment_value: 0.5
         },
-        notes: 'Load: 30 lbs pack. Progression: +5 lbs when pace is under 15 min/mi.'
+        notes: 'Foot pursuit tempo intervals. Progression: +0.5 miles per week.'
       }
     ]
   },
   {
     id: 'hybrid-dumbbell-bodyweight-v1',
     title: 'Hybrid Dumbbell & Bodyweight Planner',
-    subtitle: '4-Day Split • Strength, Core, Ruck & Metcon Intervals',
+    subtitle: '4-Day Split • Strength, Core, Pursuit & Metcon Intervals',
     category: 'Hybrid',
     frequency: '4 Days / Week Split',
     estimatedDurationMinutes: 60,
     recommendedWarmupId: 'warmup-upper-primer',
-    description: 'Comprehensive 4-day hybrid regime combining dumbbell hypertrophy, bodyweight endurance, heavy rucking, and high-intensity interval running.',
+    description: 'Comprehensive 4-day hybrid regime combining dumbbell hypertrophy, bodyweight endurance, duty sprint intervals, and high-intensity aerobic conditioning.',
     schedule: [
       {
         day: 1,
@@ -839,20 +837,19 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
       },
       {
         day: 3,
-        focus: 'Rucking',
+        focus: 'Pursuit Conditioning',
         exercises: [
           {
-            id: 'hdb-v1-d3-ruck',
-            name: 'Ruck March',
+            id: 'hdb-v1-d3-pursuit-run',
+            name: 'Foot Pursuit Sprints & Aerobic Run',
             muscleGroup: 'Full Body',
             type: 'cardio',
             defaultSets: 1,
-            targetReps: '5 miles',
+            targetReps: '4 miles',
             restPeriodSeconds: 0,
-            distance_miles: 5,
-            weight_lbs: 30,
-            pace: '15-20 min/mi',
-            notes: '5 miles ruck with 30 lbs pack. Target 15-20 minutes per mile pace.'
+            distance_miles: 4,
+            pace: '8:00-9:30 min/mi',
+            notes: '4-mile aerobic base and sprint repeats: 6x100m maximum acceleration sprints embedded in steady-state recovery.'
           }
         ]
       },
@@ -967,13 +964,13 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'tactical-hypertrophy-conditioning-v1',
-    title: 'Overland Athletics Tactical Hypertrophy & Conditioning Protocol',
-    subtitle: '6-Week Tactical Cycle • Upper / Lower / Engine / Upper / Lower / Ruck / Rest',
+    title: 'Patrol Ready Tactical Hypertrophy & Conditioning Protocol',
+    subtitle: '6-Week Tactical Cycle • Upper / Lower / Engine / Upper / Lower / Duty Cardio / Rest',
     category: 'Hybrid',
     frequency: '6 Days / Week',
     estimatedDurationMinutes: 65,
     recommendedWarmupId: 'warmup-universal-tactical',
-    description: 'A 6-day comprehensive military-style athletic protocol combining a 4-day Upper/Lower hypertrophy split with a 2-day aerobic capacity and progressive load carriage (rucking) system.',
+    description: 'A 6-day comprehensive frontline tactical conditioning protocol combining a 4-day Upper/Lower hypertrophy split with a 2-day aerobic capacity and duty pursuit stamina system.',
     schedule: [
       {
         day: 1,
@@ -1511,31 +1508,30 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
       },
       {
         day: 6,
-        focus: 'Conditioning Session B: Tactical Ruck Progression & Zone 2 Base',
+        focus: 'Conditioning Session B: Duty Cardio Progression & Zone 2 Base',
         exercises: [
           {
-            id: 'th-d6-ruck',
-            name: 'Progressive Load Carriage Ruck',
+            id: 'th-d6-cardio',
+            name: 'Duty Aerobic Base Run & Pursuit Intervals',
             muscleGroup: 'Full Body',
             type: 'cardio',
             defaultSets: 1,
-            targetReps: '4.0 miles (25-30 lbs)',
+            targetReps: '4.0 miles',
             targetRpe: 7,
             restPeriodSeconds: 0,
             distance_miles: 4.0,
-            weight_lbs: 30,
-            pace: '15:00-16:00 min/mile',
-            notes: 'Zone 2 HR (60-70% Max HR, approx 120-140 BPM). Weight strapped high and tight between scapulae. March with smooth heel-to-toe turnover. Do NOT run.',
+            pace: '8:30-9:30 min/mile',
+            notes: 'Zone 2 HR (60-70% Max HR, approx 120-140 BPM). Continuous steady-state aerobic engine run building officer stamina and cardiovascular reserve.',
             progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'pace_under_15_min',
-              increment_value: 5,
-              action: '+5 lbs pack load when pace < 15 min/mi'
+              metric: 'distance_miles',
+              trigger: 'per_week',
+              increment_value: 0.5,
+              action: '+0.5 miles aerobic volume weekly'
             }
           },
           {
             id: 'th-d6-decompression',
-            name: 'Post-Ruck Mandatory Tissue Decompression',
+            name: 'Post-Run Mandatory Tissue Decompression',
             muscleGroup: 'Full Body',
             type: 'strength',
             defaultSets: 1,
@@ -1846,7 +1842,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
   },
   {
     id: 'warmup-upper-primer',
-    title: 'Overland Upper Body Scapular & Thoracic Primer',
+    title: 'Patrol Ready Upper Body Scapular & Thoracic Primer',
     category: 'Upper Body',
     durationMinutes: 7,
     description: 'Essential pre-lift protocol designed to unlock thoracic spine mobility, lubricate the glenohumeral joint, and fire rotator cuff stabilizers prior to pressing and pulling.',
@@ -1920,7 +1916,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
   },
   {
     id: 'warmup-lower-hip',
-    title: 'Overland Lower Body Hip Capsule & Ankle Opener',
+    title: 'Patrol Ready Lower Body Hip Capsule & Ankle Opener',
     category: 'Lower Body',
     durationMinutes: 8,
     description: 'Targeted mobility protocol to open hip capsules, improve ankle dorsiflexion for deeper squats, and activate glute medius for knee tracking stability.',
@@ -1994,7 +1990,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
   },
   {
     id: 'warmup-cns-ramp',
-    title: 'Overland Central Nervous System Potentiation & Ramp',
+    title: 'Patrol Ready Central Nervous System Potentiation & Ramp',
     category: 'Full Body / CNS',
     durationMinutes: 5,
     description: 'Short, high-intensity neural primer designed to elevate heart rate, recruit high-threshold motor units (Type IIx fibers), and synchronize coordination.',

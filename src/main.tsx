@@ -9,19 +9,19 @@ import {FirebaseProvider} from './context/FirebaseContext.tsx';
 registerSW({
   immediate: true,
   onNeedRefresh() {
-    console.log('[Overland PWA] New update available.');
+    console.log('[Patrol Ready PWA] New update available.');
   },
   onOfflineReady() {
-    console.log('[Overland PWA] App is cached and ready for offline use.');
+    console.log('[Patrol Ready PWA] App is cached and ready for offline use.');
   },
   onRegisteredSW(swScriptUrl, registration) {
-    console.log('[Overland PWA] Service worker active:', swScriptUrl, registration);
+    console.log('[Patrol Ready PWA] Service worker active:', swScriptUrl, registration);
   },
   onRegisterError(error) {
-    console.warn('[Overland PWA] Service worker registration error, attempting direct /sw.js:', error);
+    console.warn('[Patrol Ready PWA] Service worker registration error, attempting direct /sw.js:', error);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch((err) => {
-        console.warn('[Overland PWA] Direct /sw.js fallback registration error:', err);
+        console.warn('[Patrol Ready PWA] Direct /sw.js fallback registration error:', err);
       });
     }
   },
@@ -33,7 +33,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration().then((reg) => {
       if (!reg) {
         navigator.serviceWorker.register('/sw.js').catch((err) => {
-          console.log('[Overland PWA] Standalone registration fallback note:', err);
+          console.log('[Patrol Ready PWA] Standalone registration fallback note:', err);
         });
       }
     });

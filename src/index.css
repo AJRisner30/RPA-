@@ -3,29 +3,37 @@
 :root {
   --font-heading: 'Barlow Condensed', sans-serif;
   --font-sans: 'Outfit', sans-serif;
-  --color-overland-gold: #d8a348;
-  --color-overland-gold-light: #f6c15b;
-  --color-overland-slate: #12171d;
-  --color-overland-slate-card: #182028;
-  --color-overland-border: #2c3846;
+  --color-patrol-navy: #080e18;
+  --color-patrol-navy-surface: #0b1320;
+  --color-patrol-slate-card: #111c2e;
+  --color-patrol-blue: #3b82f6;
+  --color-patrol-blue-light: #60a5fa;
+  --color-patrol-gold: #3b82f6;
+  --color-patrol-border: #1e293b;
+  /* Backwards compatibility */
+  --color-overland-gold: #3b82f6;
+  --color-overland-gold-light: #60a5fa;
+  --color-overland-slate: #0b1320;
+  --color-overland-slate-card: #111c2e;
+  --color-overland-border: #1e293b;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #10151a;
+  background-color: #080e18;
   color: #f1f5f9;
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   background-image: 
-    radial-gradient(ellipse 90% 40% at 50% -10%, rgba(216, 163, 72, 0.08), transparent 70%),
-    radial-gradient(ellipse 60% 30% at 50% 100%, rgba(216, 163, 72, 0.03), transparent 60%);
+    radial-gradient(ellipse 90% 40% at 50% -10%, rgba(37, 99, 235, 0.12), transparent 70%),
+    radial-gradient(ellipse 60% 30% at 50% 100%, rgba(59, 130, 246, 0.05), transparent 60%);
   background-attachment: fixed;
 }
 
 ::selection {
-  background-color: #d8a348;
-  color: #0c1014;
+  background-color: #2563eb;
+  color: #ffffff;
 }
 
 h1, h2, h3, .font-athletic {
@@ -33,21 +41,21 @@ h1, h2, h3, .font-athletic {
   letter-spacing: 0.03em;
 }
 
-/* Custom scrollbar for tactical overland dark theme */
+/* Custom scrollbar for tactical patrol performance dark theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #10151a;
+  background: #080e18;
 }
 ::-webkit-scrollbar-thumb {
-  background: #25303c;
+  background: #1e293b;
   border-radius: 9999px;
-  border: 1px solid rgba(216, 163, 72, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.25);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d8a348;
+  background: #3b82f6;
 }
 
 /* Subtle Entry Animations & Tab Content Fade-In */

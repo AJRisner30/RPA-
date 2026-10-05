@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { 
   ShieldCheck, Dumbbell, Zap, Lock, LogIn, Sparkles, 
   ExternalLink, Mail, Instagram, AlertCircle, RefreshCw,
-  Flame, Activity, Compass, Footprints, CheckCircle2, ChevronRight
+  Flame, Activity, Compass, Footprints, CheckCircle2, ChevronRight, Shield
 } from 'lucide-react';
-import { OverlandCompanyEmblem } from './BrandingLogos';
+import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { useFirebase } from '../context/FirebaseContext';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -45,42 +45,45 @@ export const SignInGate: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#10151a] text-zinc-100 flex flex-col justify-between relative overflow-hidden font-sans selection:bg-amber-500 selection:text-black">
-      {/* Background Ambience & Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(245,158,11,0.12),transparent_70%)] pointer-events-none" />
+    <div className="min-h-screen bg-[#080e18] text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans selection:bg-blue-600 selection:text-white">
+      {/* Background Ambience & Police Tactical Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(37,99,235,0.18),transparent_70%)] pointer-events-none" />
       <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{
-          backgroundImage: `linear-gradient(#f59e0b 1px, transparent 1px), linear-gradient(90deg, #f59e0b 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)`,
           backgroundSize: '40px 40px'
         }}
       />
 
       {/* Top Banner & Brand Rail */}
-      <header className="relative z-10 border-b border-zinc-800/80 bg-[#0d1217]/90 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <header className="relative z-10 border-b border-blue-500/30 bg-[#0b1320]/95 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <OverlandCompanyEmblem size="sm" />
+          <PatrolReadyCompanyEmblem size="sm" />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-athletic font-black text-sm sm:text-base tracking-wider text-white uppercase">
-                Overland Athletics
+                Patrol Ready
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono">
-                v2.6
+              <span className="font-athletic font-black text-sm sm:text-base tracking-wider text-blue-400 uppercase">
+                Performance
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 font-mono">
+                LEO v2.6
               </span>
             </div>
-            <span className="text-[11px] text-amber-400 font-bold block tracking-wider uppercase font-athletic">
-              Run • Lift • Ruck • Go The Distance
+            <span className="text-[11px] text-blue-300 font-bold block tracking-wider uppercase font-athletic">
+              Tactical fitness for the Frontline.
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <PWAInstallButton variant="pill" className="text-xs py-1 px-2.5 hidden sm:inline-flex" />
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-400">
-            <Lock className="w-3.5 h-3.5 text-amber-400" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-blue-500/30 rounded-lg text-xs font-mono text-slate-300">
+            <Lock className="w-3.5 h-3.5 text-blue-400" />
             <span className="hidden xs:inline">Access:</span>
-            <span className="text-amber-400 font-bold">Locked</span>
+            <span className="text-blue-400 font-bold">Secure Gate</span>
           </div>
         </div>
       </header>
@@ -90,30 +93,30 @@ export const SignInGate: React.FC = () => {
         {/* Emblem Hero Badge */}
         <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
           <div className="relative mb-3">
-            <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl animate-pulse" />
-            <div className="relative p-1 bg-gradient-to-b from-amber-400/40 via-zinc-800 to-zinc-900 rounded-2xl shadow-2xl border border-amber-400/30">
-              <OverlandCompanyEmblem size="lg" />
+            <div className="absolute inset-0 bg-blue-500/25 rounded-full blur-2xl animate-pulse" />
+            <div className="relative p-1 bg-gradient-to-b from-blue-400/40 via-slate-800 to-slate-950 rounded-2xl shadow-2xl border border-blue-400/40">
+              <PatrolReadyCompanyEmblem size="lg" />
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-[11px] font-bold text-amber-300 uppercase tracking-widest font-mono mb-2">
-            <Lock className="w-3 h-3 text-amber-400" />
-            <span>Athlete Access Restricted • Sign-In Required</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/15 border border-blue-500/40 rounded-full text-[11px] font-bold text-blue-300 uppercase tracking-widest font-mono mb-2">
+            <Shield className="w-3.5 h-3.5 text-blue-400" />
+            <span>Tactical &amp; Law Enforcement Portal • Authorized Sign-In</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white font-athletic">
-            Tactical Hypertrophy &amp; Hybrid Conditioning
+            Patrol Ready Performance
           </h1>
 
-          <p className="mt-2 text-xs sm:text-base text-zinc-400 max-w-xl leading-relaxed">
-            Welcome to the official <span className="text-zinc-200 font-bold">Overland Athletics</span> training system. Sign in with your Google account to access your customized programs, automated overload tracking, and cloud records.
+          <p className="mt-2 text-xs sm:text-base text-slate-300 max-w-xl leading-relaxed">
+            Welcome to <span className="text-white font-bold">Patrol Ready Performance</span> — Tactical fitness for the Frontline. Sign in to access your duty-specific training protocols, automated progressive overload tracking, and secure officer performance records.
           </p>
         </div>
 
         {/* Primary Sign-In Box */}
-        <div className="w-full max-w-md bg-zinc-900/90 border-2 border-zinc-800 hover:border-zinc-700 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative transition-all">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-black px-3.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider font-athletic shadow-md">
-            Overland Athlete Portal
+        <div className="w-full max-w-md bg-[#0f172a]/95 border-2 border-blue-500/30 hover:border-blue-400/50 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative transition-all">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider font-athletic shadow-md border border-blue-400/40">
+            Frontline Officer Portal
           </div>
 
           {/* Auth Error Notification */}
@@ -125,7 +128,7 @@ export const SignInGate: React.FC = () => {
                   <div className="font-bold text-red-300">Sign-in Notice ({authError.code})</div>
                   <p className="leading-snug text-red-200/90">{authError.message}</p>
                   {authError.isDomainError && (
-                    <div className="text-[11px] text-amber-300 pt-1 font-mono">
+                    <div className="text-[11px] text-blue-300 pt-1 font-mono">
                       Domain: {authError.domain || window.location.hostname}
                     </div>
                   )}
@@ -147,12 +150,12 @@ export const SignInGate: React.FC = () => {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading || isAuthenticating}
-              className="w-full py-3.5 px-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 text-zinc-900 rounded-2xl font-black text-sm tracking-wide transition-all shadow-lg hover:shadow-xl hover:shadow-white/10 flex items-center justify-center gap-3 border border-zinc-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full py-3.5 px-4 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 rounded-2xl font-black text-sm tracking-wide transition-all shadow-lg hover:shadow-xl hover:shadow-blue-500/10 flex items-center justify-center gap-3 border border-slate-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               {isLoading || isAuthenticating ? (
                 <>
-                  <RefreshCw className="w-5 h-5 text-zinc-900 animate-spin" />
-                  <span>Connecting to Overland Cloud...</span>
+                  <RefreshCw className="w-5 h-5 text-slate-900 animate-spin" />
+                  <span>Connecting to Patrol Cloud...</span>
                 </>
               ) : (
                 <>
@@ -175,8 +178,8 @@ export const SignInGate: React.FC = () => {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                     />
                   </svg>
-                  <span className="text-zinc-900 group-hover:text-black">
-                    Continue with Google
+                  <span className="text-slate-900 group-hover:text-black font-bold">
+                    Sign in with Google
                   </span>
                 </>
               )}
@@ -188,20 +191,20 @@ export const SignInGate: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAlternative(true)}
-                  className="text-xs text-zinc-400 hover:text-amber-400 transition-colors font-medium cursor-pointer"
+                  className="text-xs text-slate-400 hover:text-blue-400 transition-colors font-medium cursor-pointer"
                 >
-                  Trouble with popups? Use alternative sign-in &darr;
+                  Trouble with popup window? Use direct redirect &darr;
                 </button>
               ) : (
-                <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-left space-y-2 animate-in fade-in duration-150">
-                  <p className="text-[11px] text-zinc-300 leading-snug">
-                    If your browser or device blocks popups, redirect directly to Google:
+                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-left space-y-2 animate-in fade-in duration-150">
+                  <p className="text-[11px] text-slate-300 leading-snug">
+                    If your mobile device or browser blocks popup windows, sign in via full redirect:
                   </p>
                   <button
                     type="button"
                     onClick={handleRedirectSignIn}
                     disabled={isLoading || isAuthenticating}
-                    className="w-full py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-lg text-xs font-bold border border-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-blue-300 rounded-lg text-xs font-bold border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <LogIn className="w-3.5 h-3.5" />
                     <span>Sign in with Full-Page Redirect</span>
@@ -211,103 +214,105 @@ export const SignInGate: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-6 pt-5 border-t border-zinc-800/80 text-[11px] text-zinc-400 flex items-center justify-center gap-1.5 font-mono">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Secure 256-Bit Cloud Sync • Overland Athletics</span>
+          <div className="mt-6 pt-5 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-center gap-1.5 font-mono">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <span>Secure 256-Bit Cloud Sync • Patrol Ready Performance</span>
           </div>
         </div>
 
-        {/* Feature Highlights Grid */}
+        {/* Tactical Law Enforcement Pillars Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 w-full mt-8 sm:mt-12 text-left">
-          <div className="p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl">
-            <div className="flex items-center gap-2 text-amber-400 mb-1.5">
-              <Activity className="w-4 h-4" />
+          <div className="p-4 bg-slate-900/70 border border-blue-500/25 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 text-blue-400 mb-1.5">
+              <Shield className="w-4 h-4 text-blue-400" />
               <span className="text-xs font-black uppercase tracking-wider font-athletic">
-                The Apex Protocol
+                Duty Readiness &amp; Armor
               </span>
             </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              26-week master tactical conditioning protocol across 5 progressive mesocycles.
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Combat chassis resilience engineered to withstand duty vest and belt loads through 12-hour patrol shifts.
             </p>
           </div>
 
-          <div className="p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl">
-            <div className="flex items-center gap-2 text-amber-400 mb-1.5">
-              <Dumbbell className="w-4 h-4" />
+          <div className="p-4 bg-slate-900/70 border border-blue-500/25 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 text-blue-400 mb-1.5">
+              <Activity className="w-4 h-4 text-blue-400" />
               <span className="text-xs font-black uppercase tracking-wider font-athletic">
-                Tactical Hypertrophy
+                Foot Pursuit Speed
               </span>
             </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              6-day military microcycle combining 4-day Upper/Lower hypertrophy with engine intervals.
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Explosive sprint mechanics, change-of-direction agility, and anaerobic capacity for high-stress tactical chases.
             </p>
           </div>
 
-          <div className="p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl">
+          <div className="p-4 bg-slate-900/70 border border-blue-500/25 rounded-2xl shadow-sm">
             <div className="flex items-center gap-2 text-emerald-400 mb-1.5">
               <Sparkles className="w-4 h-4" />
               <span className="text-xs font-black uppercase tracking-wider font-athletic">
                 Auto-Overload Engine
               </span>
             </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Automated load recommendations (+2.5 to 10 lbs) calculated from completed reps and RPE.
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Data-driven progression (+2.5 to 10 lbs) calculated automatically from completed sets, reps, and RPE feedback.
             </p>
           </div>
 
-          <div className="p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl">
-            <div className="flex items-center gap-2 text-amber-400 mb-1.5">
-              <Footprints className="w-4 h-4" />
+          <div className="p-4 bg-slate-900/70 border border-blue-500/25 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 text-blue-400 mb-1.5">
+              <Footprints className="w-4 h-4 text-blue-400" />
               <span className="text-xs font-black uppercase tracking-wider font-athletic">
-                Rucking &amp; Engine
+                Tactical Ruck &amp; Load
               </span>
             </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              6-week progressive load carriage matrix (25-50 lbs), pace pacing, and Zone 2 heart rate benchmarks.
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Progressive tactical load carriage (25-50 lbs), pace benchmarks, and aerobic heart-rate zone conditioning.
             </p>
           </div>
         </div>
 
-        {/* Coach's Directive Quote */}
+        {/* Coach / Law Enforcement Directive */}
         <div className="mt-8 text-center max-w-xl">
-          <blockquote className="text-xs sm:text-sm text-zinc-400 italic">
-            &ldquo;Standards don&apos;t negotiate. Train with intent, measure every pound, and earn every mile.&rdquo;
+          <blockquote className="text-xs sm:text-sm text-slate-400 italic">
+            &ldquo;On patrol, you don&apos;t rise to the occasion — you sink to the level of your training. Build the armor before the call.&rdquo;
           </blockquote>
-          <span className="text-[11px] font-bold text-amber-400 font-athletic uppercase tracking-wider block mt-1">
-            — Coach Aryan Risner, Overland Athletics
+          <span className="text-[11px] font-bold text-blue-400 font-athletic uppercase tracking-wider block mt-1">
+            — Coach Aryan Risner • Patrol Ready Performance
           </span>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-zinc-800 bg-[#0d1217] py-4 px-4 sm:px-8 text-xs text-zinc-500">
+      <footer className="relative z-10 border-t border-slate-800 bg-[#0b1320] py-4 px-4 sm:px-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <div className="flex items-center gap-3">
-            <span className="text-zinc-400 font-bold uppercase tracking-wider">Overland Athletics</span>
-            <span className="text-zinc-700">•</span>
+            <span className="text-slate-300 font-bold uppercase tracking-wider">Patrol Ready Performance</span>
+            <span className="text-slate-700">•</span>
+            <span className="text-blue-400 font-semibold">Tactical fitness for the Frontline.</span>
+            <span className="text-slate-700 hidden sm:inline">•</span>
             <a
               href="https://bckd.co/87uJC2e"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-400 hover:text-amber-300 transition-colors font-bold inline-flex items-center gap-1"
+              className="text-blue-400 hover:text-blue-300 transition-colors font-bold inline-flex items-center gap-1"
             >
-              <Zap className="w-3 h-3 fill-amber-400" />
+              <Zap className="w-3 h-3 fill-blue-400 text-blue-400" />
               <span>Bucked Up Partner</span>
             </a>
-            <span className="text-zinc-700 hidden sm:inline">•</span>
+            <span className="text-slate-700 hidden sm:inline">•</span>
             <a
               href="https://www.instagram.com/ajrisner"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-pink-400 transition-colors hidden sm:inline-flex items-center gap-1"
+              className="text-slate-400 hover:text-blue-400 transition-colors hidden sm:inline-flex items-center gap-1"
             >
-              <Instagram className="w-3 h-3" />
+              <Instagram className="w-3 h-3 text-blue-400" />
               <span>@ajrisner</span>
             </a>
           </div>
 
-          <span className="text-zinc-500 font-mono text-[11px]">
-            © {new Date().getFullYear()} Overland Athletics. All Rights Reserved.
+          <span className="text-slate-500 font-mono text-[11px]">
+            © {new Date().getFullYear()} Patrol Ready Performance. All Rights Reserved.
           </span>
         </div>
       </footer>

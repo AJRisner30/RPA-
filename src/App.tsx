@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { 
   getStoredPrograms, savePrograms, 
-  getStoredWorkoutLogs,
-  getStoredRuckLogs, saveRuckLog, deleteRuckLog
+  getStoredWorkoutLogs
 } from './utils/storage';
-import { WorkoutProgram, WorkoutSessionLog, RuckSessionLog } from './types';
+import { WorkoutProgram, WorkoutSessionLog } from './types';
 import { Navbar, TabType } from './components/Navbar';
 import { WorkoutsTab } from './components/WorkoutsTab';
 import { WarmupsTab } from './components/WarmupsTab';
 import { RepLoadCalculatorTab } from './components/RepLoadCalculatorTab';
 import { ProgressGraphsTab } from './components/ProgressGraphsTab';
 import { WorkoutLogsTab } from './components/WorkoutLogsTab';
-import { RuckProgressTab } from './components/RuckProgressTab';
 import { ContactTab } from './components/ContactTab';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { AthleteLoginModal } from './components/AthleteLoginModal';
 import { SignInGate } from './components/SignInGate';
 import { LoadingSplash } from './components/LoadingSplash';
 import { getCurrentAthlete, AthleteProfile, updateAthleteProfile, registerAthlete } from './utils/athleteAuth';
-import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone, Footprints } from 'lucide-react';
-import { OverlandCompanyEmblem } from './components/BrandingLogos';
+import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone } from 'lucide-react';
+import { PatrolReadyCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { useFirebase } from './context/FirebaseContext';
@@ -27,9 +25,6 @@ import {
   subscribeToUserWorkoutLogs, 
   subscribeToUserAthlete, 
   saveWorkoutLogToFirestore,
-  subscribeToUserRuckLogs,
-  saveRuckLogToFirestore,
-  deleteRuckLogFromFirestore,
   saveAthleteToFirestore
 } from './utils/firebaseSync';
 
@@ -38,7 +33,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
   const [programs, setPrograms] = useState<WorkoutProgram[]>(() => getStoredPrograms());
   const [logs, setLogs] = useState<WorkoutSessionLog[]>(() => getStoredWorkoutLogs());
-  const [ruckLogs, setRuckLogs] = useState<RuckSessionLog[]>(() => getStoredRuckLogs());
   const [currentAthlete, setCurrentAthlete] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [isAthleteModalOpen, setIsAthleteModalOpen] = useState<boolean>(false);
 
@@ -76,13 +70,13 @@ export default function App() {
         setCurrentAthlete(cloudAthlete);
         updateAthleteProfile(cloudAthlete.id, cloudAthlete);
       } else {
-        const athleteName = user.displayName || user.email?.split('@')[0] || 'Overland Athlete';
+        const athleteName = user.displayName || user.email?.split('@')[0] || 'Patrol Officer';
         const athleteEmail = user.email || '';
         const newAthlete = registerAthlete({
           name: athleteName,
           email: athleteEmail,
           experienceLevel: 'Intermediate',
-          primaryGoal: 'Hybrid Athlete',
+          primaryGoal: 'Tactical Conditioning & Pursuit',
           weightLbs: 185,
         });
         setCurrentAthlete(newAthlete);
@@ -92,28 +86,9 @@ export default function App() {
       }
     });
 
-    // 3. Subscribe to rucking logs in Firestore
-    const unsubscribeRucks = subscribeToUserRuckLogs(user.uid, (cloudRucks) => {
-      if (cloudRucks.length > 0) {
-        setRuckLogs(cloudRucks);
-        try {
-          localStorage.setItem('rpa_ruck_logs_v1', JSON.stringify(cloudRucks));
-        } catch {}
-      } else {
-        // First-time sync: backfill existing local ruck logs to cloud
-        const localRucks = getStoredRuckLogs();
-        if (localRucks.length > 0) {
-          localRucks.forEach((r) => {
-            saveRuckLogToFirestore(r, user.uid).catch(() => {});
-          });
-        }
-      }
-    });
-
     return () => {
       unsubscribeLogs();
       unsubscribeAthlete();
-      unsubscribeRucks();
     };
   }, [user]);
 
@@ -143,67 +118,6 @@ export default function App() {
     }
   };
 
-  const handleSaveRuckLog = (newRuckLog: RuckSessionLog, syncToWorkoutLogs: boolean) => {
-    const updatedRucks = saveRuckLog(newRuckLog);
-    setRuckLogs(updatedRucks);
-
-    if (syncToWorkoutLogs) {
-      const companionWorkoutLog: WorkoutSessionLog = {
-        id: `workout-sync-${newRuckLog.id}`,
-        userId: user?.uid,
-        athleteId: newRuckLog.athleteId,
-        workoutTitle: `🎒 ${newRuckLog.title} (${newRuckLog.weightLbs}# / ${newRuckLog.distanceMiles}mi)`,
-        date: newRuckLog.date,
-        startTime: '07:00',
-        endTime: '08:00',
-        durationMinutes: newRuckLog.durationMinutes,
-        totalVolumeLbs: Math.round(newRuckLog.distanceMiles * newRuckLog.weightLbs),
-        totalSetsCompleted: 1,
-        rating: 5,
-        notes: `Tactical ruck march on ${newRuckLog.terrain || 'pavement'}. Pace: ${newRuckLog.paceMinPerMile ? newRuckLog.paceMinPerMile.toFixed(2) : '--'} min/mi. Workload: ${newRuckLog.workloadIndex || (newRuckLog.distanceMiles * newRuckLog.weightLbs)} lb-mi. ${newRuckLog.notes || ''}`.trim(),
-        exercises: [
-          {
-            exerciseName: `Weighted Ruck March (${newRuckLog.weightLbs} lbs)`,
-            muscleGroup: 'Full Body',
-            isTimed: true,
-            sets: [
-              {
-                setNumber: 1,
-                weightLbs: newRuckLog.weightLbs,
-                reps: 1,
-                distanceMiles: newRuckLog.distanceMiles,
-                timeSeconds: newRuckLog.durationMinutes * 60,
-                timeFormatted: `${newRuckLog.durationMinutes}:00`,
-                rpe: newRuckLog.rpe,
-                estimated1RM: newRuckLog.weightLbs,
-              }
-            ]
-          }
-        ]
-      };
-      setLogs((prev) => [companionWorkoutLog, ...prev]);
-      if (user) {
-        saveWorkoutLogToFirestore(companionWorkoutLog, user.uid).catch(console.warn);
-      }
-    }
-
-    if (user) {
-      saveRuckLogToFirestore(newRuckLog, user.uid).catch((err) => {
-        console.warn('[Firebase] Save ruck log Firestore error:', err);
-      });
-    }
-  };
-
-  const handleDeleteRuckLog = (ruckId: string) => {
-    const updated = deleteRuckLog(ruckId);
-    setRuckLogs(updated);
-    if (user) {
-      deleteRuckLogFromFirestore(ruckId).catch((err) => {
-        console.warn('[Firebase] Delete ruck log Firestore error:', err);
-      });
-    }
-  };
-
   // 1. Initial page boot: display branded loading splash while auth state is resolving
   if (loading) {
     return <LoadingSplash />;
@@ -215,7 +129,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#10151a] text-zinc-100 flex flex-col font-sans selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-[#080e18] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* Brand & Tab Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -255,7 +169,6 @@ export default function App() {
               onUpdateLogs={setLogs}
               onOpenLiveWorkout={() => handleStartWorkout(programs[0])}
               onNavigateToGraphs={() => setActiveTab('graphs')}
-              onNavigateToRuck={() => setActiveTab('ruck')}
             />
           )}
 
@@ -264,19 +177,6 @@ export default function App() {
               logs={logs} 
               currentAthlete={currentAthlete}
               onNavigateToLogs={() => setActiveTab('logs')}
-              onNavigateToRuck={() => setActiveTab('ruck')}
-            />
-          )}
-
-          {activeTab === 'ruck' && (
-            <RuckProgressTab
-              ruckLogs={ruckLogs}
-              workoutLogs={logs}
-              currentAthlete={currentAthlete}
-              onSaveRuckLog={handleSaveRuckLog}
-              onDeleteRuckLog={handleDeleteRuckLog}
-              onNavigateToWorkoutLogs={() => setActiveTab('logs')}
-              onNavigateToGraphs={() => setActiveTab('graphs')}
             />
           )}
 
@@ -302,25 +202,24 @@ export default function App() {
         onAthleteChanged={(athlete) => {
           setCurrentAthlete(athlete);
           setLogs(getStoredWorkoutLogs());
-          setRuckLogs(getStoredRuckLogs());
         }}
       />
 
-      {/* Footer Branded with Overland Athletics, Run Lift Ruck, Socials, and Partners */}
-      <footer className="mt-auto border-t border-amber-500/20 bg-[#0d1217] py-8 px-4 sm:px-6 lg:px-8 relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+      {/* Footer Branded with Patrol Ready Performance, Tactical Fitness for the Frontline */}
+      <footer className="mt-auto border-t border-blue-500/20 bg-[#0b1320] py-8 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-slate-400">
             <div className="flex items-center gap-3">
-              <OverlandCompanyEmblem size="sm" />
+              <PatrolReadyCompanyEmblem size="sm" />
               <div className="flex items-center gap-2">
-                <span className="font-athletic font-black tracking-wider uppercase text-zinc-100">
-                  Overland Athletics
+                <span className="font-athletic font-black tracking-wider uppercase text-white">
+                  Patrol Ready Performance
                 </span>
-                <span className="text-zinc-600">•</span>
-                <span className="text-amber-400 font-bold tracking-wide">Run • Lift • Ruck</span>
-                <span className="text-zinc-600 hidden sm:inline">•</span>
-                <span className="hidden sm:inline text-zinc-400">Go The Distance</span>
+                <span className="text-slate-600">•</span>
+                <span className="text-blue-400 font-bold tracking-wide">Tactical fitness for the Frontline.</span>
+                <span className="text-slate-600 hidden sm:inline">•</span>
+                <span className="hidden sm:inline text-slate-400">Duty Readiness &amp; Combat Chassis</span>
               </div>
             </div>
 
@@ -328,55 +227,54 @@ export default function App() {
             <div className="flex items-center gap-4 flex-wrap justify-center text-xs">
               <a
                 href="mailto:risnerathletics@gmail.com"
-                className="flex items-center gap-1.5 text-zinc-300 hover:text-amber-400 transition-colors font-medium cursor-pointer"
-                title="Email Overland Athletics"
+                className="flex items-center gap-1.5 text-slate-300 hover:text-blue-400 transition-colors font-medium cursor-pointer"
+                title="Email Patrol Ready Performance"
               >
-                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <Mail className="w-3.5 h-3.5 text-blue-400" />
                 <span>risnerathletics@gmail.com</span>
               </a>
 
-              <span className="text-zinc-700 hidden sm:inline">•</span>
+              <span className="text-slate-700 hidden sm:inline">•</span>
 
               <a
                 href="https://www.instagram.com/ajrisner"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-zinc-300 hover:text-pink-400 transition-colors font-medium cursor-pointer"
+                className="flex items-center gap-1.5 text-slate-300 hover:text-blue-400 transition-colors font-medium cursor-pointer"
                 title="Instagram: @ajrisner"
               >
-                <Instagram className="w-3.5 h-3.5 text-pink-400" />
+                <Instagram className="w-3.5 h-3.5 text-blue-400" />
                 <span>@ajrisner</span>
-                <ExternalLink className="w-3 h-3 text-zinc-500" />
+                <ExternalLink className="w-3 h-3 text-slate-500" />
               </a>
 
-              <span className="text-zinc-700 hidden sm:inline">•</span>
+              <span className="text-slate-700 hidden sm:inline">•</span>
 
               <a
                 href="https://bckd.co/87uJC2e"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-amber-400 hover:text-amber-300 transition-colors font-bold cursor-pointer"
+                className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors font-bold cursor-pointer"
                 title="Bucked Up Supplement Partner"
               >
-                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                <span>Bucked Up Supplements</span>
-                <ExternalLink className="w-3 h-3 text-amber-400/60" />
+                <Zap className="w-3.5 h-3.5 text-blue-400 fill-blue-400" />
+                <span>Bucked Up Supps</span>
+                <ExternalLink className="w-3 h-3 text-blue-400/60" />
               </a>
             </div>
 
-            <div className="flex items-center gap-2 text-zinc-400">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Overland Athletics • Elite Performance</span>
+            <div className="flex items-center gap-2 text-slate-400">
+              <ShieldCheck className="w-4 h-4 text-blue-400" />
+              <span>Patrol Ready Performance • LEO Fitness</span>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-zinc-400 font-mono">
+          <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400 font-mono">
             <div className="flex items-center gap-3">
-              <span>Overland Athletics • Run • Lift • Ruck • All Rights Reserved</span>
-              <span className="text-zinc-600 hidden md:inline">|</span>
-              <PWAInstallButton variant="pill" />
+              <span>Patrol Ready Performance • Tactical fitness for the Frontline. • All Rights Reserved</span>
+              <PWAInstallButton variant="pill" withPrefixDivider />
             </div>
-            <span className="text-amber-400/80">Elite Performance • Go The Distance</span>
+            <span className="text-blue-400/80">Duty Ready • Armor-Plated • Pursuit Velocity</span>
           </div>
         </div>
       </footer>

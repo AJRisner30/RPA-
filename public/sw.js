@@ -1,5 +1,5 @@
-// Overland Athletics Service Worker
-const CACHE_NAME = 'overland-pwa-v1';
+// Patrol Ready Performance Service Worker
+const CACHE_NAME = 'patrol-ready-pwa-v2';
 
 const STATIC_ASSETS = [
   '/',
@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
   '/pwa-512x512.png',
   '/pwa-maskable-512x512.png',
   '/apple-touch-icon.png',
+  '/patrol-ready-logo.svg',
   '/overland-logo.svg',
   '/favicon.svg'
 ];
@@ -67,7 +68,7 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) return cachedResponse;
           const fallback = await caches.match('/index.html');
           if (fallback) return fallback;
-          return new Response('Offline - Overland Athletics', {
+          return new Response('Offline - Patrol Ready Performance', {
             headers: { 'Content-Type': 'text/plain' }
           });
         })

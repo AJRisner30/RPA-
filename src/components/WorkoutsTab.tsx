@@ -10,7 +10,7 @@ import {
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup } from '../types';
 import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
-import { OverlandCompanyEmblem } from './BrandingLogos';
+import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 
 // Custom Running Shoe SVG icon
 const ShoeIcon = () => (
@@ -521,7 +521,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           progression_rules: progressionRuleObj,
           notes: parsed.notes
             ? parsed.notes
-            : `Overland Protocol (${day.day} - ${day.focus}). Target Rest: ${configuredRest}s.`
+            : `Patrol Ready Protocol (${day.day} - ${day.focus}). Target Rest: ${configuredRest}s.`
         };
       });
 
@@ -767,42 +767,41 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Sleek, Compact Command Deck: Combines Identity, Status, and 3-Program Selector */}
-      <div className="bg-[#141a22] border-2 border-zinc-700/80 hover:border-zinc-600 rounded-2xl p-3 sm:p-4 shadow-xl">
+      {/* Sleek, Compact Command Deck: Combines Identity, Status, and 4-Program Selector */}
+      <div className="bg-[#0f172a] border-2 border-blue-500/30 hover:border-blue-400/50 rounded-2xl p-3 sm:p-4 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Identity & Status */}
           <div className="flex items-center gap-3">
             <div className="shrink-0 hidden sm:flex">
-              <OverlandCompanyEmblem size="sm" />
+              <PatrolReadyCompanyEmblem size="sm" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-amber-400" />
-                  Overland Athletics
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-blue-400" />
+                  Patrol Ready Performance
                 </span>
-                <span className="text-xs text-amber-400 font-bold flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                  Run • Lift • Ruck
+                <span className="text-xs text-blue-400 font-bold flex items-center gap-1">
+                  Tactical fitness for the Frontline.
                 </span>
-                <span className="text-zinc-500 hidden md:inline">•</span>
-                <span className="text-xs text-zinc-400 hidden md:inline font-mono">
-                  Go The Distance
+                <span className="text-slate-600 hidden md:inline">•</span>
+                <span className="text-xs text-slate-400 hidden md:inline font-mono">
+                  Duty Readiness &amp; Combat Chassis
                 </span>
               </div>
               <h1 className="text-lg sm:text-xl font-black text-white font-athletic uppercase tracking-wide mt-0.5 flex items-center gap-2">
                 <span>
                   {selectedProgram === 'apex_protocol' ? (
-                    <>The Apex <span className="text-emerald-400">Protocol</span></>
+                    <>The Apex <span className="text-blue-400">Protocol (LEO Master)</span></>
                   ) : selectedProgram === 'tactical_hypertrophy' ? (
-                    <>Tactical <span className="text-amber-400">Hypertrophy & Conditioning</span></>
+                    <>Patrol Ready <span className="text-blue-400">Tactical Hypertrophy &amp; Conditioning</span></>
                   ) : selectedProgram === 'hybrid_protocol' ? (
-                    <>Hybrid <span className="text-amber-400">Protocol</span></>
+                    <>Patrol Ready <span className="text-blue-400">Hybrid Protocol</span></>
                   ) : (
-                    <>Hybrid <span className="text-amber-400">DB & Bodyweight</span></>
+                    <>Patrol Ready <span className="text-blue-400">DB &amp; Bodyweight</span></>
                   )}
                 </span>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
                   {currentPhase.weeks}
                 </span>
               </h1>
@@ -831,12 +830,12 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               onClick={() => setShowCoachNotes(!showCoachNotes)}
               className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border ${
                 showCoachNotes
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-sm'
-                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+                  ? 'bg-blue-600/20 text-blue-300 border-blue-500/60 shadow-sm'
+                  : 'bg-[#0f172a] hover:bg-[#162238] text-slate-300 border-slate-700'
               }`}
               title="Toggle Coach Directives"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
               <span>Coach Cues</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showCoachNotes ? 'rotate-180' : ''}`} />
             </button>
@@ -844,7 +843,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         </div>
 
         {/* Compact 4-Program Selector Bar (Responsive Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-zinc-800/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-800/80">
           {/* Program 1: The Apex Protocol */}
           <button
             type="button"
@@ -854,19 +853,19 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             }}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'apex_protocol'
-                ? 'bg-emerald-950/60 border-emerald-400 shadow-md ring-1 ring-emerald-400/40 text-white'
-                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
             }`}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'apex_protocol' ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'apex_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
                 <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">The Apex Protocol</span>
               </div>
-              <span className="text-[10px] text-zinc-400 block font-mono truncate">26-Wk Master • Barbell & VO2</span>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">26-Wk Master • Barbell & VO2</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'apex_protocol' ? 'bg-emerald-400 text-black' : 'bg-zinc-800 text-zinc-400'
+              selectedProgram === 'apex_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
             }`}>
               26 WKS
             </span>
@@ -881,19 +880,19 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             }}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'tactical_hypertrophy'
-                ? 'bg-amber-950/60 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
-                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
             }`}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'tactical_hypertrophy' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
                 <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Tactical Hypertrophy</span>
               </div>
-              <span className="text-[10px] text-zinc-400 block font-mono truncate">6-Wk Cycle • 4-Day Hyper + Ruck</span>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">6-Wk Cycle • 4-Day Hyper + Ruck</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'tactical_hypertrophy' ? 'bg-amber-400 text-black' : 'bg-zinc-800 text-zinc-400'
+              selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
             }`}>
               6 WKS
             </span>
@@ -908,19 +907,19 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             }}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'hybrid_protocol'
-                ? 'bg-amber-950/60 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
-                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
             }`}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_protocol' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
                 <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid Protocol</span>
               </div>
-              <span className="text-[10px] text-zinc-400 block font-mono truncate">12-Wk Master • Strength/Run</span>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Strength/Run</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'hybrid_protocol' ? 'bg-amber-400 text-black' : 'bg-zinc-800 text-zinc-400'
+              selectedProgram === 'hybrid_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
             }`}>
               12 WKS
             </span>
@@ -935,19 +934,19 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             }}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'hybrid_db'
-                ? 'bg-amber-950/60 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
-                : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
             }`}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_db' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_db' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
                 <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid DB & BW</span>
               </div>
-              <span className="text-[10px] text-zinc-400 block font-mono truncate">12-Wk Master • DB & Calisthenics</span>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • DB & Calisthenics</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'hybrid_db' ? 'bg-amber-400 text-black' : 'bg-zinc-800 text-zinc-400'
+              selectedProgram === 'hybrid_db' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
             }`}>
               12 WKS
             </span>
@@ -959,10 +958,10 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       <div key={`${selectedProgram}-${activeApexPhaseKey}-${activeApexWeek}-${activeTacticalWeek}`} className="animate-tab-fade space-y-6">
         {/* COMPACT TACTICAL HYPERTROPHY WEEK SELECTOR RAIL */}
         {selectedProgram === 'tactical_hypertrophy' && (
-          <div className="bg-[#141a22] border border-amber-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
+          <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 mr-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 shrink-0 flex items-center gap-1 mr-1">
                   <Calendar className="w-3 h-3" />
                   Tactical Week:
                 </span>
@@ -979,17 +978,17 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                       }}
                       className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border flex items-center gap-1 ${
                         isSelectedWeek
-                          ? 'bg-amber-400 text-black border-amber-300 shadow-sm font-black'
-                          : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                          ? 'bg-blue-600 text-white border-blue-400 shadow-sm font-black'
+                          : 'bg-[#0a0f1d] text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
                       }`}
                     >
                       <span>Week {w}</span>
-                      {isDeload && <span className="text-[9px] font-black uppercase bg-zinc-800 text-amber-300 px-1 rounded">Deload</span>}
+                      {isDeload && <span className="text-[9px] font-black uppercase bg-red-950/80 text-red-300 border border-red-500/40 px-1 rounded">Deload</span>}
                     </button>
                   );
                 })}
               </div>
-              <span className="text-[11px] font-mono text-amber-400 font-bold shrink-0">
+              <span className="text-[11px] font-mono text-blue-400 font-bold shrink-0">
                 Week {activeTacticalWeek} Active • Saturday Ruck Synced
               </span>
             </div>
@@ -998,10 +997,10 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
         {/* COMPACT MESOCYCLE & WEEK SELECTOR RAIL */}
         {selectedProgram === 'apex_protocol' && (
-        <div className="bg-[#141a22] border border-emerald-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
+        <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
           {/* Phase Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 shrink-0 flex items-center gap-1 mr-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 shrink-0 flex items-center gap-1 mr-1">
               <Activity className="w-3 h-3" />
               Phase:
             </span>
@@ -1018,21 +1017,21 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                   }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-emerald-400 text-black border-emerald-300 shadow-sm font-black'
-                      : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                      ? 'bg-blue-600 text-white border-blue-400 shadow-sm font-black'
+                      : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-[#111c2e]'
                   }`}
                 >
                   <span>{m.weeks}</span>
                   <span className="text-[10px] opacity-80 hidden md:inline">({m.badge.split('&')[0].trim()})</span>
-                  {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
+                  {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
                 </button>
               );
             })}
           </div>
 
           {/* Week Selector inlined cleanly */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-zinc-800/80 scrollbar-none">
-            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 shrink-0 mr-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-slate-800/80 scrollbar-none">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 mr-1">
               Week:
             </span>
             {(apexMesocycles.find((m) => m.id === activeApexPhaseKey)?.weekRange || [1, 2, 3, 4]).map((w) => {
@@ -1047,15 +1046,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                   }}
                   className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border ${
                     isSelectedWeek
-                      ? 'bg-emerald-400 text-black border-emerald-300 shadow-sm font-black'
-                      : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                      ? 'bg-blue-600 text-white border-blue-400 shadow-sm font-black'
+                      : 'bg-[#0a0f1d] text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
                   }`}
                 >
                   W{w}
                 </button>
               );
             })}
-            <span className="text-[10px] font-mono text-emerald-400 ml-auto hidden sm:inline shrink-0">
+            <span className="text-[10px] font-mono text-blue-400 ml-auto hidden sm:inline shrink-0">
               Week {activeApexWeek} Active
             </span>
           </div>
@@ -1063,8 +1062,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       )}
 
       {selectedProgram === 'hybrid_protocol' && (
-        <div className="bg-[#141a22] border border-amber-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md flex items-center gap-2 overflow-x-auto scrollbar-none">
-          <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 mr-1">
+        <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 shrink-0 flex items-center gap-1 mr-1">
             <Activity className="w-3 h-3" />
             Phase:
           </span>
@@ -1080,12 +1079,12 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 }}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
                   isSelected
-                    ? 'bg-amber-400 text-black border-amber-300 font-black shadow-sm'
-                    : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                    ? 'bg-blue-600 text-white border-blue-400 font-black shadow-sm'
+                    : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-[#111c2e]'
                 }`}
               >
                 <span>{m.label} ({m.weeks})</span>
-                {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
+                {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
               </button>
             );
           })}
@@ -1093,8 +1092,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       )}
 
       {selectedProgram === 'hybrid_db' && (
-        <div className="bg-[#141a22] border border-amber-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md flex items-center gap-2 overflow-x-auto scrollbar-none">
-          <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 mr-1">
+        <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 shrink-0 flex items-center gap-1 mr-1">
             <Activity className="w-3 h-3" />
             Phase:
           </span>
@@ -1110,12 +1109,12 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 }}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
                   isSelected
-                    ? 'bg-amber-400 text-black border-amber-300 font-black shadow-sm'
-                    : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                    ? 'bg-blue-600 text-white border-blue-400 font-black shadow-sm'
+                    : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-[#111c2e]'
                 }`}
               >
                 <span>{m.label} ({m.weeks})</span>
-                {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
+                {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
               </button>
             );
           })}
@@ -1168,71 +1167,71 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </div>
           ) : selectedProgram === 'tactical_hypertrophy' ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Strict OHP & Pull-Ups</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+2.5 - 5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing 8 reps at RPE 8</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Strict OHP & Pull-Ups</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+2.5 - 5 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Upon completing 8 reps at RPE 8</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Trap Bar, Squat & RDL</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+10 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Double progression on top reps</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Trap Bar, Squat & RDL</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+10 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Double progression on top reps</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Incline, Bench & Rows</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing 10-12 reps with clean tempo</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Incline, Bench & Rows</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+5 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Upon completing 10-12 reps with clean tempo</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">6-Wk Ruck Progression</span>
-                <span className="text-sm font-black text-amber-400 font-mono">25 → 50 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Sub-15:00/mi Zone 2 pace</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">6-Wk Ruck Progression</span>
+                <span className="text-sm font-black text-blue-400 font-mono">25 → 50 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Sub-15:00/mi Zone 2 pace</span>
               </div>
             </div>
           ) : selectedProgram === 'hybrid_protocol' ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Squat & Deadlift</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+10 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon hitting top rep ceiling</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Squat & Deadlift</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+10 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Upon hitting top rep ceiling</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Bench, OHP & Rows</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon hitting target reps</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Bench, OHP & Rows</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+5 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Upon hitting target reps</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Weighted Pull-Ups</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+2.5 - 5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing 6-8 reps</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Weighted Pull-Ups</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+2.5 - 5 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Upon completing 6-8 reps</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Zone 2 Aerobic Base</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+0.5 - 1.0 mi/wk</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Continuous base expansion</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Zone 2 Aerobic Base</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+0.5 - 1.0 mi/wk</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Continuous base expansion</span>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">DB Floor Press</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon 3 sets × 12 reps</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DB Floor Press</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+5 lbs</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Upon 3 sets × 12 reps</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Push-ups</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+1 rep</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Every workout session</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Push-ups</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+1 rep</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Every workout session</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Zone 2 Run</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+0.5 mi / wk</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Conversational base pace</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Zone 2 Run</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+0.5 mi / wk</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Conversational base pace</span>
               </div>
-              <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Ruck March</span>
-                <span className="text-sm font-black text-amber-400 font-mono">+5 lbs pack</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">When pace is &lt; 15 min/mi</span>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ruck March</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+5 lbs pack</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">When pace is &lt; 15 min/mi</span>
               </div>
             </div>
           )}
@@ -1241,38 +1240,38 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
       {/* COLLAPSIBLE COACH'S DIRECTIVES */}
       {showCoachNotes && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 shadow-sm animate-in fade-in duration-200">
+        <div className="bg-[#0f172a] border border-blue-500/30 rounded-xl p-3.5 shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-2 mb-2">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">
               {currentPhase.coachRule ? "Coach Aryan's Tactical Directives & Overload Laws" : "Order of Operations & Recovery Guidelines"}
             </span>
           </div>
-          <p className="leading-relaxed text-xs text-zinc-300">
+          <p className="leading-relaxed text-xs text-slate-300">
             {currentPhase.coachRule ? currentPhase.coachRule : COACH_RULES.orderOfOperations.splitSessions}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-2 border-t border-zinc-800">
-            <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-800">
+            <div className="p-2 bg-[#0a0f1d] rounded-lg border border-slate-800">
+              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider block mb-0.5">
                 {COACH_RULES.zone2Guidance.title}
               </span>
-              <span className="text-[11px] text-zinc-400">{COACH_RULES.zone2Guidance.rule}</span>
+              <span className="text-[11px] text-slate-400">{COACH_RULES.zone2Guidance.rule}</span>
             </div>
-            <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800">
+            <div className="p-2 bg-[#0a0f1d] rounded-lg border border-slate-800">
               <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-0.5">
                 {COACH_RULES.progressiveOverload.title}
               </span>
-              <span className="text-[11px] text-zinc-400">{COACH_RULES.progressiveOverload.rule}</span>
+              <span className="text-[11px] text-slate-400">{COACH_RULES.progressiveOverload.rule}</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Day Navigator Filter Bar */}
-      <div className="bg-[#141a22] border-2 border-zinc-700 rounded-2xl p-2.5 sm:p-3 shadow-md">
+      <div className="bg-[#0f172a] border-2 border-blue-500/40 rounded-2xl p-2.5 sm:p-3 shadow-md">
         <div className="flex items-center justify-between gap-2 mb-2 px-1">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-amber-400" />
+            <Calendar className="w-4 h-4 text-blue-400" />
             <span className="text-xs font-black uppercase tracking-wider text-white font-athletic">
               Daily Schedule Navigator
             </span>
@@ -1289,7 +1288,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span>Exit Day View</span>
               </button>
             )}
-            <span className="text-[11px] text-zinc-300 font-mono font-bold">
+            <span className="text-[11px] text-slate-300 font-mono font-bold">
               {dayViewMode === 'all' ? 'Showing all 7 days' : `Day ${dayViewMode + 1} of 7`}
             </span>
           </div>
@@ -1302,8 +1301,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             onClick={() => setDayViewMode('all')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 border-2 ${
               dayViewMode === 'all'
-                ? 'bg-amber-400 text-black border-amber-300 shadow-md shadow-amber-950/40 ring-2 ring-amber-400/20'
-                : 'bg-zinc-950 text-zinc-200 border-zinc-700 hover:border-amber-400 hover:text-white hover:bg-zinc-800'
+                ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-950/60 ring-2 ring-blue-400/30'
+                : 'bg-[#0a0f1d] text-slate-200 border-slate-700 hover:border-blue-400 hover:text-white hover:bg-[#111c2e]'
             }`}
           >
             All Days ({currentPhase.days.length})
@@ -1322,15 +1321,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 onClick={() => setDayViewMode(idx)}
                 className={`relative px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border-2 ${
                   isSelected
-                    ? 'bg-amber-400 text-black border-amber-300 shadow-md shadow-amber-950/40 ring-2 ring-amber-400/20'
+                    ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-950/60 ring-2 ring-blue-400/30'
                     : isRest
-                    ? 'bg-zinc-950/80 text-zinc-400 border-zinc-800 hover:border-zinc-600'
-                    : 'bg-zinc-950 text-zinc-200 border-zinc-700 hover:border-amber-400 hover:text-white'
+                    ? 'bg-[#0a0f1d]/80 text-slate-400 border-slate-800 hover:border-slate-600'
+                    : 'bg-[#0a0f1d] text-slate-200 border-slate-700 hover:border-blue-400 hover:text-white'
                 }`}
               >
                 <span>{day.day}</span>
                 {isToday && (
-                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-black' : 'bg-emerald-400 shadow-sm shadow-emerald-400/50'}`} />
+                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-400 shadow-sm shadow-emerald-400/50'}`} />
                 )}
                 {isRest && (
                   <span className="text-[9px] uppercase font-mono opacity-80">(Rest)</span>
@@ -1343,7 +1342,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
       {/* Focused Day Navigator Header (When a single day is selected) */}
       {dayViewMode !== 'all' && (
-        <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-[#141a22] border-2 border-amber-500/50 rounded-2xl shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-[#0f172a] border-2 border-blue-500/50 rounded-2xl shadow-md">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -1351,7 +1350,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 const prevIdx = (dayViewMode - 1 + currentPhase.days.length) % currentPhase.days.length;
                 setDayViewMode(prevIdx);
               }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs font-black transition-all border-2 border-zinc-700 hover:border-amber-400 cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#0a0f1d] hover:bg-slate-800 text-slate-200 hover:text-white rounded-xl text-xs font-black transition-all border-2 border-slate-700 hover:border-blue-400 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Prev Day</span>
@@ -1367,7 +1366,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 const nextIdx = (dayViewMode + 1) % currentPhase.days.length;
                 setDayViewMode(nextIdx);
               }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs font-black transition-all border-2 border-zinc-700 hover:border-amber-400 cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#0a0f1d] hover:bg-slate-800 text-slate-200 hover:text-white rounded-xl text-xs font-black transition-all border-2 border-slate-700 hover:border-blue-400 cursor-pointer"
             >
               <span>Next Day</span>
               <ChevronRight className="w-4 h-4" />
@@ -1377,7 +1376,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           <button
             type="button"
             onClick={() => setDayViewMode('all')}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all border-2 border-amber-300 shadow-md cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all border-2 border-blue-400 shadow-md cursor-pointer active:scale-95"
           >
             <X className="w-3.5 h-3.5 stroke-[3]" />
             <span>Exit Day View (Show All Days)</span>
@@ -1417,7 +1416,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-amber-400 font-bold tracking-wide">
+                    <span className="text-xs text-blue-400 font-bold tracking-wide">
                       {day.focus}
                     </span>
                   </div>
@@ -1425,8 +1424,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
                 <div className="flex items-center gap-2 flex-wrap">
                   {day.progressionRule && (
-                    <span className="text-[10px] font-bold px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-lg flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span className="text-[10px] font-bold px-2.5 py-1 bg-blue-500/10 text-blue-300 border border-blue-500/30 rounded-lg flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3 text-blue-400 shrink-0" />
                       <span>{day.progressionRule}</span>
                     </span>
                   )}
@@ -1435,9 +1434,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     <button
                       type="button"
                       onClick={() => handleLaunchDayLifts(day)}
-                      className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md shadow-amber-950/40 border-2 border-amber-300 cursor-pointer active:scale-95"
+                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md shadow-blue-950/50 border-2 border-blue-400 cursor-pointer active:scale-95"
                     >
-                      <Play className="w-3.5 h-3.5 fill-black text-black stroke-[2]" />
+                      <Play className="w-3.5 h-3.5 fill-white text-white stroke-[2]" />
                       <span>Start Live Session</span>
                     </button>
                   )}
@@ -1447,13 +1446,13 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               {/* Day Body Content */}
               <div className="p-4 sm:p-6 space-y-4">
                 {/* WARM UP PRIMER */}
-                <div className="bg-zinc-950/70 rounded-xl p-3.5 border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="bg-[#0a0f1d] rounded-xl p-3.5 border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <div className="flex items-center text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">
+                    <div className="flex items-center text-blue-400 text-xs font-bold uppercase tracking-wider mb-1">
                       <Flame className="w-3.5 h-3.5 mr-1.5" />
                       <span>Movement Primer & Dynamic Warm-Up</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{day.warmup}</p>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{day.warmup}</p>
                   </div>
 
                   {!isRestDay && (
@@ -1470,7 +1469,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                           onSelectWarmup('warmup-upper-primer');
                         }
                       }}
-                      className="shrink-0 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-amber-400 hover:text-amber-300 text-xs font-bold rounded-lg border border-amber-500/30 transition-colors flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
+                      className="shrink-0 px-3 py-1.5 bg-[#0f172a] hover:bg-slate-800 text-blue-300 hover:text-white text-xs font-bold rounded-lg border border-blue-500/30 transition-colors flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
                     >
                       <Clock className="w-3.5 h-3.5" />
                       <span>Guided Primer</span>
@@ -1531,13 +1530,13 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
                                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                   {overloadMatch && (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">
-                                      <TrendingUp className="w-3 h-3 text-amber-400 shrink-0" />
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded">
+                                      <TrendingUp className="w-3 h-3 text-blue-400 shrink-0" />
                                       <span>{overloadMatch[1]}</span>
                                     </span>
                                   )}
 
-                                  <span className="text-[10px] text-zinc-400">
+                                  <span className="text-[10px] text-slate-400">
                                     {currentRest >= 180 ? 'Heavy CNS Rest' : currentRest >= 120 ? 'Strength Rest' : 'Standard Rest'}
                                   </span>
                                 </div>
@@ -1547,12 +1546,12 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                             {/* Clean, Streamlined Dedicated Rest Timer for this Exercise */}
                             <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
                               {activeExerciseTimer && activeExerciseTimer.exerciseName === cleanExerciseName ? (
-                                <div className="flex items-center gap-1 bg-zinc-900/95 border border-amber-500/60 shadow-lg shadow-amber-500/10 rounded-xl p-1 animate-in fade-in duration-200">
+                                <div className="flex items-center gap-1 bg-[#0f172a] border border-blue-500/60 shadow-lg shadow-blue-500/20 rounded-xl p-1 animate-in fade-in duration-200">
                                   {/* -15s */}
                                   <button
                                     type="button"
                                     onClick={() => handleAdjustActiveTimerRemaining(-15)}
-                                    className="px-1.5 py-1 text-[11px] font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+                                    className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
                                     title="Minus 15s"
                                   >
                                     -15
@@ -1566,8 +1565,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                       activeExerciseTimer.secondsRemaining === 0
                                         ? 'bg-emerald-500 text-black animate-pulse'
                                         : activeExerciseTimer.isRunning
-                                          ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
-                                          : 'bg-zinc-800 text-amber-300 border border-amber-500/30'
+                                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                                          : 'bg-slate-800 text-blue-300 border border-blue-500/30'
                                     }`}
                                     title={
                                       activeExerciseTimer.secondsRemaining === 0
@@ -1598,7 +1597,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => handleAdjustActiveTimerRemaining(15)}
-                                    className="px-1.5 py-1 text-[11px] font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+                                    className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
                                     title="Plus 15s"
                                   >
                                     +15
@@ -1608,7 +1607,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                   <button
                                     type="button"
                                     onClick={handleCancelExerciseTimer}
-                                    className="p-1 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer ml-0.5"
+                                    className="p-1 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded transition-colors cursor-pointer ml-0.5"
                                     title="Dismiss timer"
                                   >
                                     <X className="w-3.5 h-3.5" />
@@ -1616,11 +1615,11 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-1.5">
-                                  <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+                                  <div className="flex items-center bg-[#0a0f1d] border border-slate-800 rounded-lg p-0.5">
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateExerciseRest(cleanExerciseName, currentRest - 15)}
-                                      className="px-1.5 py-1 text-[11px] font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+                                      className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
                                       title="Minus 15s"
                                     >
                                       -15
@@ -1629,7 +1628,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleToggleExerciseTimer(cleanExerciseName, currentRest)}
-                                      className="flex items-center gap-1 px-2.5 py-1 bg-zinc-800/80 hover:bg-amber-500 hover:text-black hover:text-white text-amber-400 font-mono text-xs font-bold rounded transition-all cursor-pointer"
+                                      className="flex items-center gap-1 px-2.5 py-1 bg-slate-800/80 hover:bg-blue-600 hover:text-white text-blue-400 font-mono text-xs font-bold rounded transition-all cursor-pointer"
                                       title={`Click to start ${currentRest}s rest countdown`}
                                     >
                                       <Clock className="w-3 h-3" />
@@ -1639,7 +1638,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateExerciseRest(cleanExerciseName, currentRest + 15)}
-                                      className="px-1.5 py-1 text-[11px] font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+                                      className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
                                       title="Plus 15s"
                                     >
                                       +15
@@ -1650,7 +1649,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => handleToggleExerciseTimer(cleanExerciseName, currentRest)}
-                                    className="p-1.5 bg-zinc-900 hover:bg-amber-500/20 text-zinc-400 hover:text-amber-400 border border-zinc-800 hover:border-amber-500/40 rounded-lg transition-colors cursor-pointer"
+                                    className="p-1.5 bg-[#0a0f1d] hover:bg-blue-900/30 text-slate-400 hover:text-blue-400 border border-slate-800 hover:border-blue-500/40 rounded-lg transition-colors cursor-pointer"
                                     title="Start rest timer now"
                                   >
                                     <Timer className="w-4 h-4" />
@@ -1666,16 +1665,16 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 </div>
 
                 {/* CONDITIONING / CARDIO SECTION */}
-                <div className="bg-zinc-950/70 rounded-xl p-3.5 border border-zinc-800/80">
-                  <div className="flex items-center text-zinc-400 text-xs font-bold uppercase tracking-wider mb-1.5">
-                    <div className="mr-2 text-amber-400">
+                <div className="bg-[#0a0f1d] rounded-xl p-3.5 border border-slate-800/80">
+                  <div className="flex items-center text-slate-400 text-xs font-bold uppercase tracking-wider mb-1.5">
+                    <div className="mr-2 text-blue-400">
                       <ShoeIcon />
                     </div>
                     <span>Conditioning & Aerobic Base</span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                     <p className="font-bold text-white text-xs sm:text-sm">{day.run}</p>
-                    <p className="text-xs text-zinc-400 font-mono">{day.pace}</p>
+                    <p className="text-xs text-slate-400 font-mono">{day.pace}</p>
                   </div>
                 </div>
 
@@ -1685,7 +1684,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     <button
                       type="button"
                       onClick={() => handleLaunchDayLifts(day)}
-                      className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black rounded-xl text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-950/30 cursor-pointer active:scale-98"
+                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black rounded-xl text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-950/40 border border-blue-400/40 cursor-pointer active:scale-98"
                     >
                       <Play className="w-4 h-4 fill-white" />
                       <span>Start & Track {day.day} Session</span>

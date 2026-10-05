@@ -26,14 +26,14 @@ export interface HybridStrengthLogItem {
   estimated1RM?: number;
 }
 
-// 12-Week Protocol (Sunday Start + Warmups) - Overland Athletics Template
+// 12-Week Protocol (Sunday Start + Warmups) - Patrol Ready Performance Law Enforcement Template
 export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
   phase1: {
     id: 'phase1',
     title: "Phase 1: Foundation",
     weeks: "Weeks 1-4",
     desc: "Establish aerobic base (Zone 2) and build foundational movement strength. Progress by adding 10% volume each week.",
-    coachRule: "Overland Athletics Overload Laws: +10 lbs on lower compound lifts (Squat, Deadlift) and +5 lbs on upper compound lifts (Bench, OHP, Rows) upon completing top rep range with strict form. Weekly Zone 2 volume increases by 0.5 - 1.0 mile.",
+    coachRule: "Patrol Ready Performance Overload Laws: +10 lbs on lower compound lifts (Squat, Deadlift) and +5 lbs on upper compound lifts (Bench, OHP, Rows) upon completing top rep range with strict form. Weekly Zone 2 volume increases by 0.5 - 1.0 mile.",
     days: [
       {
         day: "Sunday",
@@ -293,8 +293,8 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     id: 'db_phase1',
     title: "Phase 1: DB Foundation & Muscular Endurance",
     weeks: "Weeks 1-4",
-    desc: "Engineered by Overland Athletics. Base hypertrophy, push-up volume accumulation, and aerobic base building with standard 25-30 lb ruck.",
-    coachRule: "Phase 1 Overload Laws: Floor press +5 lbs when hitting 3x12. Push-ups +1 rep every session. Zone 2 run +0.5 mi/wk. Ruck +5 lbs when pace < 15 min/mi.",
+    desc: "Engineered by Patrol Ready Performance. Base hypertrophy, push-up volume accumulation, and aerobic base building for frontline readiness.",
+    coachRule: "Phase 1 Overload Laws: Floor press +5 lbs when hitting 3x12. Push-ups +1 rep every session. Zone 2 run +0.5 mi/wk. Sprints +1 repeat.",
     days: [
       {
         day: "Monday",
@@ -353,16 +353,16 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
       },
       {
         day: "Friday",
-        focus: "Rucking (Base Pack Load)",
+        focus: "Foot Pursuit Conditioning & Farmer Carries",
         warmup: "Calf stretch, brisk unloaded walk 5 mins, hip flexor stretch, shoulder band pulls.",
         strength: [
-          "Ruck Pack Upright March (30 lbs pack)",
-          "Farmer Walk Carries with DBs (3x50 yards) [Overload: +5 lbs DBs]",
+          "Heavy Farmer's Walk Carries with DBs (4x50 yards) [Overload: +5 lbs DBs]",
+          "Suitcase Carries (3x40 yards/side)",
           "Standing DB Calf Raises (3x15)"
         ],
-        run: "4.0 - 5.0 Mile Ruck March (30 lbs Pack)",
-        pace: "15-20 min/mile [+5 lbs pack load when pace drops under 15 min/mi]",
-        progressionRule: "Ruck March: +5 lbs pack load when pace drops below 15 min/mi"
+        run: "4.0 - 5.0 Mile Duty Aerobic Base Run",
+        pace: "8:30-10:00 min/mile [+0.5 mi / wk progression]",
+        progressionRule: "Duty Base Run: +0.5 miles weekly; Farmer Carries: +5 lbs upon completing 50 yards"
       },
       {
         day: "Saturday",
@@ -391,8 +391,8 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     id: 'db_phase2',
     title: "Phase 2: DB Strength Density & Threshold",
     weeks: "Weeks 5-8",
-    desc: "Engineered by Overland Athletics. Heavy dumbbell loading, paused/deficit push-up volume, threshold tempo runs, and 35 lb ruck endurance.",
-    coachRule: "Phase 2 Overload Laws: Floor press +5 lbs on 3x8-10. Push-ups: add 5-10 lbs plate or elevate feet (+1 rep/session). Long run 6-8 mi at Zone 2. 35 lb Ruck March pace target sub-14:30/mi.",
+    desc: "Engineered by Patrol Ready Performance. Heavy dumbbell loading, paused/deficit push-up volume, threshold tempo runs, and duty pursuit endurance.",
+    coachRule: "Phase 2 Overload Laws: Floor press +5 lbs on 3x8-10. Push-ups: add 5-10 lbs plate or elevate feet (+1 rep/session). Long run 6-8 mi at Zone 2. Tempo run pace target sub-7:30/mi.",
     days: [
       {
         day: "Monday",
@@ -450,16 +450,16 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
       },
       {
         day: "Friday",
-        focus: "Heavy Ruck March (35 lbs)",
-        warmup: "Brisk walk 5 mins, hip flexor stretches, calf stretching, trap activation.",
+        focus: "Foot Pursuit Speed & Heavy Carries",
+        warmup: "Brisk walk 5 mins, hip flexor stretches, calf stretching, sprint drill warmups.",
         strength: [
-          "Ruck Pack Stepups (3x12/leg with 35 lbs pack)",
+          "Dumbbell Step-ups (3x12/leg with heavy DBs)",
           "Farmer's Carries (3x60 yards heavy DBs) [Overload: +5-10 lbs]",
           "Core Suitcase Carries (3x40 yards/side)"
         ],
-        run: "5.0 - 6.0 Mile Ruck March (35 lbs Pack)",
-        pace: "Sub-15 min/mile target (Maintain 14:00-14:45/mi)",
-        progressionRule: "Ruck: hold sub-14:30 pace with 35 lbs pack before increasing to Phase 3"
+        run: "5.0 - 6.0 Mile Foot Pursuit & Threshold Run",
+        pace: "Sub-7:45 min/mile target on tempo segments",
+        progressionRule: "Foot Pursuit Run: hold sub-7:45 pace on tempo segments before increasing to Phase 3"
       },
       {
         day: "Saturday",
@@ -488,8 +488,8 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     id: 'db_phase3',
     title: "Phase 3: Tactical Peak & Muscular Power",
     weeks: "Weeks 9-12",
-    desc: "Engineered by Overland Athletics. Max dumbbell loads, explosive plyometric push-ups, tactical ruck marching (40-45 lbs), and race pace / time-trial peaking.",
-    coachRule: "Phase 3 Overload Laws: Max DB loads (3x6 heavy). Plyo push-ups for explosive height. 40-45 lb Ruck March at sub-14:30 pace. Week 12: Peak taper and tactical physical fitness test (Max push-ups, 5-mile ruck, 5k time trial).",
+    desc: "Engineered by Patrol Ready Performance. Max dumbbell loads, explosive plyometric push-ups, pursuit speed intervals, and duty PT test peaking.",
+    coachRule: "Phase 3 Overload Laws: Max DB loads (3x6 heavy). Plyo push-ups for explosive height. Sprint repeats at maximum velocity. Week 12: Peak taper and tactical physical fitness test (Max push-ups, 1.5-mile run, 5k time trial).",
     days: [
       {
         day: "Monday",
@@ -547,16 +547,16 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
       },
       {
         day: "Friday",
-        focus: "Tactical Heavy Ruck (40-45 lbs)",
-        warmup: "Calf stretches, dynamic hips, shoulder rotations, unloaded 5 min brisk walk.",
+        focus: "Tactical Pursuit Intervals (Track Sprints)",
+        warmup: "Dynamic movement prep, sprint drills, 4x50m progressive accelerations.",
         strength: [
-          "Ruck Pack Overhead Press (3x10 with pack)",
-          "Farmer's Walks (3x50 yards)",
+          "Dumbbell Push Press (4x6)",
+          "Heavy Farmer's Walks (4x50 yards)",
           "Core Hanging Knee Tucks (3x15)"
         ],
-        run: "6.0 - 8.0 Mile Heavy Ruck (40-45 lbs Pack)",
-        pace: "Sub-14:30 min/mile target (Reduce volume by 50% in Week 12 for taper)",
-        progressionRule: "Tactical Heavy Ruck: maintain sub-14:30/mi pace under 40-45 lbs pack load"
+        run: "Track Pursuit Repeats: 8x300m Sprints & 5.0 Mile Base",
+        pace: "Sub-55s on 300m sprints with 90s rest",
+        progressionRule: "Pursuit Sprints: maintain sub-55s pace across all 8 repeats"
       },
       {
         day: "Saturday",
@@ -568,7 +568,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         ],
         run: "8.0 - 10.0 Mile Long Run (Week 12: Fitness Assessment)",
         pace: "Zone 2 (Reduce mileage to 4-5 miles in Week 12 for taper)",
-        progressionRule: "Week 12: 5K Time Trial + Max Push-Up Test + 5-Mile Ruck Time Test"
+        progressionRule: "Week 12: 5K Time Trial + Max Push-Up Test + 1.5-Mile POST Run Test"
       },
       {
         day: "Sunday",
@@ -583,10 +583,10 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
   },
   hybrid_db: {
     id: 'hybrid_db',
-    title: "Hybrid Dumbbell & Bodyweight Planner",
+    title: "Patrol Ready Hybrid DB & Bodyweight Protocol",
     weeks: "DB & Bodyweight • Auto-Overload",
-    desc: "Engineered by Overland Athletics. Dedicated dumbbell compound power, chest-to-deck bodyweight volume, and aerobic ruck endurance with automated progressive overload rules.",
-    coachRule: "Overland Athletics Overload Laws: +5 lbs floor press when completing all sets at 12 reps (max reps). +1 rep on push-ups every session. +0.5 miles weekly on Zone 2 runs. +5 lbs pack load when maintaining sub-15 min/mile ruck pace.",
+    desc: "Engineered by Patrol Ready Performance. Dedicated dumbbell compound power, chest-to-deck bodyweight volume, and frontline duty running endurance with automated progressive overload rules.",
+    coachRule: "Patrol Ready Performance Overload Laws: +5 lbs floor press when completing all sets at 12 reps (max reps). +1 rep on push-ups every session. +0.5 miles weekly on Zone 2 runs. +0.5 miles weekly on duty conditioning runs.",
     days: [
       {
         day: "Monday",
@@ -645,16 +645,16 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
       },
       {
         day: "Friday",
-        focus: "Rucking (Heavy Pack)",
-        warmup: "Calf stretch, brisk unloaded walk 5 mins, hip flexor stretch, shoulder band pulls.",
+        focus: "Duty Pursuit Intervals & Loaded Carries",
+        warmup: "Calf stretch, brisk walk 5 mins, hip flexor stretch, shoulder band pulls.",
         strength: [
-          "Ruck Pack Upright March (30 lbs pack)",
-          "Farmer Walk Carries with DBs (3x50 yards) [Overload: +5 lbs DBs]",
+          "Heavy Dumbbell Farmer's Carries (4x50 yards) [Overload: +5 lbs DBs]",
+          "Suitcase Carries (3x40 yards/side)",
           "Hanging Knee / Leg Raises (3x12-15)"
         ],
-        run: "5.0 Mile Ruck March (30 lbs Pack)",
-        pace: "15-20 min/mile [+5 lbs pack load when pace drops under 15 min/mi]",
-        progressionRule: "Ruck March: +5 lbs pack load when pace drops below 15 min/mi"
+        run: "5.0 Mile Duty Tempo Run",
+        pace: "7:45-8:45 min/mile target",
+        progressionRule: "Duty Tempo Run: +0.5 miles or -5s/mile pace progression"
       },
       {
         day: "Saturday",
@@ -1173,8 +1173,8 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     id: 'apex_phase4',
     title: 'Phase 4: Combat Chassis & Endurance',
     weeks: 'Weeks 17-22',
-    desc: 'Heavy carries, work capacity, 5x5 compound strength, and 35lb load carriage rucking.',
-    coachRule: "5x5 Strength protocol for primary compound lifts. Load carriage initiates: 35lb Dry Weight Ruck on Day 2 (45-70 min) and Day 6 Ruck March (3-8 Miles). Maintain strictly under 15:00/mi pace.",
+    desc: 'Heavy carries, work capacity, 5x5 compound strength, and duty pursuit endurance.',
+    coachRule: "5x5 Strength protocol for primary compound lifts. Duty conditioning initiates: Aerobic Base on Day 2 (45-70 min) and Duty Long Run on Day 6 (3-8 Miles). Maintain Zone 2-3 aerobic discipline.",
     days: [
       {
         day: 'Sunday (Day 1)',
@@ -1192,14 +1192,14 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
       },
       {
         day: 'Monday (Day 2)',
-        focus: 'Load Carriage Conditioning (Ruck)',
+        focus: 'Duty Aerobic Conditioning',
         warmup: 'Dynamic leg swings, shoulder rolls, and foot prep.',
         strength: [
           'Plank Series (3x60s) [Front and side planks - Rest: 45s]'
         ],
-        run: 'Tactical Aerobic Base (45-70 Min Ruck)',
-        pace: '35lb Dry Weight Ruck. Maintain brisk tactical cadence. W17: 45m, W18: 50m, W19: 55m, W20: 60m, W21: 65m, W22: 70m.',
-        progressionRule: 'Add +5 mins duration weekly while keeping pace brisk.'
+        run: 'Tactical Aerobic Base (45-70 Min Run)',
+        pace: 'Maintain steady aerobic cadence. W17: 45m, W18: 50m, W19: 55m, W20: 60m, W21: 65m, W22: 70m.',
+        progressionRule: 'Add +5 mins duration weekly while keeping pace steady.'
       },
       {
         day: 'Tuesday (Day 3)',
@@ -1243,14 +1243,14 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
       },
       {
         day: 'Friday (Day 6)',
-        focus: 'Tactical Load Carriage (Ruck March)',
-        warmup: 'Footwear inspection, wool socks, ankle mobilization.',
+        focus: 'Tactical Duty Run (Aerobic Engine)',
+        warmup: 'Dynamic lower-body mobility, hip openers, and ankle mobilization.',
         strength: [
-          'Footwear prep, hydration, and lower back decompression.'
+          'Hydration prep, mobility, and lower back decompression.'
         ],
-        run: 'Ruck March (3-8 Miles)',
-        pace: '35lb Dry Weight Ruck. Maintain strictly under 15:00/mi pace. W17: 3mi, W18: 4mi, W19: 5mi, W20: 6mi, W21: 7mi, W22: 8mi.',
-        progressionRule: '+1.0 Mile distance weekly. Add +5 lbs pack weight when pace drops under 14:00/mi.'
+        run: 'Duty Endurance Run (3-8 Miles)',
+        pace: 'Maintain steady aerobic pace. W17: 3mi, W18: 4mi, W19: 5mi, W20: 6mi, W21: 7mi, W22: 8mi.',
+        progressionRule: '+1.0 Mile distance weekly.'
       },
       {
         day: 'Saturday (Day 7)',
@@ -1402,13 +1402,13 @@ export function getApexWeekData(weekNumber: number): ProtocolPhase {
     clonedDays[5].run = `Long Slow Distance Run (${day6Minutes} Min)`;
     clonedDays[5].pace = `Keep HR under 145 BPM (Zone 2). Week ${week} progressive aerobic volume.`;
   } else if (week >= 17 && week <= 22) {
-    // Phase 4: Day 2 is 35lb Ruck (+5 min weekly: 45, 50, 55, 60, 65, 70); Day 6 is Ruck March (+1 mi weekly: 3, 4, 5, 6, 7, 8 miles)
-    const ruckMinutes = 45 + (week - 17) * 5;
-    const ruckMiles = 3 + (week - 17);
-    clonedDays[1].run = `Tactical Aerobic Base (${ruckMinutes} Min Ruck - 35lb Dry Weight)`;
-    clonedDays[1].pace = `Maintain brisk cadence with 35lb pack. Week ${week} load carriage conditioning.`;
-    clonedDays[5].run = `Ruck March (${ruckMiles} Miles - 35lb Dry Weight)`;
-    clonedDays[5].pace = `Maintain strictly under 15:00/mi pace. Week ${week} tactical endurance volume.`;
+    // Phase 4: Day 2 is Aerobic Run (+5 min weekly: 45, 50, 55, 60, 65, 70); Day 6 is Long Run (+1 mi weekly: 3, 4, 5, 6, 7, 8 miles)
+    const runMinutes = 45 + (week - 17) * 5;
+    const runMiles = 3 + (week - 17);
+    clonedDays[1].run = `Tactical Aerobic Base (${runMinutes} Min Zone 2 Run)`;
+    clonedDays[1].pace = `Maintain steady aerobic cadence. Week ${week} cardiovascular conditioning.`;
+    clonedDays[5].run = `Duty Long Run (${runMiles} Miles)`;
+    clonedDays[5].pace = `Maintain continuous steady pace. Week ${week} tactical endurance volume.`;
   } else {
     // Phase 5: Weeks 23-26: Day 2 is 2-Mile Race Pace Target; Day 6 is 6 x 800m Track Sprints
     clonedDays[1].run = `Tactical Aerobic Base (2-Mile Race Pace Target)`;
@@ -1430,74 +1430,67 @@ export function getApexWeekData(weekNumber: number): ProtocolPhase {
 Object.assign(PROTOCOL_DATA, APEX_PROTOCOL_PHASES);
 
 // ---------------------------------------------------------------------------
-// OVERLAND ATHLETICS TACTICAL HYPERTROPHY & CONDITIONING PROTOCOL (6-WEEK)
+// PATROL READY PERFORMANCE TACTICAL HYPERTROPHY & CONDITIONING PROTOCOL (6-WEEK)
 // ---------------------------------------------------------------------------
-export interface TacticalRuckWeek {
+export interface TacticalConditioningWeek {
   week: number;
   distance_miles: number;
-  load_lbs: number;
   target_pace: string;
   focus: string;
   is_deload?: boolean;
 }
 
-export const TACTICAL_RUCK_MATRIX: TacticalRuckWeek[] = [
+export const TACTICAL_CONDITIONING_MATRIX: TacticalConditioningWeek[] = [
   {
     week: 1,
     distance_miles: 4.0,
-    load_lbs: 30, // 25-30 lbs (~15% BW)
-    target_pace: "15:00-16:00 min/mile",
-    focus: "Stride cadence, posture, rucksack strap tuning",
+    target_pace: "8:45-9:30 min/mile",
+    focus: "Aerobic base cadence, nasal breathing, and duty stamina",
     is_deload: false,
   },
   {
     week: 2,
     distance_miles: 5.0,
-    load_lbs: 35, // 30-35 lbs (~15% BW)
-    target_pace: "15:00-15:30 min/mile",
-    focus: "Sustained pacing and on-the-move hydration management",
+    target_pace: "8:30-9:15 min/mile",
+    focus: "Sustained threshold pacing and hydration management",
     is_deload: false,
   },
   {
     week: 3,
     distance_miles: 4.0,
-    load_lbs: 45, // 40-45 lbs (~20% BW)
-    target_pace: "14:30-15:00 min/mile",
-    focus: "Upward load step, upright thoracic spine discipline",
+    target_pace: "8:00-8:45 min/mile",
+    focus: "Tempo foot pursuit speed intervals and sprint recovery",
     is_deload: false,
   },
   {
     week: 4,
     distance_miles: 3.0,
-    load_lbs: 25, // 25 lbs deload
-    target_pace: "15:30-16:00 min/mile",
+    target_pace: "9:00-9:45 min/mile",
     focus: "Active flush, low systemic fatigue, tissue regeneration",
     is_deload: true,
   },
   {
     week: 5,
     distance_miles: 6.0,
-    load_lbs: 40, // 35-40 lbs (~18% BW)
-    target_pace: "14:45-15:15 min/mile",
-    focus: "Extended aerobic duration check under load",
+    target_pace: "8:30-9:15 min/mile",
+    focus: "Extended aerobic duration check and duty engine capacity",
     is_deload: false,
   },
   {
     week: 6,
     distance_miles: 5.0,
-    load_lbs: 50, // 45-50 lbs (~20-25% BW)
-    target_pace: "14:00-14:45 min/mile",
-    focus: "Standard field baseline standard benchmark",
+    target_pace: "7:45-8:30 min/mile",
+    focus: "Frontline pursuit speed and physical assessment benchmark",
     is_deload: false,
   }
 ];
 
 export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
   id: 'tactical_hypertrophy_v1',
-  title: 'Overland Athletics Tactical Hypertrophy & Conditioning Protocol',
+  title: 'Patrol Ready Tactical Hypertrophy & Conditioning Protocol',
   weeks: '6-Week Tactical Cycle',
-  desc: 'A 6-day comprehensive military-style athletic protocol combining a 4-day Upper/Lower hypertrophy split with a 2-day aerobic capacity and progressive load carriage (rucking) system.',
-  coachRule: 'Double Progression Rule: +5 lbs for upper body or +10 lbs for lower body upon achieving top of target rep range at target RPE. Compound structural lifts stay within RPE 7.5-8.5. Accessories reach RPE 9.0-10.0. Conditioning intervals strictly in Zone 3; Rucks strictly in Zone 2 (120-140 BPM).',
+  desc: 'A 6-day comprehensive frontline tactical conditioning protocol combining a 4-day Upper/Lower hypertrophy split with a 2-day aerobic capacity and duty pursuit stamina system.',
+  coachRule: 'Double Progression Rule: +5 lbs for upper body or +10 lbs for lower body upon achieving top of target rep range at target RPE. Compound structural lifts stay within RPE 7.5-8.5. Accessories reach RPE 9.0-10.0. Conditioning intervals strictly in Zone 3; Long base runs strictly in Zone 2 (120-140 BPM).',
   days: [
     {
       day: 'Monday',
@@ -1581,15 +1574,15 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
     },
     {
       day: 'Saturday',
-      focus: 'Conditioning Session B: Tactical Ruck Progression & Zone 2 Base',
-      warmup: 'Pre-Ruck Foot & Hip Prep (5 mins): Banded ankle distractions (10/side) + Tibialis raises (20 reps) + Glute bridges with mini-band (15 reps).',
+      focus: 'Conditioning Session B: Duty Cardio Progression & Zone 2 Base',
+      warmup: 'Pre-Run Foot & Hip Prep (5 mins): Banded ankle distractions (10/side) + Tibialis raises (20 reps) + Glute bridges with mini-band (15 reps).',
       strength: [
-        'Progressive Load Carriage Ruck (1xDynamic) [Zone 2 HR (60-70% Max HR, approx 120-140 BPM) - Rest: 0s - Tempo: 14:00-16:00 min/mile pace - Weight strapped high & tight, smooth heel-to-toe turnover]',
-        'Post-Ruck Mandatory Tissue Decompression (1xCircuit) [Passive recovery - Rest: 0s - Legs-Up-On-Wall 3-5 min + Couch Stretch 90s/side + Foam roll calves/T-spine 2 min]'
+        'Duty Aerobic Base Run (1xDynamic) [Zone 2 HR (60-70% Max HR, approx 120-140 BPM) - Rest: 0s - Continuous steady-state aerobic cadence]',
+        'Post-Run Mandatory Tissue Decompression (1xCircuit) [Passive recovery - Rest: 0s - Legs-Up-On-Wall 3-5 min + Couch Stretch 90s/side + Foam roll calves/T-spine 2 min]'
       ],
-      run: '4.0 Mile Tactical Ruck (25-30 lbs / ~15% BW)',
-      pace: '15:00-16:00 min/mile (Zone 2 HR)',
-      progressionRule: 'Zone 2 Load Carriage: Maintain target pace without exceeding Zone 2 HR (120-140 BPM)'
+      run: '4.0 Mile Duty Aerobic Base Run',
+      pace: '8:45-9:30 min/mile (Zone 2 HR)',
+      progressionRule: 'Zone 2 Duty Engine: Maintain target pace without exceeding Zone 2 HR (120-140 BPM)'
     },
     {
       day: 'Sunday',
@@ -1607,22 +1600,22 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
 
 /**
  * Returns customized week data for any week 1 through 6 of the Tactical Hypertrophy & Conditioning Protocol.
- * Dynamically injects the exact weekly Day 6 Ruck prescription from the 6-week progression matrix.
+ * Dynamically injects the exact weekly Day 6 run prescription from the 6-week progression matrix.
  */
 export function getTacticalHypertrophyWeekData(weekNumber: number): ProtocolPhase {
   const week = Math.max(1, Math.min(6, weekNumber));
-  const ruckPrescription = TACTICAL_RUCK_MATRIX[week - 1] || TACTICAL_RUCK_MATRIX[0];
+  const cardioPrescription = TACTICAL_CONDITIONING_MATRIX[week - 1] || TACTICAL_CONDITIONING_MATRIX[0];
 
   const clonedDays = JSON.parse(JSON.stringify(TACTICAL_HYPERTROPHY_BASE_PHASE.days)) as ProtocolDay[];
 
-  // Dynamically configure Day 6 (Saturday Ruck)
-  const deloadBadge = ruckPrescription.is_deload ? ' (DELOAD FLUSH)' : '';
-  clonedDays[5].run = `${ruckPrescription.distance_miles.toFixed(1)} Mile Tactical Ruck (${ruckPrescription.load_lbs} lbs Pack Load)${deloadBadge}`;
-  clonedDays[5].pace = `Target: ${ruckPrescription.target_pace} • Zone 2 HR (120-140 BPM). Week ${week}: ${ruckPrescription.focus}.`;
-  clonedDays[5].progressionRule = `Week ${week} Benchmark: ${ruckPrescription.distance_miles} miles @ ${ruckPrescription.load_lbs} lbs. If HR > Zone 2, reduce pace or drop pack load by 5 lbs.`;
+  // Dynamically configure Day 6 (Saturday Run)
+  const deloadBadge = cardioPrescription.is_deload ? ' (DELOAD FLUSH)' : '';
+  clonedDays[5].run = `${cardioPrescription.distance_miles.toFixed(1)} Mile Duty Aerobic Run${deloadBadge}`;
+  clonedDays[5].pace = `Target: ${cardioPrescription.target_pace} • Zone 2 HR (120-140 BPM). Week ${week}: ${cardioPrescription.focus}.`;
+  clonedDays[5].progressionRule = `Week ${week} Benchmark: ${cardioPrescription.distance_miles} miles @ ${cardioPrescription.target_pace}. Maintain steady continuous cadence.`;
   
-  // Update strength array ruck item
-  clonedDays[5].strength[0] = `Progressive Load Carriage Ruck (${ruckPrescription.distance_miles} Miles - ${ruckPrescription.load_lbs} lbs) [Zone 2 HR - Target Pace: ${ruckPrescription.target_pace} - Rest: 0s]`;
+  // Update strength array run item
+  clonedDays[5].strength[0] = `Duty Aerobic Base Run (${cardioPrescription.distance_miles} Miles) [Zone 2 HR - Target Pace: ${cardioPrescription.target_pace} - Rest: 0s]`;
 
   return {
     ...TACTICAL_HYPERTROPHY_BASE_PHASE,

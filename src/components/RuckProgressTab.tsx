@@ -299,14 +299,14 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
     <div className="space-y-6">
       {/* Sub-Navigation Switcher between Logs, Graphs, and Ruck */}
       <div className="flex justify-center">
-        <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-lg">
+        <div className="inline-flex p-1 bg-[#0a0f1d] border border-slate-800 rounded-2xl shadow-lg">
           {onNavigateToWorkoutLogs && (
             <button
               type="button"
               onClick={onNavigateToWorkoutLogs}
               className="px-3.5 sm:px-4 py-2 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <History className="w-3.5 h-3.5 text-amber-400" />
+              <History className="w-3.5 h-3.5 text-blue-400" />
               <span>Workout Logs</span>
             </button>
           )}
@@ -316,26 +316,26 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               onClick={onNavigateToGraphs}
               className="px-3.5 sm:px-4 py-2 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+              <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
               <span>Strength PRs</span>
             </button>
           )}
           <button
             type="button"
-            className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-950/40"
+            className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-blue-950/40"
           >
-            <Footprints className="w-3.5 h-3.5 text-black" />
+            <Footprints className="w-3.5 h-3.5 text-white" />
             <span>Ruck Progression</span>
           </button>
         </div>
       </div>
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-[#111822] via-[#141b24] to-[#1a232f] border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl">
-        <div className="absolute -right-10 -top-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#0c1322] via-[#0f172a] to-[#0c1322] border border-blue-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="absolute -right-10 -top-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-3xl">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1">
               <Footprints className="w-3.5 h-3.5" />
               Tactical Load Carriage
             </span>
@@ -344,7 +344,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               Progressive Overload
             </span>
             <span className="text-xs text-zinc-400 font-medium">
-              Athlete: <strong className="text-amber-400">{currentAthlete.name}</strong>
+              Athlete: <strong className="text-blue-400">{currentAthlete.name}</strong>
             </span>
           </div>
 
@@ -362,9 +362,9 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               <button
                 type="button"
                 onClick={() => setShowForm(!showForm)}
-                className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-amber-950/40 cursor-pointer active:scale-95"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-blue-950/40 cursor-pointer active:scale-95"
               >
-                <Plus className="w-4 h-4 text-black stroke-[3]" />
+                <Plus className="w-4 h-4 text-white stroke-[3]" />
                 <span>{showForm ? 'Close Ruck Logger' : 'Log New Ruck Session'}</span>
               </button>
               <span className="text-xs text-zinc-400">
@@ -379,7 +379,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 onClick={() => setAthleteFilter('current')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   athleteFilter === 'current'
-                    ? 'bg-amber-400 text-black shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-sm'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -390,7 +390,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 onClick={() => setAthleteFilter('all')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   athleteFilter === 'all'
-                    ? 'bg-amber-400 text-black shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-sm'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -403,10 +403,10 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
 
       {/* Ruck Logging Form Modal / Expandable Card */}
       {showForm && (
-        <div className="bg-[#121820] border-2 border-amber-500/50 rounded-3xl p-5 sm:p-7 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className="bg-[#0c1322] border-2 border-blue-500/50 rounded-3xl p-5 sm:p-7 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200">
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-zinc-800">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
                 <Footprints className="w-4 h-4" />
               </div>
               <div>
@@ -432,7 +432,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   required
-                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white font-medium outline-none"
+                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-blue-400 rounded-xl px-3 py-2 text-white font-medium outline-none"
                 />
               </div>
 
@@ -446,13 +446,13 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Tactical 4-Mile March"
-                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white placeholder-zinc-500 outline-none"
+                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-blue-400 rounded-xl px-3 py-2 text-white placeholder-zinc-500 outline-none"
                 />
               </div>
 
               {/* Pack Weight (lbs) */}
               <div>
-                <label className="block text-amber-400 font-bold uppercase text-[11px] mb-1 flex items-center justify-between">
+                <label className="block text-blue-400 font-bold uppercase text-[11px] mb-1 flex items-center justify-between">
                   <span>Pack Weight (lbs)</span>
                   <span className="text-[10px] text-zinc-400">Required</span>
                 </label>
@@ -465,7 +465,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   onChange={(e) => setWeightLbs(e.target.value === '' ? '' : Number(e.target.value))}
                   required
                   placeholder="35"
-                  className="w-full bg-[#18202b] border border-amber-500/60 focus:border-amber-400 rounded-xl px-3 py-2 text-white font-bold text-base outline-none"
+                  className="w-full bg-[#18202b] border border-blue-500/60 focus:border-blue-400 rounded-xl px-3 py-2 text-white font-bold text-base outline-none"
                 />
                 {/* Quick Weight Chips */}
                 <div className="flex gap-1 mt-1.5 flex-wrap">
@@ -476,7 +476,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                       onClick={() => setWeightLbs(wt)}
                       className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
                         weightLbs === wt
-                          ? 'bg-amber-400 text-black'
+                          ? 'bg-blue-600 text-white'
                           : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                       }`}
                     >
@@ -488,7 +488,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
 
               {/* Distance (Miles) */}
               <div>
-                <label className="block text-amber-400 font-bold uppercase text-[11px] mb-1 flex items-center justify-between">
+                <label className="block text-blue-400 font-bold uppercase text-[11px] mb-1 flex items-center justify-between">
                   <span>Distance (Miles)</span>
                   <span className="text-[10px] text-zinc-400">Required</span>
                 </label>
@@ -501,7 +501,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   onChange={(e) => setDistanceMiles(e.target.value === '' ? '' : Number(e.target.value))}
                   required
                   placeholder="4.0"
-                  className="w-full bg-[#18202b] border border-amber-500/60 focus:border-amber-400 rounded-xl px-3 py-2 text-white font-bold text-base outline-none"
+                  className="w-full bg-[#18202b] border border-blue-500/60 focus:border-blue-400 rounded-xl px-3 py-2 text-white font-bold text-base outline-none"
                 />
                 {/* Quick Distance Chips */}
                 <div className="flex gap-1 mt-1.5 flex-wrap">
@@ -512,7 +512,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                       onClick={() => setDistanceMiles(dist)}
                       className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
                         distanceMiles === dist
-                          ? 'bg-amber-400 text-black'
+                          ? 'bg-blue-600 text-white'
                           : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                       }`}
                     >
@@ -539,7 +539,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   onChange={(e) => setDurationMinutes(e.target.value === '' ? '' : Number(e.target.value))}
                   required
                   placeholder="60"
-                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white font-medium outline-none"
+                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-blue-400 rounded-xl px-3 py-2 text-white font-medium outline-none"
                 />
               </div>
 
@@ -551,7 +551,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 <select
                   value={terrain}
                   onChange={(e) => setTerrain(e.target.value as RuckTerrainType)}
-                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white font-medium outline-none"
+                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-blue-400 rounded-xl px-3 py-2 text-white font-medium outline-none"
                 >
                   {TERRAINS.map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -571,14 +571,14 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   value={heartRateAvg}
                   onChange={(e) => setHeartRateAvg(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="e.g. 142"
-                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white placeholder-zinc-500 outline-none"
+                  className="w-full bg-[#18202b] border border-zinc-700 focus:border-blue-400 rounded-xl px-3 py-2 text-white placeholder-zinc-500 outline-none"
                 />
               </div>
 
               {/* RPE 1-10 */}
               <div>
                 <label className="block text-zinc-400 font-bold uppercase text-[11px] mb-1">
-                  Effort (RPE 1-10): <strong className="text-amber-400">{rpe}/10</strong>
+                  Effort (RPE 1-10): <strong className="text-blue-400">{rpe}/10</strong>
                 </label>
                 <input
                   type="range"
@@ -587,7 +587,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   step="0.5"
                   value={rpe}
                   onChange={(e) => setRpe(Number(e.target.value))}
-                  className="w-full accent-amber-400 cursor-pointer mt-2"
+                  className="w-full accent-blue-400 cursor-pointer mt-2"
                 />
               </div>
             </div>
@@ -602,16 +602,16 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Pacing felt controlled, used trekking cadence, zero hotspots on feet."
-                className="w-full bg-[#18202b] border border-zinc-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white placeholder-zinc-500 outline-none"
+                className="w-full bg-[#18202b] border border-zinc-700 focus:border-blue-400 rounded-xl px-3 py-2 text-white placeholder-zinc-500 outline-none"
               />
             </div>
 
             {/* Live Calculation Output Card */}
-            <div className="bg-[#192330] border border-amber-500/30 rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-[#0a0f1d] border border-blue-500/30 rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4 flex-wrap">
                 <div>
                   <div className="text-[10px] uppercase font-bold text-zinc-400">Calculated Pace</div>
-                  <div className="text-lg font-black text-amber-400 font-mono">
+                  <div className="text-lg font-black text-blue-400 font-mono">
                     {formatRuckPace(livePaceMinPerMile)} <span className="text-xs text-zinc-400">/mi</span>
                   </div>
                 </div>
@@ -641,10 +641,10 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                   type="checkbox"
                   checked={linkToWorkoutLogs}
                   onChange={(e) => setLinkToWorkoutLogs(e.target.checked)}
-                  className="w-4 h-4 accent-amber-400 rounded"
+                  className="w-4 h-4 accent-blue-400 rounded"
                 />
                 <span className="text-xs text-zinc-300 font-medium">
-                  Also add to <strong className="text-amber-400">General Workout Logs</strong>
+                  Also add to <strong className="text-blue-400">General Workout Logs</strong>
                 </span>
               </label>
             </div>
@@ -660,7 +660,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-amber-950/40 cursor-pointer"
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-blue-950/40 cursor-pointer"
               >
                 Save Ruck Session
               </button>
@@ -675,7 +675,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
         <div className="bg-[#141b24] border border-zinc-800 rounded-2xl p-4 shadow-md">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Max Pack</span>
-            <Scale className="w-4 h-4 text-amber-400" />
+            <Scale className="w-4 h-4 text-blue-400" />
           </div>
           <div className="text-2xl sm:text-3xl font-black text-white font-mono">
             {stats.maxWeight} <span className="text-xs font-normal text-zinc-400">lbs</span>
@@ -699,9 +699,9 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
         <div className="bg-[#141b24] border border-zinc-800 rounded-2xl p-4 shadow-md">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Peak Workload</span>
-            <Zap className="w-4 h-4 text-amber-400" />
+            <Zap className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-blue-400 font-mono">
             {stats.maxWorkload}
           </div>
           <div className="text-[10px] text-zinc-400 mt-1">mi × lbs volume</div>
@@ -723,7 +723,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
         <div className="bg-[#141b24] border border-zinc-800 rounded-2xl p-4 shadow-md">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Load</span>
-            <Trophy className="w-4 h-4 text-amber-400" />
+            <Trophy className="w-4 h-4 text-blue-400" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-white font-mono">
             {stats.totalWorkload.toLocaleString()}
@@ -749,7 +749,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-800 gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-amber-400" />
+              <TrendingUp className="w-5 h-5 text-blue-400" />
               <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wide">
                 Progression Curves Over Time
               </h2>
@@ -766,7 +766,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               onClick={() => setChartMetric('weight_distance')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 chartMetric === 'weight_distance'
-                  ? 'bg-amber-400 text-black shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -777,7 +777,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               onClick={() => setChartMetric('workload')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 chartMetric === 'workload'
-                  ? 'bg-amber-400 text-black shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -788,7 +788,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               onClick={() => setChartMetric('pace')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 chartMetric === 'pace'
-                  ? 'bg-amber-400 text-black shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -805,7 +805,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#262f3c" vertical={false} />
                   <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="left" stroke="#fbbf24" tick={{ fontSize: 11 }} label={{ value: 'Weight (lbs)', angle: -90, position: 'insideLeft', fill: '#fbbf24', fontSize: 10 }} />
+                  <YAxis yAxisId="left" stroke="#60a5fa" tick={{ fontSize: 11 }} label={{ value: 'Weight (lbs)', angle: -90, position: 'insideLeft', fill: '#60a5fa', fontSize: 10 }} />
                   <YAxis yAxisId="right" orientation="right" stroke="#34d399" tick={{ fontSize: 11 }} label={{ value: 'Distance (mi)', angle: 90, position: 'insideRight', fill: '#34d399', fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#18202b', borderColor: '#334155', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
@@ -816,24 +816,24 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                  <Bar yAxisId="left" dataKey="weightLbs" name="Pack Weight" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={24} />
+                  <Bar yAxisId="left" dataKey="weightLbs" name="Pack Weight" fill="#2563eb" radius={[6, 6, 0, 0]} barSize={24} />
                   <Line yAxisId="right" type="monotone" dataKey="distanceMiles" name="Distance" stroke="#34d399" strokeWidth={3} dot={{ r: 5, fill: '#10b981' }} />
                 </ComposedChart>
               ) : chartMetric === 'workload' ? (
                 <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#262f3c" vertical={false} />
                   <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 11 }} />
-                  <YAxis stroke="#fbbf24" tick={{ fontSize: 11 }} label={{ value: 'Workload (mi × lbs)', angle: -90, position: 'insideLeft', fill: '#fbbf24', fontSize: 10 }} />
+                  <YAxis stroke="#60a5fa" tick={{ fontSize: 11 }} label={{ value: 'Workload (mi × lbs)', angle: -90, position: 'insideLeft', fill: '#60a5fa', fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#18202b', borderColor: '#334155', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
                     formatter={(val: any) => [`${val} lb-miles`, 'Workload Index']}
                   />
-                  <Area type="monotone" dataKey="workloadIndex" name="Workload Index" stroke="#f59e0b" fill="url(#colorWorkload)" fillOpacity={0.2} strokeWidth={3} />
-                  <Line type="monotone" dataKey="workloadIndex" stroke="#fbbf24" strokeWidth={3} dot={{ r: 6, fill: '#fbbf24' }} />
+                  <Area type="monotone" dataKey="workloadIndex" name="Workload Index" stroke="#2563eb" fill="url(#colorWorkload)" fillOpacity={0.2} strokeWidth={3} />
+                  <Line type="monotone" dataKey="workloadIndex" stroke="#60a5fa" strokeWidth={3} dot={{ r: 6, fill: '#60a5fa' }} />
                   <defs>
                     <linearGradient id="colorWorkload" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.5}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.5}/>
+                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                 </ComposedChart>
@@ -867,7 +867,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
       {/* Tactical Milestone Standards Checklist */}
       <div className="bg-[#121820] border border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xl">
         <div className="flex items-center gap-2 mb-1">
-          <Award className="w-5 h-5 text-amber-400" />
+          <Award className="w-5 h-5 text-blue-400" />
           <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-wide">
             Tactical & Military Milestone Standards
           </h2>
@@ -916,7 +916,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 </div>
 
                 <div className="font-black text-sm text-zinc-100 mb-1">{standard.name}</div>
-                <div className="flex items-center gap-2 text-xs font-mono text-amber-400 mb-2">
+                <div className="flex items-center gap-2 text-xs font-mono text-blue-400 mb-2">
                   <span>{standard.targetWeightLbs} lbs</span>
                   <span>•</span>
                   <span>{standard.targetDistanceMiles} mi</span>
@@ -937,7 +937,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-800 gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <History className="w-5 h-5 text-amber-400" />
+              <History className="w-5 h-5 text-blue-400" />
               <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wide">
                 Unified Training History & Timeline
               </h2>
@@ -954,7 +954,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               onClick={() => setFeedFilter('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 feedFilter === 'all'
-                  ? 'bg-amber-400 text-black shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -965,7 +965,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               onClick={() => setFeedFilter('rucks_only')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 feedFilter === 'rucks_only'
-                  ? 'bg-amber-400 text-black shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -977,7 +977,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
               onClick={() => setFeedFilter('gym_only')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                 feedFilter === 'gym_only'
-                  ? 'bg-amber-400 text-black shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -999,11 +999,11 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 return (
                   <div
                     key={`ruck-${ruck.id}`}
-                    className="p-4 rounded-2xl bg-gradient-to-r from-[#141d27] to-[#182330] border-2 border-amber-500/40 hover:border-amber-400 transition-all shadow-md"
+                    className="p-4 rounded-2xl bg-gradient-to-r from-[#0c1322] to-[#111c2e] border-2 border-blue-500/40 hover:border-blue-400 transition-all shadow-md"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-700/60">
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-400 text-black flex items-center gap-1">
+                        <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white flex items-center gap-1">
                           <Footprints className="w-3 h-3" />
                           Ruck Session
                         </span>
@@ -1038,7 +1038,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                       <div className="bg-black/30 rounded-xl p-2 border border-zinc-800/80">
                         <span className="text-[10px] uppercase font-bold text-zinc-400 block">Pack Load</span>
-                        <span className="font-black text-amber-400 text-sm font-mono">{ruck.weightLbs} lbs</span>
+                        <span className="font-black text-blue-400 text-sm font-mono">{ruck.weightLbs} lbs</span>
                       </div>
 
                       <div className="bg-black/30 rounded-xl p-2 border border-zinc-800/80">
@@ -1058,7 +1058,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
 
                       <div className="bg-black/30 rounded-xl p-2 border border-zinc-800/80 col-span-2 sm:col-span-1">
                         <span className="text-[10px] uppercase font-bold text-zinc-400 block">Workload</span>
-                        <span className="font-black text-amber-300 text-sm font-mono">{Math.round(workload)} lb-mi</span>
+                        <span className="font-black text-blue-300 text-sm font-mono">{Math.round(workload)} lb-mi</span>
                       </div>
                     </div>
 
@@ -1079,7 +1079,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-800">
                       <div className="flex items-center gap-2.5 flex-wrap">
                         <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-zinc-800 text-zinc-300 border border-zinc-700 flex items-center gap-1">
-                          <Dumbbell className="w-3 h-3 text-amber-400" />
+                          <Dumbbell className="w-3 h-3 text-blue-400" />
                           Gym Strength
                         </span>
                         <h3 className="font-black text-white text-sm sm:text-base">
@@ -1113,7 +1113,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
 
                       <div className="bg-black/20 rounded-xl p-2 border border-zinc-800">
                         <span className="text-[10px] uppercase font-bold text-zinc-400 block">Sets Completed</span>
-                        <span className="font-black text-amber-400 text-sm font-mono">{gym.totalSetsCompleted} sets</span>
+                        <span className="font-black text-blue-400 text-sm font-mono">{gym.totalSetsCompleted} sets</span>
                       </div>
                     </div>
 
@@ -1150,7 +1150,7 @@ export const RuckProgressTab: React.FC<RuckProgressTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowForm(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-xs uppercase tracking-wider rounded-xl shadow-md cursor-pointer hover:from-amber-400 hover:to-amber-500 transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md cursor-pointer hover:from-blue-500 hover:to-blue-600 transition-all"
                 >
                   Log First Ruck
                 </button>

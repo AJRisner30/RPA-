@@ -60,7 +60,8 @@ export function getAutoOverloadRecommendation(
     nameLower.includes('plank') || 
     nameLower.includes('hold') || 
     nameLower.includes('run') || 
-    nameLower.includes('ruck') ||
+    nameLower.includes('sprint') ||
+    nameLower.includes('carry') ||
     (targetRepsText || '').toLowerCase().includes('min') ||
     (targetRepsText || '').toLowerCase().includes('sec') ||
     (targetRepsText || '').toLowerCase().includes(' s') ||

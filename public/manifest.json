@@ -1,14 +1,14 @@
 {
   "id": "/",
-  "name": "Overland Athletics",
-  "short_name": "Overland",
-  "description": "Overland Athletics — Run • Lift • Ruck • Go The Distance. Elite performance training, tactical conditioning, hybrid strength, and endurance progression engineered to go the distance.",
-  "start_url": "/",
+  "name": "Patrol Ready Performance",
+  "short_name": "PatrolReady",
+  "description": "Patrol Ready Performance — Tactical fitness for the Frontline. Elite law enforcement physical training, duty readiness, and tactical load carriage.",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#10151a",
-  "background_color": "#10151a",
+  "theme_color": "#0b1320",
+  "background_color": "#0b1320",
   "categories": ["fitness", "health", "sports"],
   "icons": [
     {

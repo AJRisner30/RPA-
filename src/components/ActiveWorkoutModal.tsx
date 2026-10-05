@@ -376,13 +376,13 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   const totalPlannedSets = exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
 
   const totalVolumeLbs = exercises.reduce((acc, ex) => {
-    if (ex.isTimed && !ex.exerciseName.toLowerCase().includes('ruck')) {
+    if (ex.isTimed) {
       return acc;
     }
     return (
       acc +
       ex.sets.reduce((setAcc, set) => {
-        return set.completed ? setAcc + (set.weightLbs || 0) * (ex.isTimed ? 1 : set.reps) : setAcc;
+        return set.completed ? setAcc + (set.weightLbs || 0) * set.reps : setAcc;
       }, 0)
     );
   }, 0);
@@ -434,7 +434,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         particleCount: 120,
         spread: 80,
         origin: { y: 0.6 },
-        colors: ['#e11d48', '#f59e0b', '#10b981', '#ffffff'],
+        colors: ['#2563eb', '#3b82f6', '#dc2626', '#ffffff'],
       });
     } catch {
       // confetti fallback
@@ -498,7 +498,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       {/* Top Bar */}
       <div className="bg-[#12171d] border-b-2 border-zinc-800 px-3 sm:px-5 py-3 flex items-center justify-between shrink-0 gap-3 shadow-lg">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-black font-athletic font-black text-sm shadow-md shadow-amber-950/40 shrink-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-athletic font-black text-sm shadow-md shadow-blue-950/50 shrink-0">
             LIVE
           </div>
           <div className="min-w-0">
@@ -506,29 +506,29 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               <h2 className="text-base sm:text-lg font-black text-white tracking-wide truncate max-w-[140px] sm:max-w-xs md:max-w-md">
                 {program.title}
               </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-400 text-black uppercase shrink-0">
+              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white uppercase shrink-0">
                 {program.category}
               </span>
             </div>
-            <p className="text-[11px] text-zinc-400 truncate">
-              Overland Athletics Live Weights Tracker
+            <p className="text-[11px] text-slate-400 truncate">
+              Patrol Ready Performance • Live Tactical Tracker
             </p>
           </div>
         </div>
 
         {/* Live Metrics & Actions Header */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="hidden sm:flex items-center gap-2 bg-zinc-950 px-3 py-1.5 rounded-xl border border-zinc-700 shadow-sm">
-            <Clock className="w-4 h-4 text-amber-400" />
+          <div className="hidden sm:flex items-center gap-2 bg-[#0a0f1d] px-3 py-1.5 rounded-xl border border-slate-700 shadow-sm">
+            <Clock className="w-4 h-4 text-blue-400" />
             <span className="font-mono text-xs sm:text-sm font-black text-white">
               {formatElapsed(elapsedSeconds)}
             </span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2 bg-zinc-950 px-3 py-1.5 rounded-xl border border-zinc-700 shadow-sm">
-            <Dumbbell className="w-4 h-4 text-amber-400" />
+          <div className="hidden lg:flex items-center gap-2 bg-[#0a0f1d] px-3 py-1.5 rounded-xl border border-slate-700 shadow-sm">
+            <Dumbbell className="w-4 h-4 text-blue-400" />
             <span className="font-mono text-xs sm:text-sm font-black text-white">
-              {totalVolumeLbs.toLocaleString()} <span className="text-zinc-500 text-xs">lbs</span>
+              {totalVolumeLbs.toLocaleString()} <span className="text-slate-500 text-xs">lbs</span>
             </span>
           </div>
 
@@ -547,7 +547,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           <button
             type="button"
             onClick={() => setIsFinishing(true)}
-            className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-black rounded-xl text-xs sm:text-sm border-2 border-emerald-300 shadow-lg shadow-emerald-950/40 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 uppercase tracking-wider"
+            className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs sm:text-sm border-2 border-emerald-300 shadow-lg shadow-emerald-950/40 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 uppercase tracking-wider"
             title="Review and complete session"
           >
             <Check className="w-4 h-4 stroke-[3]" />
@@ -557,7 +557,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           <button
             type="button"
             onClick={handleExitRequest}
-            className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-zinc-800 transition-colors hidden sm:block"
+            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors hidden sm:block"
             title="Exit workout"
           >
             <X className="w-5 h-5" />
@@ -568,12 +568,12 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       {/* Main Workout Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Exercise Navigation Sidebar */}
-        <div className="w-full md:w-80 bg-zinc-950/80 border-b md:border-b-0 md:border-r border-zinc-800 p-3 overflow-y-auto shrink-0 max-h-48 md:max-h-none">
+        <div className="w-full md:w-80 bg-[#070c14] border-b md:border-b-0 md:border-r border-slate-800 p-3 overflow-y-auto shrink-0 max-h-48 md:max-h-none">
           <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               Exercises ({totalSetsCompleted}/{totalPlannedSets} Sets)
             </span>
-            <span className="text-xs font-mono font-bold text-amber-400">
+            <span className="text-xs font-mono font-bold text-blue-400">
               {Math.round((totalSetsCompleted / Math.max(1, totalPlannedSets)) * 100)}%
             </span>
           </div>
@@ -590,8 +590,8 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                   onClick={() => setActiveExerciseIndex(idx)}
                   className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer ${
                     isCurrent
-                      ? 'bg-zinc-800 text-white border border-amber-500/50 shadow-md'
-                      : 'bg-zinc-900/60 hover:bg-zinc-900 text-zinc-300 border border-zinc-800/60'
+                      ? 'bg-[#162238] text-white border border-blue-500/50 shadow-md'
+                      : 'bg-[#0f172a]/60 hover:bg-[#0f172a] text-slate-300 border border-slate-800/60'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -600,22 +600,22 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                         isDone
                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                           : isCurrent
-                          ? 'bg-amber-500 text-black font-black'
-                          : 'bg-zinc-800 text-zinc-400'
+                          ? 'bg-blue-600 text-white font-black'
+                          : 'bg-slate-800 text-slate-400'
                       }`}
                     >
                       {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                     </div>
                     <div className="truncate">
                       <p className="text-xs font-bold truncate leading-snug">{ex.exerciseName}</p>
-                      <p className="text-[10px] text-zinc-400">
+                      <p className="text-[10px] text-slate-400">
                         {setsDone}/{ex.sets.length} sets completed
                       </p>
                     </div>
                   </div>
                   <ChevronRight
                     className={`w-4 h-4 shrink-0 transition-transform ${
-                      isCurrent ? 'text-amber-400 translate-x-0.5' : 'text-zinc-600'
+                      isCurrent ? 'text-blue-400 translate-x-0.5' : 'text-slate-600'
                     }`}
                   />
                 </button>
@@ -639,28 +639,28 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
         {/* Center Current Exercise Work Area */}
         {currentExercise && (
-          <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-zinc-900/50">
+          <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-[#0a0f1d]/50">
             <div className="max-w-3xl mx-auto space-y-6">
               {/* Exercise Card Header */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+              <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-semibold px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded border border-zinc-700">
+                      <span className="text-xs font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded border border-slate-700">
                         {currentExercise.muscleGroup}
                       </span>
-                      <span className="text-xs text-amber-400 flex items-center gap-1 font-mono font-bold bg-amber-400/10 px-2 py-0.5 rounded border border-amber-500/20">
-                        <Clock className="w-3 h-3 text-amber-400" />
+                      <span className="text-xs text-blue-400 flex items-center gap-1 font-mono font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                        <Clock className="w-3 h-3 text-blue-400" />
                         Rest: {currentExercise.restPeriodSeconds}s
                       </span>
                       {currentExercise.targetRpe && (
-                        <span className="text-xs text-amber-400 flex items-center gap-1 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                          <Gauge className="w-3 h-3 text-amber-400" />
+                        <span className="text-xs text-blue-400 flex items-center gap-1 font-mono font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                          <Gauge className="w-3 h-3 text-blue-400" />
                           Target RPE: {currentExercise.targetRpe}
                         </span>
                       )}
                       {currentExercise.targetReps && (
-                        <span className="text-xs text-zinc-400 font-mono bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-700/60">
+                        <span className="text-xs text-slate-400 font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60">
                           Target Reps: {currentExercise.targetReps}
                         </span>
                       )}
@@ -682,7 +682,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
                   {/* Rest Timer Button / Active Indicator */}
                   {modalRestTimer && modalRestTimer.secondsRemaining > 0 ? (
-                    <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/40 rounded-xl px-3 py-1.5 self-start sm:self-auto">
+                    <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/40 rounded-xl px-3 py-1.5 self-start sm:self-auto">
                       <button
                         type="button"
                         onClick={() =>
@@ -691,7 +691,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                             isRunning: !modalRestTimer.isRunning,
                           })
                         }
-                        className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-black font-mono rounded-lg transition-all cursor-pointer shadow-md shadow-amber-500/20"
+                        className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black font-mono rounded-lg transition-all cursor-pointer shadow-md shadow-blue-500/20"
                       >
                         {modalRestTimer.isRunning ? (
                           <Pause className="w-3.5 h-3.5 fill-current" />
@@ -709,7 +709,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                             secondsRemaining: modalRestTimer.secondsRemaining + 30,
                           })
                         }
-                        className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono rounded-lg transition-colors cursor-pointer"
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-mono rounded-lg transition-colors cursor-pointer"
                         title="Add 30 seconds"
                       >
                         +30s
@@ -718,7 +718,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setModalRestTimer(null)}
-                        className="p-1 text-zinc-400 hover:text-amber-400 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="p-1 text-slate-400 hover:text-blue-400 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
                         title="Stop Rest Timer"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -740,7 +740,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setModalRestTimer(null)}
-                        className="p-1 text-zinc-400 hover:text-white"
+                        className="p-1 text-slate-400 hover:text-white"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -748,7 +748,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                   ) : (
                     <button
                       onClick={() => handleStartRestTimer(currentExercise.restPeriodSeconds, currentExercise.exerciseName)}
-                      className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white shadow-lg shadow-amber-950/40 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all self-start sm:self-auto cursor-pointer active:scale-95"
+                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-950/40 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all self-start sm:self-auto cursor-pointer active:scale-95"
                     >
                       <Clock className="w-4 h-4" />
                       Start Rest ({currentExercise.restPeriodSeconds}s)
@@ -758,19 +758,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
                 {/* Inline Rest Progress Bar (if timer is active) */}
                 {modalRestTimer && modalRestTimer.secondsRemaining > 0 && (
-                  <div className="mt-3 bg-zinc-950/80 border border-amber-500/20 rounded-xl p-2.5">
+                  <div className="mt-3 bg-[#070c14] border border-blue-500/20 rounded-xl p-2.5">
                     <div className="flex items-center justify-between text-xs mb-1.5 font-mono">
-                      <span className="text-zinc-400 flex items-center gap-1.5">
-                        <Timer className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-slate-400 flex items-center gap-1.5">
+                        <Timer className="w-3.5 h-3.5 text-blue-400" />
                         Resting for {modalRestTimer.exerciseName}
                       </span>
-                      <span className="font-black text-amber-400">
+                      <span className="font-black text-blue-400">
                         {modalRestTimer.secondsRemaining}s remaining
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-1000 ease-linear rounded-full"
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-1000 ease-linear rounded-full"
                         style={{
                           width: `${Math.min(100, (modalRestTimer.secondsRemaining / (modalRestTimer.totalSeconds || 1)) * 100)}%`,
                         }}
@@ -780,23 +780,23 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                 )}
 
                 {/* Rest Time Customizer for this Exercise */}
-                <div className="mt-4 pt-3 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-zinc-500" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-slate-500" />
                       Set Rest Duration:
                     </span>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleUpdateExerciseRestPeriod(activeExerciseIndex, currentExercise.restPeriodSeconds - 15)}
-                        className="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded border border-zinc-700 font-mono transition-colors cursor-pointer"
+                        className="px-2 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 font-mono transition-colors cursor-pointer"
                         title="Minus 15s"
                       >
                         -15s
                       </button>
                       <button
                         onClick={() => handleUpdateExerciseRestPeriod(activeExerciseIndex, currentExercise.restPeriodSeconds + 15)}
-                        className="px-2 py-0.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded border border-zinc-700 font-mono transition-colors cursor-pointer"
+                        className="px-2 py-0.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 font-mono transition-colors cursor-pointer"
                         title="Plus 15s"
                       >
                         +15s
@@ -831,11 +831,11 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                 </div>
 
                 {currentExercise.notes && (
-                  <div className="mt-3.5 p-3 bg-zinc-950/70 border border-zinc-800 rounded-xl text-xs text-zinc-300 flex items-start gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="mt-3.5 p-3 bg-[#070c14] border border-slate-800 rounded-xl text-xs text-slate-300 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-amber-300 uppercase text-[10px] tracking-wider block">
-                        Overland Athletics Directive & Coaching Cue:
+                      <span className="font-bold text-blue-300 uppercase text-[10px] tracking-wider block">
+                        Patrol Ready Directive & Coaching Cue:
                       </span>
                       <p className="mt-0.5 leading-relaxed">{currentExercise.notes}</p>
                     </div>
@@ -847,33 +847,33 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               {currentExercise.autoOverload && !currentExercise.isTimed && (
                 <div className={`p-3.5 rounded-2xl border mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                   currentExercise.autoOverload.status === 'overload_applied'
-                    ? 'bg-gradient-to-r from-amber-950/40 via-zinc-900 to-amber-950/30 border-amber-500/40 shadow-md'
+                    ? 'bg-gradient-to-r from-blue-950/60 via-slate-900 to-blue-950/40 border-blue-500/50 shadow-md'
                     : currentExercise.autoOverload.status === 'maintain'
-                    ? 'bg-zinc-950/80 border-sky-500/30'
-                    : 'bg-zinc-950/60 border-zinc-800'
+                    ? 'bg-[#0a0f1d] border-sky-500/30'
+                    : 'bg-[#0a0f1d] border-slate-800'
                 }`}>
                   <div className="flex items-start gap-2.5">
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                       currentExercise.autoOverload.status === 'overload_applied'
-                        ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/30'
-                        : 'bg-zinc-800 text-zinc-400'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                        : 'bg-slate-800 text-slate-400'
                     }`}>
                       <Zap className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-black uppercase font-athletic tracking-wider text-amber-300">
+                        <span className="text-[11px] font-black uppercase font-athletic tracking-wider text-blue-300">
                           {currentExercise.autoOverload.status === 'overload_applied'
                             ? `⚡ Auto-Overload Applied: +${currentExercise.autoOverload.incrementLbs} lbs`
                             : currentExercise.autoOverload.status === 'maintain'
                             ? '⚡ Auto-Overload: Consolidate Working Weight'
                             : '⚡ Auto-Overload Engine Ready'}
                         </span>
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
                           Next Week Target
                         </span>
                       </div>
-                      <p className="text-xs text-zinc-300 mt-0.5 leading-snug">
+                      <p className="text-xs text-slate-300 mt-0.5 leading-snug">
                         {currentExercise.autoOverload.reason}
                       </p>
                     </div>
@@ -884,7 +884,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleApplyOverloadWeightToAllSets(activeExerciseIndex, currentExercise.autoOverload!.recommendedWeightLbs)}
-                        className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl text-xs font-bold font-mono flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                        className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold font-mono flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
                         title="Set all sets to next week's recommended overload weight"
                       >
                         <TrendingUp className="w-3.5 h-3.5" />
@@ -893,7 +893,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleApplyOverloadWeightToAllSets(activeExerciseIndex, currentExercise.autoOverload!.previousWeightLbs!)}
-                        className="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-mono flex items-center gap-1 cursor-pointer transition-colors"
                         title="Revert all sets to previous week's weight"
                       >
                         <RotateCcw className="w-3 h-3" />
@@ -905,13 +905,13 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               )}
 
               {/* Set-by-Set Logging Table */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-lg">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+              <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                     {currentExercise.isTimed ? (
                       <Clock className="w-4 h-4 text-emerald-400" />
                     ) : (
-                      <Dumbbell className="w-4 h-4 text-amber-400" />
+                      <Dumbbell className="w-4 h-4 text-blue-400" />
                     )}
                     {currentExercise.isTimed ? 'Conditioning, Distance & Time Log' : 'Weights & Reps Log'}
                   </h4>
@@ -921,14 +921,14 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       onClick={() => setShowRpeGuide(!showRpeGuide)}
                       className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
                         showRpeGuide
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                          : 'bg-zinc-800/80 text-zinc-400 hover:text-amber-400 border-zinc-700/60'
+                          ? 'bg-blue-600/20 text-blue-300 border-blue-500/40'
+                          : 'bg-slate-800/80 text-slate-400 hover:text-blue-400 border-slate-700/60'
                       }`}
                     >
-                      <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                      <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
                       <span>RPE Guide</span>
                     </button>
-                    <span className="text-xs text-zinc-500 hidden sm:inline">
+                    <span className="text-xs text-slate-500 hidden sm:inline">
                       {currentExercise.isTimed ? 'Pace & Exertion' : 'Auto 1RM & Intensity'}
                     </span>
                   </div>
@@ -936,39 +936,39 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
                 {/* Expandable RPE Scale & Intensity Reference Guide */}
                 {showRpeGuide && (
-                  <div className="mb-3.5 p-3.5 bg-zinc-950/90 border border-amber-500/30 rounded-xl text-xs space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-150 shadow-inner">
-                    <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                      <div className="flex items-center gap-2 text-amber-400 font-athletic font-bold uppercase tracking-wider text-[11px]">
-                        <HelpCircle className="w-4 h-4 text-amber-400" />
-                        Overland Athletics Rate of Perceived Exertion (RPE / RIR) Scale
+                  <div className="mb-3.5 p-3.5 bg-[#070c14] border border-blue-500/30 rounded-xl text-xs space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-150 shadow-inner">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                      <div className="flex items-center gap-2 text-blue-400 font-athletic font-bold uppercase tracking-wider text-[11px]">
+                        <HelpCircle className="w-4 h-4 text-blue-400" />
+                        Patrol Ready Performance Rate of Perceived Exertion (RPE / RIR) Scale
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowRpeGuide(false)}
-                        className="text-zinc-500 hover:text-zinc-300 p-0.5 cursor-pointer"
+                        className="text-slate-500 hover:text-slate-300 p-0.5 cursor-pointer"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
                       RPE measures effort and reps in reserve (RIR) on every logged set. Tracking RPE ensures progressive overload without exceeding recovery capacity.
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                      <div className="p-2 rounded-lg bg-amber-950/30 border border-amber-500/30">
-                        <div className="font-bold text-amber-400 font-mono">RPE 10 (0 RIR)</div>
-                        <div className="text-zinc-400 text-[10px] mt-0.5">Absolute maximum effort. All-out sprint / 0 reps left.</div>
+                      <div className="p-2 rounded-lg bg-red-950/40 border border-red-500/30">
+                        <div className="font-bold text-red-400 font-mono">RPE 10 (0 RIR)</div>
+                        <div className="text-slate-400 text-[10px] mt-0.5">Absolute maximum effort. All-out pursuit / 0 reps left.</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-600/30">
-                        <div className="font-bold text-amber-400 font-mono">RPE 9 (1 RIR)</div>
-                        <div className="text-zinc-400 text-[10px] mt-0.5">Heavy strain / Race pace. Exactly 1 rep left in tank.</div>
+                      <div className="p-2 rounded-lg bg-blue-950/50 border border-blue-500/40">
+                        <div className="font-bold text-blue-300 font-mono">RPE 9 (1 RIR)</div>
+                        <div className="text-slate-400 text-[10px] mt-0.5">Heavy strain / Sprint pace. Exactly 1 rep left in tank.</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-600/30">
-                        <div className="font-bold text-emerald-400 font-mono">RPE 8 (2 RIR)</div>
-                        <div className="text-zinc-400 text-[10px] mt-0.5">Primary strength & tempo zone. 2 solid reps left.</div>
+                      <div className="p-2 rounded-lg bg-blue-950/40 border border-blue-500/30">
+                        <div className="font-bold text-blue-400 font-mono">RPE 8 (2 RIR)</div>
+                        <div className="text-slate-400 text-[10px] mt-0.5">Primary strength & tempo zone. 2 solid reps left.</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
                         <div className="font-bold text-sky-400 font-mono">RPE 7 (3+ RIR)</div>
-                        <div className="text-zinc-400 text-[10px] mt-0.5">Aerobic Zone 2 or explosive warmups. Conversation pace.</div>
+                        <div className="text-slate-400 text-[10px] mt-0.5">Aerobic Zone 2 or dynamic warmup. Conversation pace.</div>
                       </div>
                     </div>
                   </div>
@@ -976,27 +976,27 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
                 {/* Table Header: Dynamically adapts for Timed/Cardio vs Strength */}
                 {currentExercise.isTimed ? (
-                  <div className="grid grid-cols-12 gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-2 py-1 mb-1 items-center">
+                  <div className="grid grid-cols-12 gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1 items-center">
                     <div className="col-span-1 text-center">Set</div>
                     <div className="col-span-2 hidden sm:block">Previous</div>
                     <div className="col-span-3 sm:col-span-3 text-center">
-                      {currentExercise.exerciseName.toLowerCase().includes('ruck') ? 'Pack (lbs) / Dist' : 'Distance (mi)'}
+                      Distance (mi)
                     </div>
                     <div className="col-span-4 sm:col-span-3 text-center">Time / Duration</div>
                     <div className="col-span-2 sm:col-span-2 text-center flex items-center justify-center gap-1">
-                      <span className="text-amber-400 font-black">RPE</span>
+                      <span className="text-blue-400 font-black">RPE</span>
                     </div>
                     <div className="col-span-2 sm:col-span-1 text-center">Done</div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-12 gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-2 py-1 mb-1 items-center">
+                  <div className="grid grid-cols-12 gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1 items-center">
                     <div className="col-span-1 text-center">Set</div>
                     <div className="col-span-2 hidden sm:block">Previous</div>
                     <div className="col-span-4 sm:col-span-3 text-center">Weight (lbs)</div>
                     <div className="col-span-2 sm:col-span-2 text-center">Reps</div>
                     <div className="col-span-3 sm:col-span-2 text-center flex items-center justify-center gap-1">
-                      <span className="text-amber-400 font-black">RPE</span>
-                      <span className="text-[9px] text-zinc-500 font-normal lowercase hidden sm:inline">(1-10)</span>
+                      <span className="text-blue-400 font-black">RPE</span>
+                      <span className="text-[9px] text-slate-500 font-normal lowercase hidden sm:inline">(1-10)</span>
                     </div>
                     <div className="col-span-2 sm:col-span-2 text-center">Done</div>
                   </div>
@@ -1008,7 +1008,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                     const isStopwatchActive = activeSetStopwatch?.exerciseIdx === activeExerciseIndex && activeSetStopwatch?.setIdx === setIdx;
 
                     if (currentExercise.isTimed) {
-                      // TIMED / CARDIO SET ROW (Runs, Planks, Intervals, Rucks)
+                      // TIMED / CARDIO SET ROW (Runs, Planks, Intervals, Sprints)
                       return (
                         <div
                           key={set.id}
@@ -1029,36 +1029,28 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                               {set.prevTimeFormatted ? (
                                 <span className="font-mono text-[11px]">
                                   {set.prevTimeFormatted}
-                                  {set.prevWeightLbs ? ` • ${set.prevWeightLbs}lbs` : ''}
+                                  {set.prevDistanceMiles ? ` • ${set.prevDistanceMiles}mi` : ''}
                                 </span>
                               ) : (
                                 <span className="text-zinc-600">—</span>
                               )}
                             </div>
 
-                            {/* Distance / Load Input */}
+                            {/* Distance Input */}
                             <div className="col-span-3 sm:col-span-3 flex items-center justify-center gap-1">
                               <input
                                 type="number"
                                 step="0.1"
-                                placeholder={currentExercise.exerciseName.toLowerCase().includes('ruck') ? '35' : '3.0'}
-                                value={
-                                  currentExercise.exerciseName.toLowerCase().includes('ruck')
-                                    ? set.weightLbs || ''
-                                    : set.distanceMiles !== undefined ? set.distanceMiles : ''
-                                }
+                                placeholder="3.0"
+                                value={set.distanceMiles !== undefined ? set.distanceMiles : ''}
                                 onChange={(e) => {
                                   const val = parseFloat(e.target.value) || 0;
-                                  if (currentExercise.exerciseName.toLowerCase().includes('ruck')) {
-                                    handleUpdateSet(activeExerciseIndex, setIdx, 'weightLbs', val);
-                                  } else {
-                                    handleUpdateSet(activeExerciseIndex, setIdx, 'distanceMiles', val);
-                                  }
+                                  handleUpdateSet(activeExerciseIndex, setIdx, 'distanceMiles', val);
                                 }}
-                                className="w-full max-w-[4.8rem] text-center font-mono font-bold text-xs sm:text-sm bg-zinc-900 border border-zinc-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-amber-500"
+                                className="w-full max-w-[4.8rem] text-center font-mono font-bold text-xs sm:text-sm bg-[#0a0f1d] border border-slate-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-blue-500"
                               />
-                              <span className="text-[10px] text-zinc-400 hidden sm:inline">
-                                {currentExercise.exerciseName.toLowerCase().includes('ruck') ? 'lbs' : 'mi'}
+                              <span className="text-[10px] text-slate-400 hidden sm:inline">
+                                mi
                               </span>
                             </div>
 
@@ -1075,10 +1067,10 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                 onChange={(e) =>
                                   handleUpdateSet(activeExerciseIndex, setIdx, 'timeFormatted', e.target.value)
                                 }
-                                className={`w-full max-w-[5.2rem] text-center font-mono font-bold text-xs sm:text-sm border rounded-lg py-1.5 text-white focus:outline-none focus:border-amber-500 ${
+                                className={`w-full max-w-[5.2rem] text-center font-mono font-bold text-xs sm:text-sm border rounded-lg py-1.5 text-white focus:outline-none focus:border-blue-500 ${
                                   isStopwatchActive
-                                    ? 'bg-amber-950/70 border-amber-500 text-amber-300 animate-pulse'
-                                    : 'bg-zinc-900 border-zinc-700'
+                                    ? 'bg-blue-950/70 border-blue-500 text-blue-300 animate-pulse'
+                                    : 'bg-[#0a0f1d] border-slate-700'
                                 }`}
                               />
 
@@ -1088,8 +1080,8 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                 onClick={() => handleToggleSetStopwatch(activeExerciseIndex, setIdx)}
                                 className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                                   isStopwatchActive
-                                    ? 'bg-amber-500 text-black font-black border-amber-500 animate-pulse shadow-md shadow-amber-950/40'
-                                    : 'bg-zinc-800 hover:bg-zinc-700 text-amber-400 border-zinc-700'
+                                    ? 'bg-blue-600 text-white font-black border-blue-500 animate-pulse shadow-md shadow-blue-950/50'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-blue-400 border-slate-700'
                                 }`}
                                 title={isStopwatchActive ? 'Stop timer and record time' : 'Start live set stopwatch'}
                               >
@@ -1114,7 +1106,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                   const raw = e.target.value;
                                   handleUpdateSet(activeExerciseIndex, setIdx, 'rpe', raw === '' ? undefined : parseFloat(raw));
                                 }}
-                                className="w-full max-w-[3.6rem] text-center font-mono font-bold text-xs bg-zinc-900 border border-zinc-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-amber-500"
+                                className="w-full max-w-[3.6rem] text-center font-mono font-bold text-xs bg-[#0a0f1d] border border-slate-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-blue-500"
                               />
                             </div>
 
@@ -1209,12 +1201,12 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                   parseFloat(e.target.value) || 0
                                 )
                               }
-                              className="w-full max-w-[5.4rem] text-center font-mono font-bold text-xs sm:text-sm bg-zinc-900 border border-zinc-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-amber-500"
+                              className="w-full max-w-[5.4rem] text-center font-mono font-bold text-xs sm:text-sm bg-[#0a0f1d] border border-slate-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-blue-500"
                             />
                           </div>
                           {/* Mobile-only previous indicator */}
                           {set.prevWeightLbs ? (
-                            <span className="text-[9px] font-mono text-zinc-500 sm:hidden truncate">
+                            <span className="text-[9px] font-mono text-slate-500 sm:hidden truncate">
                               Prev: {set.prevWeightLbs}×{set.prevReps}
                             </span>
                           ) : null}
@@ -1233,7 +1225,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                 parseInt(e.target.value) || 0
                               )
                             }
-                            className="w-full max-w-[3.8rem] text-center font-mono font-bold text-xs sm:text-sm bg-zinc-900 border border-zinc-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-amber-500"
+                            className="w-full max-w-[3.8rem] text-center font-mono font-bold text-xs sm:text-sm bg-[#0a0f1d] border border-slate-700 rounded-lg py-1.5 text-white focus:outline-none focus:border-blue-500"
                           />
                         </div>
 
@@ -1252,19 +1244,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                 const val = raw === '' ? undefined : parseFloat(raw);
                                 handleUpdateSet(activeExerciseIndex, setIdx, 'rpe', val);
                               }}
-                              className={`w-full text-center font-mono font-bold text-xs sm:text-sm rounded-lg py-1.5 border transition-all focus:outline-none focus:ring-1 focus:ring-amber-500 ${
+                              className={`w-full text-center font-mono font-bold text-xs sm:text-sm rounded-lg py-1.5 border transition-all focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                                 (set.rpe || 0) >= 9.5
-                                  ? 'bg-amber-950/40 border-amber-500/70 text-amber-300'
+                                  ? 'bg-red-950/40 border-red-500/70 text-red-300'
                                   : (set.rpe || 0) >= 8.5
-                                  ? 'bg-amber-950/50 border-amber-500/70 text-amber-300'
+                                  ? 'bg-blue-950/60 border-blue-500/70 text-blue-200'
                                   : (set.rpe || 0) >= 7.5
-                                  ? 'bg-emerald-950/40 border-emerald-500/60 text-emerald-300'
-                                  : 'bg-zinc-900 border-zinc-700 text-zinc-200'
+                                  ? 'bg-blue-950/40 border-blue-500/60 text-blue-300'
+                                  : 'bg-[#0a0f1d] border-slate-700 text-slate-200'
                               }`}
                               title="Rate of Perceived Exertion (1 to 10 scale)"
                             />
                           </div>
-                          <span className="text-[9px] font-mono mt-0.5 text-zinc-400 truncate">
+                          <span className="text-[9px] font-mono mt-0.5 text-slate-400 truncate">
                             {set.rpe !== undefined && set.rpe > 0
                               ? set.rpe >= 10
                                 ? '0 RIR (Max)'
@@ -1292,8 +1284,8 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                             onClick={() => handleToggleCompleteSet(activeExerciseIndex, setIdx)}
                             className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-bold transition-all shadow-md cursor-pointer ${
                               set.completed
-                                ? 'bg-emerald-500 text-zinc-950 shadow-emerald-500/30'
-                                : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700'
+                                ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/30'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700'
                             }`}
                             title={set.completed ? 'Mark incomplete' : 'Log set with RPE & start rest timer'}
                           >
@@ -1304,7 +1296,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                             <button
                               type="button"
                               onClick={() => handleRemoveSet(activeExerciseIndex, setIdx)}
-                              className="p-1 text-zinc-600 hover:text-amber-400 transition-colors hidden sm:block cursor-pointer"
+                              className="p-1 text-slate-600 hover:text-red-400 transition-colors hidden sm:block cursor-pointer"
                               title="Delete set"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1317,13 +1309,13 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                 </div>
 
                 {/* Set Actions & 1RM / RPE Estimation preview */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-zinc-800">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-slate-800">
                   <button
                     type="button"
                     onClick={() => handleAddSet(activeExerciseIndex)}
-                    className="w-full sm:w-auto px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 border border-slate-700 transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5 text-amber-400" />
+                    <Plus className="w-3.5 h-3.5 text-blue-400" />
                     Add Set
                   </button>
 
@@ -1342,10 +1334,10 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                         : null;
 
                     return (
-                      <div className="text-xs text-zinc-400 flex flex-wrap items-center gap-3">
+                      <div className="text-xs text-slate-400 flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-1.5">
                           <span>Est. 1RM Peak:</span>
-                          <span className="font-mono font-bold text-amber-400 text-sm">
+                          <span className="font-mono font-bold text-blue-400 text-sm">
                             {Math.max(
                               0,
                               ...currentExercise.sets.map((s) => calculate1RM(s.weightLbs, s.reps))
@@ -1354,9 +1346,9 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                           </span>
                         </div>
                         {currentExAvgRpe && (
-                          <div className="flex items-center gap-1.5 border-l border-zinc-800 pl-3">
+                          <div className="flex items-center gap-1.5 border-l border-slate-800 pl-3">
                             <span>Logged Avg RPE:</span>
-                            <span className="font-mono font-bold text-amber-400 text-sm">
+                            <span className="font-mono font-bold text-blue-400 text-sm">
                               {currentExAvgRpe} / 10
                             </span>
                           </div>
@@ -1392,7 +1384,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveExerciseIndex((prev) => Math.min(exercises.length - 1, prev + 1))}
-                    className="px-4 sm:px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-950/30 transition-all cursor-pointer"
+                    className="px-4 sm:px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-blue-950/40 transition-all cursor-pointer"
                   >
                     Next Exercise
                     <ChevronRight className="w-4 h-4" />
@@ -1416,23 +1408,23 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       {/* Finishing Workout Confirmation Modal */}
       {isFinishing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="w-full max-w-lg bg-zinc-900 border border-zinc-700 rounded-2xl p-6 shadow-2xl relative">
+          <div className="w-full max-w-lg bg-[#0f172a] border border-blue-500/40 rounded-2xl p-6 shadow-2xl relative">
             <button
               onClick={() => setIsFinishing(false)}
-              className="absolute top-4 right-4 p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="text-center pb-4 border-b border-zinc-800">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-1 mx-auto mb-3 flex items-center justify-center shadow-lg shadow-emerald-900/40">
+            <div className="text-center pb-4 border-b border-slate-800">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 p-1 mx-auto mb-3 flex items-center justify-center shadow-lg shadow-blue-900/40 border border-blue-400/40">
                 <Award className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-black text-white font-athletic uppercase tracking-wider">
                 Workout Summary & Log
               </h3>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Overland Athletics Training Record
+              <p className="text-xs text-slate-400 mt-0.5">
+                Patrol Ready Performance • Officer Training Record
               </p>
             </div>
 
@@ -1446,26 +1438,26 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-4">
-                  <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-center">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  <div className="p-3 bg-[#070c14] rounded-xl border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
                       Duration
                     </span>
-                    <span className="font-mono text-lg sm:text-xl font-black text-amber-400">
+                    <span className="font-mono text-lg sm:text-xl font-black text-blue-400">
                       {formatElapsed(elapsedSeconds)}
                     </span>
                   </div>
 
-                  <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-center">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  <div className="p-3 bg-[#070c14] rounded-xl border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
                       Total Volume
                     </span>
-                    <span className="font-mono text-lg sm:text-xl font-black text-amber-400">
+                    <span className="font-mono text-lg sm:text-xl font-black text-blue-400">
                       {totalVolumeLbs.toLocaleString()} <span className="text-[10px] font-normal">lbs</span>
                     </span>
                   </div>
 
-                  <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-center">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  <div className="p-3 bg-[#070c14] rounded-xl border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
                       Sets Logged
                     </span>
                     <span className="font-mono text-lg sm:text-xl font-black text-emerald-400">
@@ -1473,11 +1465,11 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                     </span>
                   </div>
 
-                  <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-center">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  <div className="p-3 bg-[#070c14] rounded-xl border border-slate-800 text-center">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
                       Avg Session RPE
                     </span>
-                    <span className="font-mono text-lg sm:text-xl font-black text-amber-400">
+                    <span className="font-mono text-lg sm:text-xl font-black text-blue-400">
                       {avgRpeVal ? `${avgRpeVal}/10` : '—'}
                     </span>
                   </div>
@@ -1488,7 +1480,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
             {/* Coach Rating & Notes */}
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-300 block mb-1">
                   Workout Effort / Rating (1-5 Stars):
                 </label>
                 <div className="flex gap-2">
@@ -1499,8 +1491,8 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       onClick={() => setSessionRating(star)}
                       className={`flex-1 py-1.5 rounded-lg font-bold text-xs border transition-colors ${
                         sessionRating >= star
-                          ? 'bg-amber-500 text-zinc-950 border-amber-400'
-                          : 'bg-zinc-800 text-zinc-500 border-zinc-700'
+                          ? 'bg-blue-600 text-white border-blue-400'
+                          : 'bg-slate-800 text-slate-500 border-slate-700'
                       }`}
                     >
                       ★ {star}
@@ -1510,24 +1502,24 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
-                  Athlete Session Notes & Cues:
+                <label className="text-xs font-semibold text-slate-300 block mb-1">
+                  Officer Session Notes & Cues:
                 </label>
                 <textarea
                   value={workoutNotes}
                   onChange={(e) => setWorkoutNotes(e.target.value)}
-                  placeholder="e.g. Great explosive speed on bench press; back felt fresh. Rest timer kept pacing tight."
+                  placeholder="e.g. Explosive speed on bench press; combat chassis felt stable. Rest timer kept pacing sharp."
                   rows={2}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-[#070c14] border border-slate-800 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-zinc-800 flex gap-2">
+            <div className="mt-5 pt-3 border-t border-slate-800 flex gap-2">
               <button
                 type="button"
                 onClick={() => setIsFinishing(false)}
-                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-xl transition-colors"
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-colors"
               >
                 Return to Live Workout
               </button>
@@ -1548,11 +1540,11 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       {/* Exit Workout Confirmation Modal */}
       {showExitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-[#141a21] border-2 border-red-900/80 rounded-2xl p-6 shadow-2xl relative text-center">
+          <div className="w-full max-w-md bg-[#0f172a] border-2 border-red-900/80 rounded-2xl p-6 shadow-2xl relative text-center">
             <button
               type="button"
               onClick={() => setShowExitModal(false)}
-              className="absolute top-4 right-4 p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               title="Close dialog"
             >
               <X className="w-5 h-5" />
@@ -1566,14 +1558,14 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               Exit Active Workout?
             </h3>
 
-            <p className="text-xs text-zinc-300 mt-2.5 leading-relaxed">
-              You currently have <span className="font-bold text-amber-400">{totalSetsCompleted}</span> of{' '}
+            <p className="text-xs text-slate-300 mt-2.5 leading-relaxed">
+              You currently have <span className="font-bold text-blue-400">{totalSetsCompleted}</span> of{' '}
               <span className="font-bold text-white">{totalPlannedSets}</span> sets logged{' '}
-              (<span className="font-mono text-zinc-200">{formatElapsed(elapsedSeconds)}</span> elapsed,{' '}
-              <span className="font-bold text-amber-400">{totalVolumeLbs.toLocaleString()} lbs</span> total volume).
+              (<span className="font-mono text-slate-200">{formatElapsed(elapsedSeconds)}</span> elapsed,{' '}
+              <span className="font-bold text-blue-400">{totalVolumeLbs.toLocaleString()} lbs</span> total volume).
             </p>
 
-            <p className="text-[11px] text-zinc-400 mt-1.5">
+            <p className="text-[11px] text-slate-400 mt-1.5">
               Would you like to save your completed sets to your training record before exiting, discard this session, or keep lifting?
             </p>
 
@@ -1581,7 +1573,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               <button
                 type="button"
                 onClick={handleExitWorkoutWithSave}
-                className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
               >
                 <Check className="w-4 h-4 stroke-[3]" />
                 Save Completed Sets & Exit
@@ -1602,7 +1594,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowExitModal(false)}
-                className="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
               >
                 Keep Working Out
               </button>
