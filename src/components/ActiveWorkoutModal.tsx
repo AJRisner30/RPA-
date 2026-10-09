@@ -43,7 +43,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       );
 
       if (timed) {
-        // Cardio / Timed exercise (Run, Ruck, Interval, Plank)
+        // Cardio / Timed exercise (Run, Sprint Intervals, Plank)
         let prevTimeFormatted: string | undefined;
         let prevDistance: number | undefined;
         let prevWeight: number | undefined = template.weight_lbs;

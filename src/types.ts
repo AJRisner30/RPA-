@@ -135,25 +135,28 @@ export interface WorkoutSessionLog {
   }[];
 }
 
-export type RuckTerrainType = 'Pavement / Road' | 'Trails / Forest' | 'Hilly Terrain' | 'Mixed Tactical' | 'Treadmill / Incline';
+export type ProgramKey = 'apex_protocol' | 'tactical_hypertrophy' | 'hybrid_protocol' | 'hybrid_db';
 
-export interface RuckSessionLog {
-  id: string;
-  userId?: string;
-  athleteId?: string;
-  title: string;
-  date: string; // YYYY-MM-DD
-  distanceMiles: number;
-  weightLbs: number;
-  durationMinutes: number;
-  paceMinPerMile?: number; // Minutes per mile
-  workloadIndex?: number; // distanceMiles * weightLbs (lb-miles)
-  terrain?: RuckTerrainType | string;
-  heartRateAvg?: number;
-  rpe?: number; // 1-10
-  notes?: string;
-  createdAt: string;
-  updatedAt?: string;
+export interface QuestionnaireAnswers {
+  completedAt: string;
+  pushUpScore: 'under_15' | '15_to_30' | '30_to_50' | 'over_50';
+  pullUpScore: 'zero' | '1_to_5' | '6_to_12' | 'over_12';
+  aerobicScore: 'under_1_mile' | '13_to_16_min' | '10_30_to_13_min' | 'sub_10_30';
+  equipmentAccess: 'bodyweight_dumbbells' | 'full_tactical_gym' | 'basic_station_gym';
+  liftingExperience: 'beginner' | 'intermediate' | 'advanced_tactical';
+  weeklyDays: 3 | 4 | 5 | 6;
+  primaryGoalCategory: 
+    | 'tactical_duty_readiness' 
+    | 'muscle_armor_hypertrophy' 
+    | 'hybrid_strength_running' 
+    | 'station_db_minimal' 
+    | 'complete_apex_peak';
+  injuryConstraints?: string;
+  recommendedProgramKey: ProgramKey;
+  recommendedProgramTitle: string;
+  recommendationReason: string;
+  recommendedStartingWeek: number;
+  fitnessTier: 'Recruit Foundation' | 'Operational LEO' | 'Tactical Elite';
 }
 
 export interface WarmUpStep {
@@ -204,6 +207,50 @@ export interface PersonalRecord {
   date: string;
 }
 
+export interface BodyweightEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  weightLbs: number;
+  notes?: string;
+}
+
+export interface RecoveryCheckIn {
+  id: string;
+  date: string; // YYYY-MM-DD
+  sleepHours: number; // e.g. 7.5
+  sleepQuality: 1 | 2 | 3 | 4 | 5; // 1 = Poor, 5 = Deep / Restful
+  muscleSoreness: 1 | 2 | 3 | 4 | 5; // 1 = Fresh, 5 = Very Sore
+  shiftStress: 1 | 2 | 3 | 4 | 5; // 1 = Calm, 5 = Extreme Shift Stress
+  restingHr?: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export type ReadinessTier = 
+  | 'Patrol Ready: Peak'
+  | 'Optimal: Combat Chassis'
+  | 'Operational: Monitor Fatigue'
+  | 'Recovery Advisory'
+  | 'Strained / De-load Priority';
+
+export interface ReadinessScoreBreakdown {
+  overallScore: number; // 0 - 100
+  tier: ReadinessTier;
+  recoveryScore: number; // 0 - 100
+  weightConsistencyScore: number; // 0 - 100
+  workoutCompletionScore: number; // 0 - 100
+  workoutsCompleted7d: number;
+  targetWorkoutsPerWeek: number;
+  workoutStreak: number;
+  lastWeightDate?: string;
+  lastWeightLbs?: number;
+  daysSinceLastWeight?: number;
+  lastRecoveryDate?: string;
+  hoursOfSleep?: number;
+  coachAdvisory: string;
+  statusBadgeColor: string;
+}
+
 export interface AthleteProfile {
   id: string;
   name: string;
@@ -212,11 +259,15 @@ export interface AthleteProfile {
   avatarColor: string;
   joinedDate: string;
   experienceLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Elite';
-  primaryGoal: 'Hybrid Athlete' | 'Strength & Power' | 'Hypertrophy' | 'Tactical Conditioning & Pursuit' | 'Tactical & Rucking' | 'Endurance & Running';
+  primaryGoal: 'Hybrid Athlete' | 'Strength & Power' | 'Hypertrophy' | 'Tactical Conditioning & Pursuit' | 'Endurance & Running';
   weightLbs?: number;
   restingHr?: number;
   maxHr?: number;
   notes?: string;
+  questionnaire?: QuestionnaireAnswers;
+  weightHistory?: BodyweightEntry[];
+  recoveryHistory?: RecoveryCheckIn[];
+  lastRecoveryCheckIn?: RecoveryCheckIn;
 }
 
 /**

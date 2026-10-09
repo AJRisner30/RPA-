@@ -34,6 +34,25 @@ service cloud.firestore {
       );
     }
 
+    // RBAC Tier Helper: verifies Pro access with active subscription or unexpired trial
+    function isTrialActive() {
+      return 'trialEnd' in request.auth.token &&
+        request.auth.token.trialEnd is number &&
+        (
+          (request.auth.token.trialEnd < 10000000000 && request.time.toMillis() < request.auth.token.trialEnd * 1000) ||
+          (request.auth.token.trialEnd >= 10000000000 && request.time.toMillis() < request.auth.token.trialEnd)
+        );
+    }
+
+    function hasActiveProAccess() {
+      return isSignedIn() &&
+        (request.auth.token.tier == 'pro' || request.auth.token.tier == 'enterprise') &&
+        (
+          request.auth.token.status == 'active_subscriber' ||
+          isTrialActive()
+        );
+    }
+
     // Diagnostics / Connection verification
     match /test/connection {
       allow read: if true;
@@ -50,13 +69,17 @@ service cloud.firestore {
         data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
         data.email is string && data.email.size() <= 150 &&
         data.experienceLevel in ['Beginner', 'Intermediate', 'Advanced', 'Elite'] &&
-        data.primaryGoal in ['Hybrid Athlete', 'Strength & Power', 'Hypertrophy', 'Tactical & Rucking', 'Endurance & Running'] &&
+        data.primaryGoal in ['Hybrid Athlete', 'Strength & Power', 'Hypertrophy', 'Tactical & Rucking', 'Tactical Conditioning & Pursuit', 'Endurance & Running'] &&
         (!('weightLbs' in data) || (data.weightLbs is number && data.weightLbs >= 0 && data.weightLbs <= 1000)) &&
         (!('restingHr' in data) || (data.restingHr is number && data.restingHr >= 20 && data.restingHr <= 250)) &&
         (!('maxHr' in data) || (data.maxHr is number && data.maxHr >= 50 && data.maxHr <= 260)) &&
         (!('avatarColor' in data) || (data.avatarColor is string && data.avatarColor.size() <= 80)) &&
         (!('joinedDate' in data) || (data.joinedDate is string && data.joinedDate.size() <= 40)) &&
         (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+        (!('questionnaire' in data) || data.questionnaire is map) &&
+        (!('weightHistory' in data) || data.weightHistory is list) &&
+        (!('recoveryHistory' in data) || data.recoveryHistory is list) &&
+        (!('lastRecoveryCheckIn' in data) || data.lastRecoveryCheckIn is map) &&
         (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
         (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
     }
@@ -175,6 +198,15 @@ service cloud.firestore {
         (existing().userId == request.auth.uid || isAdmin());
       allow delete: if isSignedIn() && isValidId(ruckId) &&
         (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // ----------------------------------------------------
+    // Performance Metrics (Protected Collection)
+    // Read/write access granted if user has tier: "pro" AND either:
+    // status is "active_subscriber" OR request.time < trialEnd timestamp
+    // ----------------------------------------------------
+    match /performance_metrics/{metricId} {
+      allow read, write: if hasActiveProAccess();
     }
 
     // ----------------------------------------------------

@@ -14,7 +14,7 @@ export default defineConfig(() => {
         manifestFilename: 'manifest.json',
         includeAssets: [
           'favicon.svg',
-          'overland-logo.svg',
+          'patrol-ready-logo.svg',
           'apple-touch-icon.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
@@ -25,15 +25,15 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: '/',
-          name: 'Overland Athletics',
-          short_name: 'Overland',
+          name: 'Patrol Ready Performance',
+          short_name: 'PatrolReady',
           description:
-            'Overland Athletics — Run • Lift • Ruck. Elite performance training, tactical conditioning, hybrid strength, and endurance progression.',
-          theme_color: '#10151a',
-          background_color: '#10151a',
+            'Patrol Ready Performance — Tactical fitness for the Frontline. Elite law enforcement physical training, duty readiness, combat chassis durability, foot pursuit speed, and tactical load carriage.',
+          theme_color: '#0b1320',
+          background_color: '#0b1320',
           display: 'standalone',
           orientation: 'portrait-primary',
-          start_url: '/',
+          start_url: '/?source=pwa',
           scope: '/',
           categories: ['fitness', 'health', 'sports'],
           icons: [

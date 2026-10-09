@@ -1,12 +1,13 @@
 import React from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
-  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut
+  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { AthleteProfile } from '../utils/athleteAuth';
 import { PWAInstallButton } from './PWAInstallButton';
 import { useFirebase } from '../context/FirebaseContext';
+import { useUserTier } from '../hooks/useUserTier';
 
 export type TabType = 'workouts' | 'warmups' | 'calculator' | 'logs' | 'graphs' | 'contact';
 
@@ -16,6 +17,10 @@ interface NavbarProps {
   onStartActiveWorkout: () => void;
   currentAthlete?: AthleteProfile;
   onOpenAthleteModal: () => void;
+  onOpenQuestionnaire?: () => void;
+  onOpenPricingModal?: () => void;
+  readinessScore?: number;
+  readinessTier?: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,8 +28,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectTab,
   currentAthlete,
   onOpenAthleteModal,
+  onOpenQuestionnaire,
+  onOpenPricingModal,
+  readinessScore,
+  readinessTier,
 }) => {
   const { user, isCloudConnected, authError, signOutUser } = useFirebase();
+  const { tier } = useUserTier();
 
   const tabs = [
     { id: 'workouts', label: 'Workouts', icon: Dumbbell },
@@ -131,12 +141,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Cloud className={`w-3 h-3 ${authError ? 'text-red-400' : 'text-slate-300'}`} />
             </button>
 
-            {/* Athlete Profile Chip */}
+            {/* Ability Matcher Quick Action */}
+            {onOpenQuestionnaire && (
+              <button
+                type="button"
+                onClick={onOpenQuestionnaire}
+                className="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-blue-950/70 hover:bg-blue-900/80 text-blue-300 hover:text-white border border-blue-500/40 hover:border-blue-400 rounded-lg text-[11px] font-bold transition-all shadow-sm cursor-pointer shrink-0"
+                title="Take Physical Ability Assessment & Match Recommended Program"
+              >
+                <Award className="w-3 h-3 text-blue-400 shrink-0" />
+                <span className="hidden sm:inline">Program Matcher</span>
+              </button>
+            )}
+
+            {/* Athlete Profile Chip & Readiness Pill */}
             <button
               type="button"
               onClick={onOpenAthleteModal}
               className="flex items-center gap-1.5 px-2.5 py-1 bg-[#0f172a] hover:bg-blue-900/40 text-white border border-blue-500/50 hover:border-blue-400 rounded-lg text-[11px] font-black transition-all shadow-sm cursor-pointer active:scale-95 shrink-0"
-              title="View athlete profile and cloud sync details"
+              title={`View athlete profile and tactical readiness score (${readinessScore ?? 85}% ${readinessTier || ''})`}
             >
               <div className={`w-4 h-4 rounded-full bg-gradient-to-tr ${currentAthlete?.avatarColor || 'from-blue-600 to-blue-400'} flex items-center justify-center text-[9px] font-black text-white shrink-0`}>
                 {currentAthlete ? currentAthlete.name.charAt(0).toUpperCase() : 'P'}
@@ -144,7 +167,35 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="font-bold text-white whitespace-nowrap truncate max-w-[80px] sm:max-w-none">
                 {currentAthlete ? currentAthlete.name : 'Officer'}
               </span>
+              {readinessScore !== undefined && (
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                  readinessScore >= 85 
+                    ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+                    : readinessScore >= 70
+                    ? 'bg-blue-950/80 border-blue-500/40 text-blue-300'
+                    : 'bg-amber-950/80 border-amber-500/40 text-amber-300'
+                }`}>
+                  {readinessScore}% Ready
+                </span>
+              )}
               <UserCheck className="w-3 h-3 text-blue-400 shrink-0" />
+            </button>
+
+            {/* RBAC Tier Badge & Pricing Modal Trigger */}
+            <button
+              type="button"
+              onClick={onOpenPricingModal}
+              className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-black font-mono transition-all shadow-sm cursor-pointer border shrink-0 ${
+                tier === 'pro'
+                  ? 'bg-amber-950/80 hover:bg-amber-900/80 text-amber-300 border-amber-500/50'
+                  : tier === 'enterprise'
+                  ? 'bg-blue-950/80 hover:bg-blue-900/80 text-blue-300 border-blue-500/50'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border-zinc-700'
+              }`}
+              title={`Active RBAC Custom Claim: ${tier.toUpperCase()}. Click to inspect pricing tiers & claim rules.`}
+            >
+              <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+              <span className="uppercase">{tier}</span>
             </button>
 
             {/* Quick Sign Out Button */}

@@ -1,4 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+import fs from 'fs';
+import path from 'path';
+import { Resvg } from '@resvg/resvg-js';
+
+function createBadgeSvg({ scale = 1.05, rx = 0, yOffset = 250 } = {}) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
     <linearGradient id="chromeBevelFav" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FFFFFF" />
@@ -40,7 +45,7 @@
   </defs>
 
   <!-- Background Canvas -->
-  <rect width="512" height="512"  fill="#0A0E17"/>
+  <rect width="512" height="512" ${rx > 0 ? `rx="${rx}"` : ''} fill="#0A0E17"/>
 
   <!-- Subtle Radial Background Glow -->
   <radialGradient id="centerAura" cx="50%" cy="45%" r="60%">
@@ -50,7 +55,7 @@
   <rect width="512" height="512" fill="url(#centerAura)" />
 
   <!-- Police Shield Badge (Centered) -->
-  <g filter="url(#iconShadow)" transform="translate(256, 252) scale(1.02) translate(-400, -235)">
+  <g filter="url(#iconShadow)" transform="translate(256, ${yOffset}) scale(${scale}) translate(-400, -235)">
     <!-- Outer Shield Metallic Layer -->
     <path d="M 400 32 L 485 52 L 565 82 L 565 240 C 565 315, 490 380, 400 425 C 310 380, 235 315, 235 240 L 235 82 L 315 52 Z"
           fill="url(#chromeBevelFav)" stroke="#020617" stroke-width="4" />
@@ -102,4 +107,64 @@
     <text x="400" y="361" font-family="'Impact', 'Arial Black', sans-serif" font-size="18" font-weight="900" fill="#0B1320" text-anchor="middle" letter-spacing="4">&#9733; POLICE &#9733;</text>
     <text x="400" y="394" font-family="'Impact', 'Arial Black', sans-serif" font-size="14" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="3">PRP</text>
   </g>
-</svg>
+</svg>`;
+}
+
+function renderPng(svg, size) {
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: 'width', value: size },
+    font: { loadSystemFonts: true }
+  });
+  return resvg.render().asPng();
+}
+
+async function main() {
+  console.log('Building high-resolution PWA and App Store icons...');
+
+  // 1. Standard icon (scale 1.05, centered)
+  const standardSvg = createBadgeSvg({ scale: 1.02, rx: 0, yOffset: 252 });
+  
+  // 2. Maskable icon (scale 0.82 to fit within 80% safe zone circle for Android)
+  const maskableSvg = createBadgeSvg({ scale: 0.82, rx: 0, yOffset: 256 });
+
+  // 3. Apple Touch Icon (scale 1.0, rx 0)
+  const appleSvg = createBadgeSvg({ scale: 1.0, rx: 0, yOffset: 252 });
+
+  // 4. Favicon SVG
+  fs.writeFileSync('public/favicon.svg', standardSvg);
+  console.log('✓ public/favicon.svg');
+
+  // 5. Render PNGs
+  const pwa192 = renderPng(standardSvg, 192);
+  fs.writeFileSync('public/pwa-192x192.png', pwa192);
+  console.log('✓ public/pwa-192x192.png (192x192)');
+
+  const pwa512 = renderPng(standardSvg, 512);
+  fs.writeFileSync('public/pwa-512x512.png', pwa512);
+  console.log('✓ public/pwa-512x512.png (512x512)');
+
+  const maskable512 = renderPng(maskableSvg, 512);
+  fs.writeFileSync('public/pwa-maskable-512x512.png', maskable512);
+  console.log('✓ public/pwa-maskable-512x512.png (512x512 maskable safe-zone)');
+
+  const appleTouch = renderPng(appleSvg, 180);
+  fs.writeFileSync('public/apple-touch-icon.png', appleTouch);
+  console.log('✓ public/apple-touch-icon.png (180x180)');
+
+  // If dist/ exists, also sync icons to dist/
+  if (fs.existsSync('dist')) {
+    fs.writeFileSync('dist/favicon.svg', standardSvg);
+    fs.writeFileSync('dist/pwa-192x192.png', pwa192);
+    fs.writeFileSync('dist/pwa-512x512.png', pwa512);
+    fs.writeFileSync('dist/pwa-maskable-512x512.png', maskable512);
+    fs.writeFileSync('dist/apple-touch-icon.png', appleTouch);
+    console.log('✓ Synced to dist/');
+  }
+
+  console.log('All app icons generated successfully!');
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

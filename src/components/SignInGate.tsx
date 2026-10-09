@@ -260,13 +260,13 @@ export const SignInGate: React.FC = () => {
 
           <div className="p-4 bg-slate-900/70 border border-blue-500/25 rounded-2xl shadow-sm">
             <div className="flex items-center gap-2 text-blue-400 mb-1.5">
-              <Footprints className="w-4 h-4 text-blue-400" />
+              <Zap className="w-4 h-4 text-blue-400" />
               <span className="text-xs font-black uppercase tracking-wider font-athletic">
-                Tactical Ruck &amp; Load
+                Tactical Duty &amp; Pursuit
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Progressive tactical load carriage (25-50 lbs), pace benchmarks, and aerobic heart-rate zone conditioning.
+              Frontline sprint intervals, 1.5-mile physical agility standards, and anaerobic foot pursuit work capacity.
             </p>
           </div>
         </div>

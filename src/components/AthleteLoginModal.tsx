@@ -5,6 +5,7 @@ import {
   Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw, Copy, ExternalLink
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog } from '../types';
+import { ReadinessScoreCard } from './ReadinessScoreCard';
 import { 
   getAthletes, 
   getSelectableAthletes,
@@ -18,9 +19,7 @@ import {
   getStoredWorkoutLogs, 
   clearAllWorkoutLogs, 
   clearAthleteWorkoutLogs, 
-  clearHybridStrengthLogs,
-  clearAllRuckLogs,
-  clearAthleteRuckLogs
+  clearHybridStrengthLogs
 } from '../utils/storage';
 import { useFirebase } from '../context/FirebaseContext';
 import { saveAthleteToFirestore } from '../utils/firebaseSync';
@@ -29,12 +28,14 @@ interface AthleteLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAthleteChanged: (athlete: AthleteProfile) => void;
+  onOpenQuestionnaire?: () => void;
 }
 
 export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
   isOpen,
   onClose,
   onAthleteChanged,
+  onOpenQuestionnaire,
 }) => {
   const { 
     user, 
@@ -84,11 +85,9 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     if (scope === 'all') {
       clearAllWorkoutLogs();
       clearHybridStrengthLogs();
-      clearAllRuckLogs();
-      setClearSuccessMsg('All workout and ruck logs cleared successfully across all athletes.');
+      setClearSuccessMsg('All workout logs cleared successfully across all athletes.');
     } else {
       clearAthleteWorkoutLogs(currentAthlete.id);
-      clearAthleteRuckLogs(currentAthlete.id);
       setClearSuccessMsg(`${currentAthlete.name}'s logs cleared successfully.`);
     }
     setConfirmClearAction('none');
@@ -100,6 +99,17 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     setCurrentAthleteState(updated);
     onAthleteChanged(updated);
     onClose();
+  };
+
+  const handleUpdateCurrentAthlete = (updated: AthleteProfile) => {
+    setCurrentAthleteState(updated);
+    updateAthleteProfile(updated.id, updated);
+    onAthleteChanged(updated);
+    if (user) {
+      saveAthleteToFirestore(updated, user.uid).catch((err) => {
+        console.warn('[Firebase] Save athlete note:', err);
+      });
+    }
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -870,6 +880,13 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                 </div>
               </div>
 
+              {/* TACTICAL READINESS SCORE SUMMARY */}
+              <ReadinessScoreCard
+                athlete={currentAthlete}
+                logs={allLogs}
+                onUpdateAthlete={handleUpdateCurrentAthlete}
+              />
+
               {/* Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div className="p-3 bg-[#0a0f1d] border border-slate-800 rounded-xl">
@@ -898,6 +915,62 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     Active
                   </div>
                 </div>
+              </div>
+
+              {/* Physical Ability Assessment & Recommended Track */}
+              <div className="p-3.5 bg-[#0a0f1d] border border-slate-800 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-white">
+                    <Award className="w-4 h-4 text-blue-400" />
+                    <span>Physical Ability &amp; Recommended Track</span>
+                  </div>
+                  {currentAthlete.questionnaire && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-500/30 font-bold">
+                      {currentAthlete.questionnaire.fitnessTier}
+                    </span>
+                  )}
+                </div>
+
+                {currentAthlete.questionnaire ? (
+                  <div className="space-y-1.5">
+                    <div className="text-xs text-slate-200">
+                      Recommended Track: <span className="font-bold text-white font-athletic uppercase">{currentAthlete.questionnaire.recommendedProgramTitle}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-snug">
+                      {currentAthlete.questionnaire.recommendationReason}
+                    </p>
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenQuestionnaire?.();
+                        }}
+                        className="px-3 py-1.5 rounded-xl border border-blue-500/40 bg-blue-950/80 hover:bg-blue-900 text-blue-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
+                        <span>Retake Ability Questionnaire</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-slate-400">
+                      No initial assessment recorded yet. Complete the 2-minute questionnaire to diagnose your current fitness tier and receive a recommended beginning program.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenQuestionnaire?.();
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-athletic uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-900/40"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Take Ability Assessment</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Log History Management / Fresh Start Options */}

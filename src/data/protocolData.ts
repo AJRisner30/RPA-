@@ -1365,7 +1365,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
 
 /**
  * Returns customized week data for any week 1 through 26 of The Apex Protocol.
- * Dynamically injects the exact weekly Day 2 and Day 6 run/ruck prescriptions.
+ * Dynamically injects the exact weekly Day 2 and Day 6 run/conditioning prescriptions.
  */
 export function getApexWeekData(weekNumber: number): ProtocolPhase {
   const week = Math.max(1, Math.min(26, weekNumber));

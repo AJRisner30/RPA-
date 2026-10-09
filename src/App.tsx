@@ -3,7 +3,7 @@ import {
   getStoredPrograms, savePrograms, 
   getStoredWorkoutLogs
 } from './utils/storage';
-import { WorkoutProgram, WorkoutSessionLog } from './types';
+import { WorkoutProgram, WorkoutSessionLog, ProgramKey, QuestionnaireAnswers } from './types';
 import { Navbar, TabType } from './components/Navbar';
 import { WorkoutsTab } from './components/WorkoutsTab';
 import { WarmupsTab } from './components/WarmupsTab';
@@ -13,9 +13,13 @@ import { WorkoutLogsTab } from './components/WorkoutLogsTab';
 import { ContactTab } from './components/ContactTab';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { AthleteLoginModal } from './components/AthleteLoginModal';
+import { AbilityQuestionnaireModal } from './components/AbilityQuestionnaireModal';
+import { PricingTiersModal } from './components/PricingTiersModal';
+import { TrialBanner } from './components/TrialBanner';
 import { SignInGate } from './components/SignInGate';
 import { LoadingSplash } from './components/LoadingSplash';
 import { getCurrentAthlete, AthleteProfile, updateAthleteProfile, registerAthlete } from './utils/athleteAuth';
+import { calculateReadinessScore } from './utils/readinessEngine';
 import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -35,6 +39,11 @@ export default function App() {
   const [logs, setLogs] = useState<WorkoutSessionLog[]>(() => getStoredWorkoutLogs());
   const [currentAthlete, setCurrentAthlete] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [isAthleteModalOpen, setIsAthleteModalOpen] = useState<boolean>(false);
+  const [isQuestionnaireOpen, setIsQuestionnaireOpen] = useState<boolean>(false);
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState<boolean>(false);
+  const [activeProgramKey, setActiveProgramKey] = useState<ProgramKey>(() => 
+    getCurrentAthlete().questionnaire?.recommendedProgramKey || 'apex_protocol'
+  );
 
   // Active workout session modal state
   const [activeLiveProgram, setActiveLiveProgram] = useState<WorkoutProgram | null>(null);
@@ -92,6 +101,18 @@ export default function App() {
     };
   }, [user]);
 
+  // Handle hash navigation to checkout/pricing modal
+  useEffect(() => {
+    const handleHash = () => {
+      if (typeof window !== 'undefined' && (window.location.hash === '#checkout' || window.location.hash === '#pricing')) {
+        setIsPricingModalOpen(true);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
   const handleUpdatePrograms = (updated: WorkoutProgram[]) => {
     setPrograms(updated);
     savePrograms(updated);
@@ -118,6 +139,28 @@ export default function App() {
     }
   };
 
+  const handleSaveQuestionnaire = (answers: QuestionnaireAnswers, recommendedProgram: ProgramKey) => {
+    const updatedAthlete: AthleteProfile = {
+      ...currentAthlete,
+      questionnaire: answers,
+      primaryGoal: answers.primaryGoalCategory === 'muscle_armor_hypertrophy'
+        ? 'Hypertrophy'
+        : answers.primaryGoalCategory === 'hybrid_strength_running'
+        ? 'Hybrid Athlete'
+        : 'Tactical Conditioning & Pursuit',
+    };
+    setCurrentAthlete(updatedAthlete);
+    updateAthleteProfile(updatedAthlete.id, updatedAthlete);
+    setActiveProgramKey(recommendedProgram);
+    setActiveTab('workouts');
+
+    if (user) {
+      saveAthleteToFirestore(updatedAthlete, user.uid).catch((err) => {
+        console.warn('[Firebase] Background athlete save note:', err);
+      });
+    }
+  };
+
   // 1. Initial page boot: display branded loading splash while auth state is resolving
   if (loading) {
     return <LoadingSplash />;
@@ -127,6 +170,8 @@ export default function App() {
   if (!user) {
     return <SignInGate />;
   }
+
+  const readiness = calculateReadinessScore(currentAthlete, logs);
 
   return (
     <div className="min-h-screen bg-[#080e18] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
@@ -140,10 +185,20 @@ export default function App() {
         onStartActiveWorkout={() => handleStartWorkout(programs[0])}
         currentAthlete={currentAthlete}
         onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
+        onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
+        onOpenPricingModal={() => setIsPricingModalOpen(true)}
+        readinessScore={readiness.overallScore}
+        readinessTier={readiness.tier}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-5">
+        {/* 14-Day Risk-Free Trial Status & Upgrade Warning Banner */}
+        <TrialBanner 
+          onOpenCheckout={() => setIsPricingModalOpen(true)}
+          className="mb-4"
+        />
+
         <div key={activeTab} className="animate-tab-fade">
           {activeTab === 'workouts' && (
             <WorkoutsTab
@@ -151,6 +206,13 @@ export default function App() {
               onStartWorkout={handleStartWorkout}
               onSelectWarmup={handleSelectWarmupFromProgram}
               onSavePrograms={handleUpdatePrograms}
+              currentAthlete={currentAthlete}
+              activeProgramKey={activeProgramKey}
+              onSelectProgram={(key) => setActiveProgramKey(key)}
+              onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
+              onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
+              readinessScore={readiness.overallScore}
+              readinessTier={readiness.tier}
             />
           )}
 
@@ -203,6 +265,21 @@ export default function App() {
           setCurrentAthlete(athlete);
           setLogs(getStoredWorkoutLogs());
         }}
+        onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
+      />
+
+      {/* Physical Ability & Program Matcher Modal */}
+      <AbilityQuestionnaireModal
+        isOpen={isQuestionnaireOpen}
+        onClose={() => setIsQuestionnaireOpen(false)}
+        currentAthlete={currentAthlete}
+        onSaveQuestionnaire={handleSaveQuestionnaire}
+      />
+
+      {/* RBAC Pricing Tiers & Custom Claims Modal */}
+      <PricingTiersModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
       />
 
       {/* Footer Branded with Patrol Ready Performance, Tactical Fitness for the Frontline */}

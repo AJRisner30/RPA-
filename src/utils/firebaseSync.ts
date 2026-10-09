@@ -9,7 +9,33 @@ import {
   Unsubscribe 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { AthleteProfile, WorkoutSessionLog, RuckSessionLog } from '../types';
+import { AthleteProfile, WorkoutSessionLog } from '../types';
+
+/**
+ * Recursively strips undefined values from an object or array.
+ * Firestore strictly rejects documents containing 'undefined' with:
+ * "Function setDoc() called with invalid data. Unsupported field value: undefined"
+ */
+export function sanitizeForFirestore<T>(val: T): T {
+  if (val === null || val === undefined) {
+    return null as any;
+  }
+  if (Array.isArray(val)) {
+    return val
+      .filter((item) => item !== undefined)
+      .map((item) => sanitizeForFirestore(item)) as any;
+  }
+  if (typeof val === 'object' && !(val instanceof Date)) {
+    const cleaned: Record<string, any> = {};
+    for (const [key, v] of Object.entries(val)) {
+      if (v !== undefined) {
+        cleaned[key] = sanitizeForFirestore(v);
+      }
+    }
+    return cleaned as T;
+  }
+  return val;
+}
 
 /**
  * Subscribes to real-time workout logs for the authenticated user from Firestore
@@ -90,7 +116,8 @@ export async function saveWorkoutLogToFirestore(
       updatedAt: new Date().toISOString(),
     };
 
-    await setDoc(doc(db, 'workoutLogs', log.id), cleanLog);
+    const sanitizedLog = sanitizeForFirestore(cleanLog);
+    await setDoc(doc(db, 'workoutLogs', log.id), sanitizedLog);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -135,6 +162,10 @@ export function subscribeToUserAthlete(
             restingHr: data.restingHr || 55,
             maxHr: data.maxHr || 190,
             notes: data.notes || '',
+            questionnaire: data.questionnaire || undefined,
+            weightHistory: data.weightHistory || [],
+            recoveryHistory: data.recoveryHistory || [],
+            lastRecoveryCheckIn: data.lastRecoveryCheckIn || undefined,
           });
         } else {
           onAthlete(null);
@@ -158,7 +189,7 @@ export async function saveAthleteToFirestore(
 ): Promise<void> {
   const path = `athletes/${userId}`;
   try {
-    const cleanAthlete = {
+    const cleanAthlete: any = {
       id: userId,
       userId,
       name: athlete.name.slice(0, 100),
@@ -175,110 +206,23 @@ export async function saveAthleteToFirestore(
       updatedAt: new Date().toISOString(),
     };
 
-    await setDoc(doc(db, 'athletes', userId), cleanAthlete);
+    if (athlete.questionnaire) {
+      cleanAthlete.questionnaire = athlete.questionnaire;
+    }
+    if (athlete.weightHistory && athlete.weightHistory.length > 0) {
+      cleanAthlete.weightHistory = athlete.weightHistory.slice(0, 60);
+    }
+    if (athlete.recoveryHistory && athlete.recoveryHistory.length > 0) {
+      cleanAthlete.recoveryHistory = athlete.recoveryHistory.slice(0, 60);
+    }
+    if (athlete.lastRecoveryCheckIn) {
+      cleanAthlete.lastRecoveryCheckIn = athlete.lastRecoveryCheckIn;
+    }
+
+    const sanitizedAthlete = sanitizeForFirestore(cleanAthlete);
+    await setDoc(doc(db, 'athletes', userId), sanitizedAthlete);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
-  }
-}
-
-/**
- * Subscribes to real-time rucking logs for the authenticated user from Firestore
- */
-export function subscribeToUserRuckLogs(
-  userId: string,
-  onRuckLogs: (logs: RuckSessionLog[]) => void
-): Unsubscribe {
-  const path = 'ruckLogs';
-  try {
-    const q = query(
-      collection(db, path),
-      where('userId', '==', userId)
-    );
-
-    return onSnapshot(
-      q,
-      (snapshot) => {
-        const logs: RuckSessionLog[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          logs.push({
-            id: docSnap.id,
-            userId: data.userId,
-            athleteId: data.athleteId || data.userId,
-            title: data.title || 'Ruck Session',
-            date: data.date,
-            distanceMiles: data.distanceMiles || 0,
-            weightLbs: data.weightLbs || 0,
-            durationMinutes: data.durationMinutes || 0,
-            paceMinPerMile: data.paceMinPerMile || (data.durationMinutes && data.distanceMiles ? data.durationMinutes / data.distanceMiles : 0),
-            workloadIndex: data.workloadIndex || (data.distanceMiles * data.weightLbs),
-            terrain: data.terrain || 'Pavement / Road',
-            heartRateAvg: data.heartRateAvg,
-            rpe: data.rpe,
-            notes: data.notes || '',
-            createdAt: data.createdAt || new Date().toISOString(),
-          } as RuckSessionLog);
-        });
-
-        // Sort descending by date
-        logs.sort((a, b) => b.date.localeCompare(a.date));
-        onRuckLogs(logs);
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.GET, path);
-      }
-    );
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
-  }
-}
-
-/**
- * Persists a rucking session log to Firestore
- */
-export async function saveRuckLogToFirestore(
-  log: RuckSessionLog,
-  userId: string
-): Promise<void> {
-  const path = `ruckLogs/${log.id}`;
-  try {
-    const workloadIndex = Math.round((log.workloadIndex ?? (log.distanceMiles * log.weightLbs)) * 10) / 10;
-    const paceMinPerMile = Math.round((log.paceMinPerMile ?? (log.durationMinutes / (log.distanceMiles || 1))) * 100) / 100;
-
-    const cleanLog = {
-      id: log.id,
-      userId,
-      athleteId: log.athleteId || userId,
-      title: (log.title || 'Ruck Session').slice(0, 150),
-      date: log.date,
-      distanceMiles: Math.max(0, Math.min(100, log.distanceMiles || 0)),
-      weightLbs: Math.max(0, Math.min(300, log.weightLbs || 0)),
-      durationMinutes: Math.max(0, Math.min(1440, log.durationMinutes || 0)),
-      paceMinPerMile: Math.max(0, Math.min(120, paceMinPerMile)),
-      workloadIndex: Math.max(0, Math.min(30000, workloadIndex)),
-      terrain: (log.terrain || 'Pavement / Road').slice(0, 60),
-      heartRateAvg: log.heartRateAvg ? Math.max(30, Math.min(250, log.heartRateAvg)) : 0,
-      rpe: log.rpe ? Math.max(1, Math.min(10, log.rpe)) : 7,
-      notes: (log.notes || '').slice(0, 1000),
-      createdAt: log.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    await setDoc(doc(db, 'ruckLogs', log.id), cleanLog);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
-}
-
-/**
- * Deletes a rucking session log from Firestore
- */
-export async function deleteRuckLogFromFirestore(ruckId: string): Promise<void> {
-  const path = `ruckLogs/${ruckId}`;
-  try {
-    await deleteDoc(doc(db, 'ruckLogs', ruckId));
-  } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
 

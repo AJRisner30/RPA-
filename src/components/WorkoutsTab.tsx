@@ -5,12 +5,13 @@ import {
   ChevronUp, Timer, TrendingUp, Calendar, 
   ChevronLeft, ChevronRight, CheckCircle2,
   SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw,
-  LogOut
+  LogOut, RefreshCw, BatteryCharging
 } from 'lucide-react';
-import { WorkoutProgram, ExerciseTemplate, MuscleGroup } from '../types';
+import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey } from '../types';
 import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
+import { RequireTier } from './RequireTier';
 
 // Custom Running Shoe SVG icon
 const ShoeIcon = () => (
@@ -36,14 +37,42 @@ interface WorkoutsTabProps {
   onStartWorkout: (program: WorkoutProgram) => void;
   onSelectWarmup: (warmupId: string) => void;
   onSavePrograms?: (programs: WorkoutProgram[]) => void;
+  currentAthlete?: AthleteProfile;
+  activeProgramKey?: ProgramKey;
+  onSelectProgram?: (programKey: ProgramKey) => void;
+  onOpenQuestionnaire?: () => void;
+  onOpenAthleteModal?: () => void;
+  readinessScore?: number;
+  readinessTier?: string;
 }
 
 export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   onStartWorkout,
   onSelectWarmup,
+  currentAthlete,
+  activeProgramKey,
+  onSelectProgram,
+  onOpenQuestionnaire,
+  onOpenAthleteModal,
+  readinessScore,
+  readinessTier,
 }) => {
-  // Primary program selector: 'apex_protocol' (26-week tactical blueprint) vs 'tactical_hypertrophy' (6-week hypertrophy & ruck) vs 'hybrid_protocol' vs 'hybrid_db'
-  const [selectedProgram, setSelectedProgram] = useState<'apex_protocol' | 'tactical_hypertrophy' | 'hybrid_protocol' | 'hybrid_db'>('apex_protocol');
+  // Primary program selector: 'apex_protocol' (26-week tactical blueprint) vs 'tactical_hypertrophy' (6-week hypertrophy & conditioning) vs 'hybrid_protocol' vs 'hybrid_db'
+  const [selectedProgram, setSelectedProgram] = useState<ProgramKey>(
+    activeProgramKey || currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol'
+  );
+
+  useEffect(() => {
+    if (activeProgramKey) {
+      setSelectedProgram(activeProgramKey);
+    }
+  }, [activeProgramKey]);
+
+  const handleProgramSwitch = (progKey: ProgramKey) => {
+    setSelectedProgram(progKey);
+    onSelectProgram?.(progKey);
+    setDayViewMode('all');
+  };
   
   // Active week inside Tactical Hypertrophy & Conditioning (Weeks 1 to 6)
   const [activeTacticalWeek, setActiveTacticalWeek] = useState<number>(1);
@@ -525,20 +554,10 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         };
       });
 
-    // If day has conditioning (run / ruck) and is not rest, append as trackable cardio
+    // If day has conditioning (run / pursuit / sprints) and is not rest, append as trackable cardio
     if (isRealConditioningRun(day.run)) {
       const combined = `${day.run} ${day.pace} ${day.focus}`.toLowerCase();
-      const isRuck = combined.includes('ruck');
       const isIntervals = combined.includes('interval') || combined.includes('track') || combined.includes('sprint') || combined.includes('repeats');
-
-      // Pack weight for rucking
-      let packWeight: number | undefined;
-      const packMatch = combined.match(/(\d+(?:\.\d+)?)\s*(?:lbs?|pound)/);
-      if (packMatch) {
-        packWeight = parseFloat(packMatch[1]);
-      } else if (isRuck) {
-        packWeight = 30;
-      }
 
       // Accurate distance extraction from day.run title and pace
       let distance: number | undefined;
@@ -580,10 +599,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
       // Sensible defaults if not specified
       if (!distance && !durationMins) {
-        if (isRuck) {
-          distance = 5.0;
-          durationMins = 75;
-        } else if (isIntervals) {
+        if (isIntervals) {
           distance = 2.5;
           durationMins = 25;
         } else {
@@ -593,7 +609,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       } else if (!distance && durationMins) {
         distance = parseFloat((durationMins / 9.5).toFixed(1));
       } else if (distance && !durationMins) {
-        durationMins = isRuck ? Math.round(distance * 15) : Math.round(distance * 9);
+        durationMins = Math.round(distance * 9);
       }
 
       const targetText = durationMins 
@@ -609,11 +625,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         targetReps: targetText,
         restPeriodSeconds: 0,
         distance_miles: distance,
-        weight_lbs: packWeight,
         pace: day.pace,
-        progression_rules: isRuck
-          ? { metric: 'weight_lbs', trigger: 'pace_under_15_min', increment_value: 5, action: '+5 lbs pack load when pace < 15 min/mi' }
-          : isIntervals
+        progression_rules: isIntervals
           ? { metric: 'seconds', trigger: 'pace_progression', increment_value: -2, action: 'drop 2-3s per interval repeat' }
           : { metric: 'distance_miles', trigger: 'per_week', increment_value: 0.5, action: '+0.5 mi weekly aerobic expansion' },
         notes: `${day.run} • Target Pace: ${day.pace}`
@@ -678,7 +691,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       label: 'Phase 2: Build & Strength',
       weeks: 'Weeks 5-10',
       badge: 'Volume & Heavy Lifts',
-      focus: 'Progressive Barbell Loading, 400m Repeats & 35 lb Ruck Mileage',
+      focus: 'Progressive Barbell Loading, 400m Repeats & Duty Conditioning Base',
       weekRange: [5, 6, 7, 8, 9, 10],
       defaultWeek: 5
     },
@@ -687,7 +700,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       label: 'Phase 3: Intensify & Threshold',
       weeks: 'Weeks 11-16',
       badge: 'Threshold & Power',
-      focus: 'Heavy Triple Progression, VO2 Max Intervals & 40 lb Ruck Load',
+      focus: 'Heavy Triple Progression, VO2 Max Intervals & Foot Pursuit Conditioning',
       weekRange: [11, 12, 13, 14, 15, 16],
       defaultWeek: 11
     },
@@ -695,8 +708,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       id: 'apex_phase4' as const,
       label: 'Phase 4: Tactical Peak',
       weeks: 'Weeks 17-22',
-      badge: 'Heavy Ruck & Speed Under Load',
-      focus: 'Speed Under Load, 45 lb Heavy Ruck & Explosive Combat Chassis',
+      badge: 'Speed & Agility Under Stress',
+      focus: 'Speed Under Load, Agility Obstacle Drills & Explosive Combat Chassis',
       weekRange: [17, 18, 19, 20, 21, 22],
       defaultWeek: 17
     },
@@ -743,21 +756,21 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       label: 'Phase 1: DB Foundation',
       weeks: 'Weeks 1-4',
       badge: 'Hypertrophy & Work Capacity',
-      focus: 'Push-Up Volume, DB Hypertrophy & Base Ruck (30 lbs)'
+      focus: 'Push-Up Volume, DB Hypertrophy & Duty Carry Conditioning'
     },
     {
       id: 'db_phase2' as const,
       label: 'Phase 2: Strength Density',
       weeks: 'Weeks 5-8',
       badge: 'Heavy DB Loads & Threshold',
-      focus: 'Weighted/Deficit Push-Ups, Tempo Running & 35 lb Ruck'
+      focus: 'Weighted/Deficit Push-Ups, Tempo Running & Foot Pursuit Sprints'
     },
     {
       id: 'db_phase3' as const,
       label: 'Phase 3: Tactical Peak',
       weeks: 'Weeks 9-12',
       badge: 'Max DB Power & Tactical Test',
-      focus: 'Explosive Plyo Push-Ups, 40-45 lb Ruck & Peak Assessment'
+      focus: 'Explosive Plyo Push-Ups, LEO Agility Circuit & Peak Assessment'
     },
   ];
 
@@ -767,6 +780,75 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* INITIAL QUESTIONNAIRE & PROGRAM RECOMMENDATION BANNER */}
+      {currentAthlete?.questionnaire ? (
+        <div className="bg-gradient-to-r from-[#0c182c] via-[#0f1f38] to-[#0c182c] border border-blue-500/40 rounded-2xl p-3 sm:p-3.5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-blue-400 shrink-0">
+              <Award className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400 font-bold">
+                  Diagnostic Ability Match:
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-500/30 font-bold">
+                  {currentAthlete.questionnaire.fitnessTier}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  • {currentAthlete.questionnaire.weeklyDays} Days/Wk
+                </span>
+              </div>
+              <div className="text-xs text-slate-200 mt-0.5">
+                Recommended Track: <span className="font-bold text-white font-athletic uppercase">{currentAthlete.questionnaire.recommendedProgramTitle}</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onOpenQuestionnaire}
+            className="px-3 py-1.5 rounded-xl border border-blue-500/40 bg-blue-950/80 hover:bg-blue-900 text-blue-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto shrink-0 shadow-sm"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
+            <span>Retake Assessment</span>
+          </button>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-blue-950/90 via-[#0d1a30] to-blue-950/90 border-2 border-blue-400/60 rounded-2xl p-4 sm:p-4.5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md">
+              <Sparkles className="w-5 h-5 text-white animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400 font-black">
+                  Initial Tactical Assessment
+                </span>
+                <span className="text-[9px] bg-red-950/80 border border-red-500/40 text-red-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                  Recommended
+                </span>
+              </div>
+              <h2 className="text-xs sm:text-sm font-black text-white font-athletic uppercase tracking-wide">
+                New Officer or Athlete? Take the 2-Minute Physical Ability &amp; Program Matcher
+              </h2>
+              <p className="text-[11px] text-slate-300 mt-0.5">
+                Diagnose your baseline push/pull/running capacity and goals to automatically unlock your recommended beginning training plan.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenQuestionnaire}
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-athletic font-black uppercase text-xs tracking-wider shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 self-start md:self-auto active:scale-[0.98]"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Take Ability Questionnaire</span>
+          </button>
+        </div>
+      )}
+
       {/* Sleek, Compact Command Deck: Combines Identity, Status, and 4-Program Selector */}
       <div className="bg-[#0f172a] border-2 border-blue-500/30 hover:border-blue-400/50 rounded-2xl p-3 sm:p-4 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -808,8 +890,30 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </div>
           </div>
 
-          {/* Quick Action Toggles: Overload Rules & Coach Directives buttons */}
+          {/* Quick Action Toggles: Readiness Score, Overload Rules, Coach Directives, and Ability Matcher */}
           <div className="flex items-center gap-2 flex-wrap">
+            {onOpenAthleteModal && (
+              <button
+                type="button"
+                onClick={onOpenAthleteModal}
+                className="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border bg-blue-950/90 hover:bg-blue-900 text-blue-300 border-blue-500/50 shadow-sm"
+                title="View Tactical Readiness Score & Daily Recovery Breakdown"
+              >
+                <BatteryCharging className="w-3.5 h-3.5 text-blue-400" />
+                <span>{readinessScore !== undefined ? `${readinessScore}% Readiness` : 'Readiness'}</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onOpenQuestionnaire}
+              className="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border bg-blue-950 hover:bg-blue-900/80 text-blue-300 border-blue-500/50 shadow-sm"
+              title="Open Ability Assessment & Program Matcher"
+            >
+              <Award className="w-3.5 h-3.5 text-blue-400" />
+              <span>Program Matcher</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setShowOverloadRules(!showOverloadRules)}
@@ -847,10 +951,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           {/* Program 1: The Apex Protocol */}
           <button
             type="button"
-            onClick={() => {
-              setSelectedProgram('apex_protocol');
-              setDayViewMode('all');
-            }}
+            onClick={() => handleProgramSwitch('apex_protocol')}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'apex_protocol'
                 ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
@@ -874,10 +975,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           {/* Program 2: Tactical Hypertrophy & Conditioning Protocol */}
           <button
             type="button"
-            onClick={() => {
-              setSelectedProgram('tactical_hypertrophy');
-              setDayViewMode('all');
-            }}
+            onClick={() => handleProgramSwitch('tactical_hypertrophy')}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'tactical_hypertrophy'
                 ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
@@ -889,7 +987,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className={`w-2 h-2 rounded-full ${selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
                 <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Tactical Hypertrophy</span>
               </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">6-Wk Cycle • 4-Day Hyper + Ruck</span>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">6-Wk Cycle • 4-Day Hyper + Conditioning</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
               selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
@@ -901,10 +999,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           {/* Program 3: Hybrid Protocol */}
           <button
             type="button"
-            onClick={() => {
-              setSelectedProgram('hybrid_protocol');
-              setDayViewMode('all');
-            }}
+            onClick={() => handleProgramSwitch('hybrid_protocol')}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'hybrid_protocol'
                 ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
@@ -928,10 +1023,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           {/* Program 4: Hybrid DB & Bodyweight */}
           <button
             type="button"
-            onClick={() => {
-              setSelectedProgram('hybrid_db');
-              setDayViewMode('all');
-            }}
+            onClick={() => handleProgramSwitch('hybrid_db')}
             className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
               selectedProgram === 'hybrid_db'
                 ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
@@ -989,7 +1081,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 })}
               </div>
               <span className="text-[11px] font-mono text-blue-400 font-bold shrink-0">
-                Week {activeTacticalWeek} Active • Saturday Ruck Synced
+                Week {activeTacticalWeek} Active • Duty Conditioning Synced
               </span>
             </div>
           </div>
@@ -1123,24 +1215,28 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
       {/* COLLAPSIBLE AUTO-OVERLOAD BENCHMARKS (Expands cleanly on user request) */}
       {showOverloadRules && (
-        <div className="bg-zinc-900/95 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-lg animate-in fade-in duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2.5 border-b border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
-                {selectedProgram === 'apex_protocol' 
-                  ? `The Apex Protocol Auto-Overload Laws (${currentPhase.weeks})`
-                  : selectedProgram === 'tactical_hypertrophy'
-                  ? `Tactical Hypertrophy Auto-Overload Benchmarks (${currentPhase.weeks})`
-                  : selectedProgram === 'hybrid_protocol'
-                  ? 'Hybrid Protocol Auto-Overload Benchmarks'
-                  : `Hybrid DB & Bodyweight Auto-Overload (${currentPhase.weeks})`}
-              </h3>
+        <RequireTier 
+          requiredTier="pro" 
+          featureName="Auto-Overload Engine"
+        >
+          <div className="bg-zinc-900/95 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-lg animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2.5 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
+                  {selectedProgram === 'apex_protocol' 
+                    ? `The Apex Protocol Auto-Overload Laws (${currentPhase.weeks})`
+                    : selectedProgram === 'tactical_hypertrophy'
+                    ? `Tactical Hypertrophy Auto-Overload Benchmarks (${currentPhase.weeks})`
+                    : selectedProgram === 'hybrid_protocol'
+                    ? 'Hybrid Protocol Auto-Overload Benchmarks'
+                    : `Hybrid DB & Bodyweight Auto-Overload (${currentPhase.weeks})`}
+                </h3>
+              </div>
+              <span className="text-[11px] text-zinc-400 font-mono">
+                Apply linear increments upon completing target reps
+              </span>
             </div>
-            <span className="text-[11px] text-zinc-400 font-mono">
-              Apply linear increments upon completing target reps
-            </span>
-          </div>
 
           {selectedProgram === 'apex_protocol' ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
@@ -1160,7 +1256,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing all target reps</span>
               </div>
               <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Aerobic Run & Ruck</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Aerobic Run & Sprints</span>
                 <span className="text-sm font-black text-emerald-400 font-mono">+5 min / +2 min / +1 mi</span>
                 <span className="text-[10px] text-zinc-400 block mt-0.5">Dynamic weekly prescription</span>
               </div>
@@ -1183,9 +1279,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className="text-[10px] text-slate-400 block mt-0.5">Upon completing 10-12 reps with clean tempo</span>
               </div>
               <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">6-Wk Ruck Progression</span>
-                <span className="text-sm font-black text-blue-400 font-mono">25 → 50 lbs</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Sub-15:00/mi Zone 2 pace</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">6-Wk Duty Conditioning</span>
+                <span className="text-sm font-black text-blue-400 font-mono">1.5-Mi Standard</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Sub-7:30/mi Zone 4/5 pace</span>
               </div>
             </div>
           ) : selectedProgram === 'hybrid_protocol' ? (
@@ -1229,13 +1325,14 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className="text-[10px] text-slate-400 block mt-0.5">Conversational base pace</span>
               </div>
               <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ruck March</span>
-                <span className="text-sm font-black text-blue-400 font-mono">+5 lbs pack</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">When pace is &lt; 15 min/mi</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Duty Agility / Farmer's Carry</span>
+                <span className="text-sm font-black text-blue-400 font-mono">+5-10 lbs carry</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Maintain upright trunk posture</span>
               </div>
             </div>
           )}
-        </div>
+          </div>
+        </RequireTier>
       )}
 
       {/* COLLAPSIBLE COACH'S DIRECTIVES */}
