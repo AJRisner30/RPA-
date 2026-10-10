@@ -96,6 +96,32 @@
         "updatedAt": { "type": "string", "description": "Last update timestamp" }
       },
       "required": ["id", "userId", "date", "distanceMiles", "weightLbs", "durationMinutes"]
+    },
+    "OfficerProgram": {
+      "title": "OfficerProgram",
+      "description": "Custom individualized officer training program uploaded specifically to an individual officer account and visible only to them.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique program identifier" },
+        "officerUserId": { "type": "string", "description": "Target officer's Firebase Auth User ID (only they and admin can access)" },
+        "officerEmail": { "type": "string", "maxLength": 150, "description": "Officer's email address" },
+        "officerName": { "type": "string", "maxLength": 100, "description": "Officer's badge name or callsign" },
+        "badgeNumber": { "type": "string", "maxLength": 40, "description": "Officer badge/ID number" },
+        "department": { "type": "string", "maxLength": 120, "description": "Agency or department name" },
+        "programTitle": { "type": "string", "maxLength": 150, "description": "Title of the assigned individualized program" },
+        "programSubtitle": { "type": "string", "maxLength": 250, "description": "Focus or operational description" },
+        "category": { "type": "string", "maxLength": 60, "description": "Training category" },
+        "coachNotes": { "type": "string", "maxLength": 3000, "description": "Confidential individualized coach notes and prescription instructions" },
+        "frequency": { "type": "string", "maxLength": 80, "description": "Assigned weekly split/frequency" },
+        "estimatedDurationMinutes": { "type": "number", "description": "Estimated duration in minutes" },
+        "scheduleDays": { "type": "array", "description": "Array of day-by-day training schedule objects" },
+        "exercises": { "type": "array", "description": "List of core prescribed exercises" },
+        "assignedByEmail": { "type": "string", "maxLength": 150, "description": "Email of the coach who assigned the program" },
+        "assignedAt": { "type": "string", "description": "Timestamp when the program was uploaded" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["id", "officerUserId", "programTitle", "category"]
     }
   },
   "firestore": {
@@ -114,6 +140,10 @@
     "/ruckLogs/{ruckId}": {
       "schema": "RuckSessionLog",
       "description": "Collection of rucking progression logs tracking distance, pack weight, and pace."
+    },
+    "/officerPrograms/{programId}": {
+      "schema": "OfficerProgram",
+      "description": "Private individualized officer programs uploaded specifically to one officer account and inaccessible to any other officer."
     }
   }
 }

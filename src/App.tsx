@@ -6,6 +6,7 @@ import {
 import { WorkoutProgram, WorkoutSessionLog, ProgramKey, QuestionnaireAnswers } from './types';
 import { Navbar, TabType } from './components/Navbar';
 import { WorkoutsTab } from './components/WorkoutsTab';
+import { OfficerPortalTab } from './components/OfficerPortalTab';
 import { WarmupsTab } from './components/WarmupsTab';
 import { RepLoadCalculatorTab } from './components/RepLoadCalculatorTab';
 import { ProgressGraphsTab } from './components/ProgressGraphsTab';
@@ -213,6 +214,14 @@ export default function App() {
               onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
               readinessScore={readiness.overallScore}
               readinessTier={readiness.tier}
+            />
+          )}
+
+          {activeTab === 'officer_portal' && (
+            <OfficerPortalTab
+              currentAthlete={currentAthlete}
+              onStartCustomWorkout={handleStartWorkout}
+              onOpenPricingModal={() => setIsPricingModalOpen(true)}
             />
           )}
 

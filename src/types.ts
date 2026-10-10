@@ -343,3 +343,32 @@ export function isExerciseTimed(
   return timedKeywords.some((kw) => name.includes(kw));
 }
 
+export interface OfficerAssignedProgram {
+  id: string;
+  officerUserId: string; // The specific officer account this program is exclusively tied to
+  officerEmail?: string;
+  officerName?: string;
+  badgeNumber?: string;
+  department?: string;
+  programTitle: string;
+  programSubtitle?: string;
+  category: 'Strength' | 'Hypertrophy' | 'Athletic Conditioning' | 'Power' | 'Hybrid' | 'Tactical & Rucking';
+  coachNotes?: string;
+  frequency?: string;
+  estimatedDurationMinutes?: number;
+  scheduleDays?: {
+    day: number;
+    dayLabel?: string;
+    focus: string;
+    warmup?: string;
+    exercises: ExerciseTemplate[];
+    runPacing?: string;
+    coachNotes?: string;
+  }[];
+  exercises: ExerciseTemplate[];
+  assignedByEmail?: string;
+  assignedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

@@ -201,6 +201,43 @@ service cloud.firestore {
     }
 
     // ----------------------------------------------------
+    // Individual Officer Specific Programs
+    // Confidential portal programs assigned specifically to one officer account
+    // Access: ONLY the targeted officer (resource.data.officerUserId == request.auth.uid) OR Admin can read.
+    // Writes: ONLY Admin can create/update/delete individual officer assigned programs.
+    // ----------------------------------------------------
+    function isValidOfficerProgram(data) {
+      return data.keys().hasAll(['id', 'officerUserId', 'programTitle', 'category']) &&
+        data.id is string && isValidId(data.id) &&
+        data.officerUserId is string && data.officerUserId.size() > 0 && data.officerUserId.size() <= 128 &&
+        data.programTitle is string && data.programTitle.size() > 0 && data.programTitle.size() <= 150 &&
+        data.category is string && data.category.size() <= 60 &&
+        (!('programSubtitle' in data) || (data.programSubtitle is string && data.programSubtitle.size() <= 250)) &&
+        (!('officerEmail' in data) || (data.officerEmail is string && data.officerEmail.size() <= 150)) &&
+        (!('officerName' in data) || (data.officerName is string && data.officerName.size() <= 100)) &&
+        (!('badgeNumber' in data) || (data.badgeNumber is string && data.badgeNumber.size() <= 40)) &&
+        (!('department' in data) || (data.department is string && data.department.size() <= 120)) &&
+        (!('coachNotes' in data) || (data.coachNotes is string && data.coachNotes.size() <= 3000)) &&
+        (!('frequency' in data) || (data.frequency is string && data.frequency.size() <= 80)) &&
+        (!('estimatedDurationMinutes' in data) || (data.estimatedDurationMinutes is number && data.estimatedDurationMinutes >= 0 && data.estimatedDurationMinutes <= 360)) &&
+        (!('scheduleDays' in data) || (data.scheduleDays is list && data.scheduleDays.size() <= 14)) &&
+        (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 50)) &&
+        (!('assignedByEmail' in data) || (data.assignedByEmail is string && data.assignedByEmail.size() <= 150)) &&
+        (!('assignedAt' in data) || (data.assignedAt is string && data.assignedAt.size() <= 60)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+    }
+
+    match /officerPrograms/{programId} {
+      allow get: if isSignedIn() && (resource.data.officerUserId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.officerUserId == request.auth.uid || isAdmin());
+      allow create: if isAdmin() && isValidId(programId) && isValidOfficerProgram(incoming());
+      allow update: if isAdmin() && isValidId(programId) && isValidOfficerProgram(incoming()) &&
+        incoming().id == existing().id;
+      allow delete: if isAdmin() && isValidId(programId);
+    }
+
+    // ----------------------------------------------------
     // Performance Metrics (Protected Collection)
     // Read/write access granted if user has tier: "pro" AND either:
     // status is "active_subscriber" OR request.time < trialEnd timestamp

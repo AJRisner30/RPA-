@@ -9,7 +9,7 @@ import {
   Unsubscribe 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { AthleteProfile, WorkoutSessionLog } from '../types';
+import { AthleteProfile, WorkoutSessionLog, OfficerAssignedProgram } from '../types';
 
 /**
  * Recursively strips undefined values from an object or array.
@@ -225,4 +225,204 @@ export async function saveAthleteToFirestore(
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
+
+/**
+ * Subscribes in real-time to the individual officer program uploaded specifically for this officer.
+ * Ensures an officer sees ONLY their own program, and no other officer's data.
+ */
+export function subscribeToOfficerProgram(
+  officerUserId: string,
+  onProgram: (program: OfficerAssignedProgram | null) => void
+): Unsubscribe {
+  const path = 'officerPrograms';
+  try {
+    const q = query(
+      collection(db, path),
+      where('officerUserId', '==', officerUserId)
+    );
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          // Take the latest assigned program for this officer
+          const docs = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              officerUserId: data.officerUserId,
+              officerEmail: data.officerEmail || '',
+              officerName: data.officerName || '',
+              badgeNumber: data.badgeNumber || '',
+              department: data.department || '',
+              programTitle: data.programTitle || 'Individualized Duty Program',
+              programSubtitle: data.programSubtitle || '',
+              category: data.category || 'Tactical & Rucking',
+              coachNotes: data.coachNotes || '',
+              frequency: data.frequency || '4-5 Days / Week',
+              estimatedDurationMinutes: data.estimatedDurationMinutes || 60,
+              scheduleDays: data.scheduleDays || [],
+              exercises: data.exercises || [],
+              assignedByEmail: data.assignedByEmail || 'risnerathletics@gmail.com',
+              assignedAt: data.assignedAt || '',
+              createdAt: data.createdAt || '',
+              updatedAt: data.updatedAt || '',
+            } as OfficerAssignedProgram;
+          });
+
+          // Sort by assignedAt / createdAt descending
+          docs.sort((a, b) => (b.assignedAt || b.createdAt || '').localeCompare(a.assignedAt || a.createdAt || ''));
+          onProgram(docs[0]);
+        } else {
+          onProgram(null);
+        }
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, path);
+      }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+  }
+}
+
+/**
+ * Subscribes to all assigned officer programs (for Coach AJ / Admin portal view)
+ */
+export function subscribeToAllOfficerPrograms(
+  onPrograms: (programs: OfficerAssignedProgram[]) => void
+): Unsubscribe {
+  const path = 'officerPrograms';
+  try {
+    return onSnapshot(
+      collection(db, path),
+      (snapshot) => {
+        const list: OfficerAssignedProgram[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            officerUserId: data.officerUserId,
+            officerEmail: data.officerEmail || '',
+            officerName: data.officerName || '',
+            badgeNumber: data.badgeNumber || '',
+            department: data.department || '',
+            programTitle: data.programTitle || 'Assigned Duty Program',
+            programSubtitle: data.programSubtitle || '',
+            category: data.category || 'Tactical & Rucking',
+            coachNotes: data.coachNotes || '',
+            frequency: data.frequency || '',
+            estimatedDurationMinutes: data.estimatedDurationMinutes || 60,
+            scheduleDays: data.scheduleDays || [],
+            exercises: data.exercises || [],
+            assignedByEmail: data.assignedByEmail || '',
+            assignedAt: data.assignedAt || '',
+            createdAt: data.createdAt || '',
+            updatedAt: data.updatedAt || '',
+          } as OfficerAssignedProgram);
+        });
+
+        list.sort((a, b) => (b.assignedAt || b.createdAt || '').localeCompare(a.assignedAt || a.createdAt || ''));
+        onPrograms(list);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, path);
+      }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+  }
+}
+
+/**
+ * Subscribes to all registered athletes across the department (for Coach AJ / Admin to select an officer)
+ */
+export function subscribeToAllAthletes(
+  onAthletes: (athletes: AthleteProfile[]) => void
+): Unsubscribe {
+  const path = 'athletes';
+  try {
+    return onSnapshot(
+      collection(db, path),
+      (snapshot) => {
+        const list: AthleteProfile[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            name: data.name || 'Officer',
+            email: data.email || '',
+            avatarColor: data.avatarColor || 'from-blue-600 to-indigo-700',
+            joinedDate: data.joinedDate || '',
+            experienceLevel: data.experienceLevel || 'Intermediate',
+            primaryGoal: data.primaryGoal || 'Tactical Conditioning & Pursuit',
+            weightLbs: data.weightLbs || 185,
+            restingHr: data.restingHr || 55,
+            maxHr: data.maxHr || 190,
+            notes: data.notes || '',
+            questionnaire: data.questionnaire,
+            weightHistory: data.weightHistory || [],
+            recoveryHistory: data.recoveryHistory || [],
+            lastRecoveryCheckIn: data.lastRecoveryCheckIn,
+          });
+        });
+        onAthletes(list);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, path);
+      }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+  }
+}
+
+/**
+ * Uploads/saves an individualized officer program to Firestore specifically for that officer
+ */
+export async function saveOfficerProgramToFirestore(
+  program: OfficerAssignedProgram
+): Promise<void> {
+  const path = `officerPrograms/${program.id}`;
+  try {
+    const cleanProgram: any = {
+      id: program.id,
+      officerUserId: program.officerUserId,
+      officerEmail: (program.officerEmail || '').slice(0, 150),
+      officerName: (program.officerName || '').slice(0, 100),
+      badgeNumber: (program.badgeNumber || '').slice(0, 40),
+      department: (program.department || '').slice(0, 120),
+      programTitle: program.programTitle.slice(0, 150),
+      programSubtitle: (program.programSubtitle || '').slice(0, 250),
+      category: program.category || 'Tactical & Rucking',
+      coachNotes: (program.coachNotes || '').slice(0, 3000),
+      frequency: (program.frequency || '4 Days / Week').slice(0, 80),
+      estimatedDurationMinutes: Math.max(0, Math.min(360, program.estimatedDurationMinutes || 60)),
+      scheduleDays: program.scheduleDays || [],
+      exercises: program.exercises || [],
+      assignedByEmail: (program.assignedByEmail || 'risnerathletics@gmail.com').slice(0, 150),
+      assignedAt: program.assignedAt || new Date().toISOString(),
+      createdAt: program.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const sanitized = sanitizeForFirestore(cleanProgram);
+    await setDoc(doc(db, 'officerPrograms', program.id), sanitized);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Deletes an officer's assigned program from Firestore
+ */
+export async function deleteOfficerProgramFromFirestore(programId: string): Promise<void> {
+  const path = `officerPrograms/${programId}`;
+  try {
+    await deleteDoc(doc(db, 'officerPrograms', programId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 

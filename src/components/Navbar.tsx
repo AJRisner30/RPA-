@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
-  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award
+  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { AthleteProfile } from '../utils/athleteAuth';
@@ -9,7 +9,7 @@ import { PWAInstallButton } from './PWAInstallButton';
 import { useFirebase } from '../context/FirebaseContext';
 import { useUserTier } from '../hooks/useUserTier';
 
-export type TabType = 'workouts' | 'warmups' | 'calculator' | 'logs' | 'graphs' | 'contact';
+export type TabType = 'workouts' | 'officer_portal' | 'warmups' | 'calculator' | 'logs' | 'graphs' | 'contact';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -38,6 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const tabs = [
     { id: 'workouts', label: 'Workouts', icon: Dumbbell },
+    { id: 'officer_portal', label: 'Officer Portal', icon: ShieldCheck, highlight: true },
     { id: 'warmups', label: 'Warm-Ups', icon: Flame },
     { id: 'calculator', label: 'Calculators', icon: Calculator },
     { id: 'logs', label: 'Workout Logs', icon: History },
