@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.patrolready.performance",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:EB:BF:E5:9A:4A:87:7B:AE:99:99:67:8B:17:66:91:EE:51:7A:B4:42:07:CA:57:9B:F3:A5:68:0D:37"
+      ]
+    }
+  }
+]

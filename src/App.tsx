@@ -19,6 +19,11 @@ import { PricingTiersModal } from './components/PricingTiersModal';
 import { TrialBanner } from './components/TrialBanner';
 import { SignInGate } from './components/SignInGate';
 import { LoadingSplash } from './components/LoadingSplash';
+import { AndroidBottomNav } from './components/AndroidBottomNav';
+import { AndroidAppModal } from './components/AndroidAppModal';
+import { AndroidInstallBanner } from './components/AndroidInstallBanner';
+import { useAndroidBackButton } from './hooks/useAndroidBackButton';
+import { useAndroidWakeLock } from './hooks/useAndroidWakeLock';
 import { getCurrentAthlete, AthleteProfile, updateAthleteProfile, registerAthlete } from './utils/athleteAuth';
 import { calculateReadinessScore } from './utils/readinessEngine';
 import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone } from 'lucide-react';
@@ -42,6 +47,7 @@ export default function App() {
   const [isAthleteModalOpen, setIsAthleteModalOpen] = useState<boolean>(false);
   const [isQuestionnaireOpen, setIsQuestionnaireOpen] = useState<boolean>(false);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState<boolean>(false);
+  const [isAndroidModalOpen, setIsAndroidModalOpen] = useState<boolean>(false);
   const [activeProgramKey, setActiveProgramKey] = useState<ProgramKey>(() => 
     getCurrentAthlete().questionnaire?.recommendedProgramKey || 'apex_protocol'
   );
@@ -51,6 +57,51 @@ export default function App() {
 
   // Pre-selected warmup flow
   const [targetWarmupId, setTargetWarmupId] = useState<string | null>(null);
+
+  // Android Back Button handler: close open modals or return to workouts
+  const hasOpenModal = 
+    activeLiveProgram !== null || 
+    isAthleteModalOpen || 
+    isQuestionnaireOpen || 
+    isPricingModalOpen || 
+    isAndroidModalOpen;
+
+  const handleCloseTopModal = () => {
+    if (activeLiveProgram !== null) {
+      setActiveLiveProgram(null);
+    } else if (isAndroidModalOpen) {
+      setIsAndroidModalOpen(false);
+    } else if (isPricingModalOpen) {
+      setIsPricingModalOpen(false);
+    } else if (isQuestionnaireOpen) {
+      setIsQuestionnaireOpen(false);
+    } else if (isAthleteModalOpen) {
+      setIsAthleteModalOpen(false);
+    }
+  };
+
+  useAndroidBackButton({
+    hasOpenModal,
+    onCloseModal: handleCloseTopModal,
+    activeTab,
+    onSelectTab: setActiveTab,
+  });
+
+  // Android Screen Wake Lock: Keeps display on during live workouts
+  useAndroidWakeLock(activeLiveProgram !== null);
+
+  // Handle URL query parameters (e.g. Android Home Screen Shortcuts ?tab=workouts / ?tab=officer_portal)
+  useEffect(() => {
+    const handleUrlParams = () => {
+      if (typeof window === 'undefined') return;
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as TabType | null;
+      if (tabParam && ['workouts', 'officer_portal', 'warmups', 'calculator', 'logs', 'graphs', 'contact'].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    };
+    handleUrlParams();
+  }, []);
 
   // Real-time Firestore sync when authenticated
   useEffect(() => {
@@ -188,12 +239,18 @@ export default function App() {
         onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
         onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
+        onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
         readinessScore={readiness.overallScore}
         readinessTier={readiness.tier}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-5">
+      {/* Android Native App Install Banner */}
+      <AndroidInstallBanner 
+        onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)} 
+      />
+
+      {/* Main Content Area (With bottom padding for Android bottom navigation bar on mobile) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-5 pb-24 md:pb-6">
         {/* 14-Day Risk-Free Trial Status & Upgrade Warning Banner */}
         <TrialBanner 
           onOpenCheckout={() => setIsPricingModalOpen(true)}
@@ -367,6 +424,26 @@ export default function App() {
 
       {/* Real-time Network Offline Detection Status */}
       <OfflineIndicator />
+
+      {/* Android Native Bottom Navigation (Mobile Viewports Only) */}
+      <AndroidBottomNav
+        activeTab={activeTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          if (tab !== 'warmups') setTargetWarmupId(null);
+        }}
+        currentAthlete={currentAthlete}
+        onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
+        onOpenPricingModal={() => setIsPricingModalOpen(true)}
+        onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
+        readinessScore={readiness.overallScore}
+      />
+
+      {/* Android Native App Packaging & Installation Modal */}
+      <AndroidAppModal
+        isOpen={isAndroidModalOpen}
+        onClose={() => setIsAndroidModalOpen(false)}
+      />
     </div>
   );
 }

@@ -22,20 +22,25 @@ export default defineConfig(() => {
           'manifest.json',
           'manifest.webmanifest',
           'sw.js',
+          '.well-known/assetlinks.json',
         ],
         manifest: {
-          id: '/',
+          id: '/?android_app=1',
           name: 'Patrol Ready Performance',
           short_name: 'PatrolReady',
           description:
             'Patrol Ready Performance — Tactical fitness for the Frontline. Elite law enforcement physical training, duty readiness, combat chassis durability, foot pursuit speed, and tactical load carriage.',
           theme_color: '#0b1320',
-          background_color: '#0b1320',
+          background_color: '#070b12',
           display: 'standalone',
+          display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
           orientation: 'portrait-primary',
-          start_url: '/?source=pwa',
+          start_url: '/?source=android_app',
           scope: '/',
-          categories: ['fitness', 'health', 'sports'],
+          categories: ['fitness', 'health', 'sports', 'productivity'],
+          dir: 'ltr',
+          lang: 'en-US',
+          prefer_related_applications: false,
           icons: [
             {
               src: '/pwa-192x192.png',
@@ -56,8 +61,32 @@ export default defineConfig(() => {
               purpose: 'maskable',
             },
           ],
+          shortcuts: [
+            {
+              name: "Today's Duty Workout",
+              short_name: 'Workouts',
+              description: "Launch today's duty workout session",
+              url: '/?tab=workouts',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+            {
+              name: 'Officer Portal',
+              short_name: 'Portal',
+              description: 'Access your confidential assigned protocol',
+              url: '/?tab=officer_portal',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+            {
+              name: 'PT Readiness Test',
+              short_name: 'Readiness',
+              description: 'Calculate PT readiness scoring & composite ratings',
+              url: '/?tab=calculator',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+          ],
         },
         workbox: {
+          maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,json}'],
           runtimeCaching: [
             {

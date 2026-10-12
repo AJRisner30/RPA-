@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.patrolready.performance'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.patrolready.performance"
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = [
+            hostName: "patrolreadyperformance.com",
+            defaultUrl: "https://patrolreadyperformance.com/?source=android_app",
+            launcherName: "PatrolReady",
+            assetStatements: '[{ "relation": ["delegate_permission/common.handle_all_urls"], "target": { "namespace": "web", "site": "https://patrolreadyperformance.com"} }]',
+            enableNotification: "true",
+            twaThemeColor: "#0B1320",
+            twaNavigationColor: "#070B12"
+        ]
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+    implementation 'androidx.core:core:1.15.0'
+}

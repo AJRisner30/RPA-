@@ -11,6 +11,7 @@ import { calculate1RM, saveWorkoutLog, getStoredWorkoutLogs } from '../utils/sto
 import { getAutoOverloadRecommendation } from '../utils/autoOverload';
 import { getCurrentAthlete } from '../utils/athleteAuth';
 import { soundManager } from '../utils/audio';
+import { useAndroidHaptics } from '../hooks/useAndroidHaptics';
 
 interface ActiveWorkoutModalProps {
   program: WorkoutProgram;
@@ -23,6 +24,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   onClose,
   onWorkoutCompleted,
 }) => {
+  const haptics = useAndroidHaptics();
   const currentAthlete = getCurrentAthlete();
   // Find athlete-specific past logs for progressive overload calculations
   const allLogs = getStoredWorkoutLogs();
@@ -279,17 +281,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         if (!prev || !prev.isRunning) return prev;
         if (prev.secondsRemaining <= 1) {
           soundManager.playRestComplete();
+          haptics.alert();
           return { ...prev, secondsRemaining: 0, isRunning: false };
         }
         if (prev.secondsRemaining <= 4 && prev.secondsRemaining > 1) {
           soundManager.playCountdownBeep();
+          haptics.tap();
         }
         return { ...prev, secondsRemaining: prev.secondsRemaining - 1 };
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [modalRestTimer?.isRunning]);
+  }, [modalRestTimer?.isRunning, haptics]);
 
   const handleStartRestTimer = (seconds: number, exerciseName: string) => {
     setModalRestTimer({
@@ -299,6 +303,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       isRunning: true,
     });
     soundManager.playCountdownBeep(true);
+    haptics.tap();
   };
 
   const handleToggleCompleteSet = (exerciseIdx: number, setIdx: number) => {
@@ -317,9 +322,12 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
     if (willBeComplete) {
       soundManager.playSetLogged();
+      haptics.success();
       // Auto-trigger inline rest countdown for this exercise
       const restSecs = currentSet.restSeconds || currentExercise.restPeriodSeconds || 90;
       handleStartRestTimer(restSecs, currentExercise.exerciseName);
+    } else {
+      haptics.tap();
     }
   };
 
@@ -427,6 +435,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
     saveWorkoutLog(sessionLog);
     soundManager.playRestComplete();
+    haptics.heavy();
 
     // Trigger celebration confetti
     try {

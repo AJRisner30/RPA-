@@ -1,0 +1,62 @@
+{
+  "packageId": "com.patrolready.performance",
+  "host": "patrolreadyperformance.com",
+  "name": "Patrol Ready Performance",
+  "launcherName": "PatrolReady",
+  "themeColor": "#0B1320",
+  "themeColorDark": "#070B12",
+  "navigationColor": "#070B12",
+  "navigationColorDark": "#070B12",
+  "navigationDividerColor": "#00000000",
+  "navigationDividerColorDark": "#00000000",
+  "backgroundColor": "#070B12",
+  "enableNotifications": true,
+  "startUrl": "/?source=android_app",
+  "iconUrl": "https://patrolreadyperformance.com/pwa-512x512.png",
+  "maskableIconUrl": "https://patrolreadyperformance.com/pwa-maskable-512x512.png",
+  "monochromeIconUrl": "https://patrolreadyperformance.com/pwa-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "patrolready"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Today's Workout",
+      "short_name": "Workouts",
+      "url": "https://patrolreadyperformance.com/?tab=workouts",
+      "chosen_icon": "https://patrolreadyperformance.com/pwa-192x192.png"
+    },
+    {
+      "name": "Officer Portal",
+      "short_name": "Portal",
+      "url": "https://patrolreadyperformance.com/?tab=officer_portal",
+      "chosen_icon": "https://patrolreadyperformance.com/pwa-192x192.png"
+    },
+    {
+      "name": "PT Readiness Test",
+      "short_name": "Readiness",
+      "url": "https://patrolreadyperformance.com/?tab=calculator",
+      "chosen_icon": "https://patrolreadyperformance.com/pwa-192x192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://patrolreadyperformance.com/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false
+}

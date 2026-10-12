@@ -55,6 +55,7 @@ export function usePWAInstall() {
 
   const [isInstalled, setIsInstalled] = useState<boolean>(() => checkIsInstalled());
   const [isIOS, setIsIOS] = useState<boolean>(false);
+  const [isAndroid, setIsAndroid] = useState<boolean>(false);
 
   useEffect(() => {
     // Re-verify current installed status
@@ -63,10 +64,12 @@ export function usePWAInstall() {
       setIsInstalled(true);
     }
 
-    // Detect iOS devices
+    // Detect devices
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+    const isAndroidDevice = /android/.test(userAgent);
     setIsIOS(isIOSDevice);
+    setIsAndroid(isAndroidDevice);
 
     // Watch for standalone display mode changes
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
@@ -142,6 +145,7 @@ export function usePWAInstall() {
     isInstallable: !!deferredPrompt && !isInstalled,
     isInstalled,
     isIOS,
+    isAndroid,
     install,
     markAsInstalled,
   };

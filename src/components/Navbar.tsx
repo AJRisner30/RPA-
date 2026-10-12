@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
-  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck
+  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck, Smartphone
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { AthleteProfile } from '../utils/athleteAuth';
@@ -19,6 +19,7 @@ interface NavbarProps {
   onOpenAthleteModal: () => void;
   onOpenQuestionnaire?: () => void;
   onOpenPricingModal?: () => void;
+  onOpenAndroidAppModal?: () => void;
   readinessScore?: number;
   readinessTier?: string;
 }
@@ -30,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAthleteModal,
   onOpenQuestionnaire,
   onOpenPricingModal,
+  onOpenAndroidAppModal,
   readinessScore,
   readinessTier,
 }) => {
@@ -97,6 +99,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden md:inline">@ajrisner</span>
               <ExternalLink className="w-2.5 h-2.5 text-slate-400 shrink-0" />
             </a>
+
+            {/* Android App Button */}
+            {onOpenAndroidAppModal && (
+              <button
+                type="button"
+                onClick={onOpenAndroidAppModal}
+                className="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-gradient-to-r from-emerald-950/80 to-slate-900 hover:from-emerald-900 hover:to-slate-800 text-emerald-300 hover:text-emerald-200 border border-emerald-500/40 rounded-lg text-[11px] font-black transition-all shadow-sm shrink-0 cursor-pointer"
+                title="Patrol Ready Android App Hub & WebAPK Manager"
+              >
+                <Smartphone className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="hidden sm:inline font-athletic">Android</span>
+                <span className="text-[9px] bg-emerald-500/30 text-emerald-300 px-1 rounded font-mono">App</span>
+              </button>
+            )}
 
             {/* PWA Install Button */}
             <PWAInstallButton variant="pill" className="text-[10px] py-1 px-2 hidden xs:inline-flex" />
