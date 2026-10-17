@@ -28,19 +28,11 @@ interface AndroidAppModalProps {
 }
 
 export const AndroidAppModal: React.FC<AndroidAppModalProps> = ({ isOpen, onClose }) => {
-  const { isInstallable, isInstalled, isAndroid, install, markAsInstalled } = usePWAInstall();
-  const { tap, success, alert } = useAndroidHaptics();
-  const [activeTab, setActiveTab] = useState<'install' | 'features' | 'apk_twa'>('install');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { isInstallable, isInstalled, install, markAsInstalled } = usePWAInstall();
+  const { tap, success } = useAndroidHaptics();
+  const [activeTab, setActiveTab] = useState<'install' | 'features'>('install');
 
   if (!isOpen) return null;
-
-  const copyToClipboard = (text: string, id: string) => {
-    tap();
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2500);
-  };
 
   const handleInstallClick = async () => {
     tap();
@@ -54,35 +46,6 @@ export const AndroidAppModal: React.FC<AndroidAppModalProps> = ({ isOpen, onClos
       success();
     }
   };
-
-  const bubblewrapSnippet = `# 1. Install Google's official Bubblewrap CLI for Android
-npm install -g @bubblewrap/cli
-
-# 2. Build the signed Android APK & Google Play App Bundle (AAB)
-bubblewrap build --manifest android/twa-manifest.json
-
-# 3. Output files ready for distribution or Google Play Store:
-# -> app-release-signed.apk (Direct sideload on Android phones)
-# -> app-release-bundle.aab (Upload directly to Google Play Console)`;
-
-  const twaManifestSnippet = `{
-  "packageId": "com.patrolready.performance",
-  "host": "patrolreadyperformance.com",
-  "name": "Patrol Ready Performance",
-  "launcherName": "PatrolReady",
-  "themeColor": "#0B1320",
-  "navigationColor": "#070B12",
-  "backgroundColor": "#070B12",
-  "display": "standalone",
-  "orientation": "portrait",
-  "iconUrl": "https://patrolreadyperformance.com/pwa-512x512.png",
-  "maskableIconUrl": "https://patrolreadyperformance.com/pwa-maskable-512x512.png",
-  "shortcuts": [
-    { "name": "Workouts", "url": "/?tab=workouts" },
-    { "name": "Officer Portal", "url": "/?tab=officer_portal" },
-    { "name": "Readiness", "url": "/?tab=calculator" }
-  ]
-}`;
 
   return (
     <div 
@@ -168,22 +131,6 @@ bubblewrap build --manifest android/twa-manifest.json
           >
             <Zap className="w-3.5 h-3.5" />
             <span>Android Capabilities</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              tap();
-              setActiveTab('apk_twa');
-            }}
-            className={`pb-2.5 px-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'apk_twa'
-                ? 'border-purple-400 text-purple-300'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <FileCode2 className="w-3.5 h-3.5" />
-            <span>APK &amp; Play Store Files</span>
           </button>
         </div>
 
@@ -352,64 +299,6 @@ bubblewrap build --manifest android/twa-manifest.json
             </div>
           )}
 
-          {/* TAB 3: APK & PLAY STORE FILES */}
-          {activeTab === 'apk_twa' && (
-            <div className="space-y-4">
-              <p className="text-xs text-slate-300">
-                This project includes production-ready configuration files in the <code className="text-blue-400 bg-slate-900 px-1 py-0.5 rounded">android/</code> directory to compile an official Android <strong>.apk</strong> or Google Play <strong>.aab</strong> bundle using Google's Bubblewrap CLI:
-              </p>
-
-              {/* Build Command Box */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-                    <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                    1-Command APK Build (Terminal):
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(bubblewrapSnippet, 'bubblewrap')}
-                    className="text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
-                  >
-                    {copiedId === 'bubblewrap' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedId === 'bubblewrap' ? 'Copied!' : 'Copy Commands'}</span>
-                  </button>
-                </div>
-                <pre className="p-3 bg-[#070b12] border border-slate-800 rounded-xl text-[11px] font-mono text-slate-300 overflow-x-auto leading-relaxed">
-                  {bubblewrapSnippet}
-                </pre>
-              </div>
-
-              {/* TWA Manifest snippet */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-                    <FileCode2 className="w-3.5 h-3.5 text-purple-400" />
-                    android/twa-manifest.json:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(twaManifestSnippet, 'twa')}
-                    className="text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
-                  >
-                    {copiedId === 'twa' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedId === 'twa' ? 'Copied!' : 'Copy Config'}</span>
-                  </button>
-                </div>
-                <pre className="p-3 bg-[#070b12] border border-slate-800 rounded-xl text-[10px] font-mono text-slate-400 overflow-x-auto max-h-40 leading-relaxed">
-                  {twaManifestSnippet}
-                </pre>
-              </div>
-
-              {/* Digital Asset Links */}
-              <div className="p-3 rounded-xl bg-blue-950/20 border border-blue-500/30 text-xs text-slate-300 flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Full Screen Without URL Bar:</strong> Digital Asset Links is configured at <code className="text-blue-300">/.well-known/assetlinks.json</code> to verify domain ownership and hide browser chrome automatically when running as an Android app.
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Modal Footer */}

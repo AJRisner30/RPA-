@@ -16,7 +16,7 @@ import {
 } from '../utils/storage';
 import { soundManager } from '../utils/audio';
 import { TEMPLATE_EXERCISES, HybridStrengthLogItem, getDefaultRestPeriod } from '../data/protocolData';
-import { getCurrentAthlete, getAthletes, AthleteProfile } from '../utils/athleteAuth';
+import { getCurrentAthlete, getAthletes, AthleteProfile, isCoachSession } from '../utils/athleteAuth';
 import { useFirebase } from '../context/FirebaseContext';
 import { saveWorkoutLogToFirestore, deleteWorkoutLogFromFirestore } from '../utils/firebaseSync';
 
@@ -36,6 +36,14 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
   onNavigateToGraphs,
 }) => {
   const { user } = useFirebase();
+  const isCoach = Boolean(
+    (user?.email && (
+      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
+      user.email.toLowerCase() === 'risnerathletics@gmail.com'
+    )) ||
+    isCoachSession()
+  );
+
   // Current active athlete & filter
   const [currentAthleteState, setCurrentAthleteState] = useState<AthleteProfile>(() => propAthlete || getCurrentAthlete());
   const currentAthlete = propAthlete || currentAthleteState;
@@ -278,9 +286,9 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Filter logs by active athlete scope
+  // Filter logs by active athlete scope (Strict Isolation: Only coach can view all)
   const athleteScopedLogs = logs.filter((log) => {
-    if (athleteFilter === 'all') return true;
+    if (isCoach && athleteFilter === 'all') return true;
     if (log.athleteId) {
       return log.athleteId === currentAthlete.id;
     }
@@ -666,31 +674,33 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Athlete Scope Toggle */}
-            <div className="flex items-center bg-[#0a0f1d] border border-slate-800 rounded-xl p-0.5 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setAthleteFilter('current')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  athleteFilter === 'current'
-                    ? 'bg-blue-600 text-white font-black shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                {currentAthlete.name.split(' ')[0]}'s Logs
-              </button>
-              <button
-                type="button"
-                onClick={() => setAthleteFilter('all')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  athleteFilter === 'all'
-                    ? 'bg-blue-600 text-white font-black shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                All Athletes ({logs.length})
-              </button>
-            </div>
+            {/* Athlete Scope Toggle - strictly restricted to Coach AJ only */}
+            {isCoach && (
+              <div className="flex items-center bg-[#0a0f1d] border border-slate-800 rounded-xl p-0.5 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setAthleteFilter('current')}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    athleteFilter === 'current'
+                      ? 'bg-blue-600 text-white font-black shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  {currentAthlete.name.split(' ')[0]}'s Logs
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAthleteFilter('all')}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    athleteFilter === 'all'
+                      ? 'bg-blue-600 text-white font-black shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  All Athletes ({logs.length})
+                </button>
+              </div>
+            )}
 
             {/* Clear All Logs Button */}
             <button

@@ -4,7 +4,7 @@ import {
   Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck, Smartphone
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
-import { AthleteProfile } from '../utils/athleteAuth';
+import { AthleteProfile, isCoachSession } from '../utils/athleteAuth';
 import { PWAInstallButton } from './PWAInstallButton';
 import { useFirebase } from '../context/FirebaseContext';
 import { useUserTier } from '../hooks/useUserTier';
@@ -22,6 +22,7 @@ interface NavbarProps {
   onOpenAndroidAppModal?: () => void;
   readinessScore?: number;
   readinessTier?: string;
+  hasOfficerProgram?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -34,13 +35,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAndroidAppModal,
   readinessScore,
   readinessTier,
+  hasOfficerProgram = false,
 }) => {
   const { user, isCloudConnected, authError, signOutUser } = useFirebase();
   const { tier } = useUserTier();
 
-  const tabs = [
+  const isCoach = Boolean(
+    (user?.email && (
+      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
+      user.email.toLowerCase() === 'risnerathletics@gmail.com'
+    )) ||
+    isCoachSession()
+  );
+
+  const tabs: Array<{ id: TabType; label: string; icon: any; highlight?: boolean }> = [
     { id: 'workouts', label: 'Workouts', icon: Dumbbell },
-    { id: 'officer_portal', label: 'Officer Portal', icon: ShieldCheck, highlight: true },
+    ...(isCoach
+      ? [{ id: 'officer_portal' as TabType, label: 'Officer Portal', icon: ShieldCheck, highlight: true }]
+      : hasOfficerProgram
+      ? [{ id: 'officer_portal' as TabType, label: 'My Duty Protocol', icon: ShieldCheck, highlight: true }]
+      : []),
     { id: 'warmups', label: 'Warm-Ups', icon: Flame },
     { id: 'calculator', label: 'Calculators', icon: Calculator },
     { id: 'logs', label: 'Workout Logs', icon: History },
@@ -128,12 +142,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
               title={
                 authError
-                  ? `Google Login Notice: Click to view instructions (${authError.code})`
+                  ? 'Sign-In Notice: Click to view details'
                   : user
-                  ? `Firebase Synced: ${user.email}`
+                  ? `Cloud Synced: ${user.email}`
                   : isCloudConnected
-                  ? 'Firestore Connected (Guest)'
-                  : 'Connecting to Firestore...'
+                  ? 'Cloud Synced'
+                  : 'Syncing Data...'
               }
             >
               <span className="relative flex h-2 w-2">
@@ -198,7 +212,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <UserCheck className="w-3 h-3 text-blue-400 shrink-0" />
             </button>
 
-            {/* RBAC Tier Badge & Pricing Modal Trigger */}
+            {/* Membership Tier Badge & Pricing Modal Trigger */}
             <button
               type="button"
               onClick={onOpenPricingModal}
@@ -209,7 +223,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   ? 'bg-blue-950/80 hover:bg-blue-900/80 text-blue-300 border-blue-500/50'
                   : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border-zinc-700'
               }`}
-              title={`Active RBAC Custom Claim: ${tier.toUpperCase()}. Click to inspect pricing tiers & claim rules.`}
+              title={`Membership: ${tier.toUpperCase()} Tier. Click to inspect pricing tiers & plans.`}
             >
               <Zap className="w-3 h-3 text-amber-400 shrink-0" />
               <span className="uppercase">{tier}</span>

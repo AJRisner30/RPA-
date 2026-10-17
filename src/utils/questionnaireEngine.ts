@@ -154,6 +154,13 @@ export const GOAL_OPTIONS = [
     preferredProgram: 'hybrid_protocol' as ProgramKey,
   },
   {
+    id: 'universal_pat_testing' as const,
+    label: 'Academy & State POST Physical Agility Test (PAT)',
+    badge: 'State POST & PAT Passing Standard',
+    description: 'Direct preparation for police recruit physical agility tests, 1.5-mile Cooper standard, unbroken push-ups, 300m sprint, and 165 lb dummy drag.',
+    preferredProgram: 'universal_pat' as ProgramKey,
+  },
+  {
     id: 'station_db_minimal' as const,
     label: 'Dumbbell & Precinct Bodyweight Mastery',
     badge: 'Minimal Gear • Maximum Intensity',
@@ -259,6 +266,27 @@ export function calculateProgramRecommendation(
         'Zone 2 conversational base running develops high cardiac stroke volume.',
         'Threshold runs expand your sustained top speed and stamina under fatigue.',
       ],
+    };
+  }
+
+  if (answers.primaryGoalCategory === 'universal_pat_testing') {
+    return {
+      programKey: 'universal_pat',
+      programTitle: 'Universal Law Enforcement Physical Agility Test (PAT) Protocol',
+      badge: 'Academy Agility & Benchmark Standard',
+      durationText: '8-Week High-Stakes Agility & Speed Prep',
+      weeklySplit: '5 Days Lift & Obstacle Agility + 1-2 Days 1.5-Mi & 300m Sprint',
+      fitnessTier,
+      startingWeek: 1,
+      startingPhaseTitle: 'Weeks 1-8: Foundational Agility & Benchmark Capacity',
+      primaryRationale:
+        'Engineered specifically to ace state POST and academy Physical Agility Tests. Systematically peaks the 1.5-mile run, 300-meter sprint, continuous cadence push-ups, 1-minute timed sit-ups, and 165 lb dummy drag.',
+      keyActionPoints: [
+        'Cadence metronome push-ups build unbreakable chest and shoulder stamina.',
+        'Weekly 300m anaerobic sprint intervals build high-intensity lactate threshold.',
+        'Heavy dummy drags and farmer carries guarantee maximum grip and posterior obstacle drive.',
+      ],
+      equipmentNotice: 'Barbell, trap bar, pull-up bar, and running track recommended.',
     };
   }
 

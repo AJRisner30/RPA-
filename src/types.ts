@@ -135,7 +135,7 @@ export interface WorkoutSessionLog {
   }[];
 }
 
-export type ProgramKey = 'apex_protocol' | 'tactical_hypertrophy' | 'hybrid_protocol' | 'hybrid_db';
+export type ProgramKey = 'apex_protocol' | 'tactical_hypertrophy' | 'hybrid_protocol' | 'hybrid_db' | 'universal_pat';
 
 export interface QuestionnaireAnswers {
   completedAt: string;
@@ -150,7 +150,8 @@ export interface QuestionnaireAnswers {
     | 'muscle_armor_hypertrophy' 
     | 'hybrid_strength_running' 
     | 'station_db_minimal' 
-    | 'complete_apex_peak';
+    | 'complete_apex_peak'
+    | 'universal_pat_testing';
   injuryConstraints?: string;
   recommendedProgramKey: ProgramKey;
   recommendedProgramTitle: string;

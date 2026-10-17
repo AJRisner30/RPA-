@@ -13,7 +13,8 @@ import {
   setCurrentAthlete, 
   registerAthlete, 
   loginAthlete,
-  updateAthleteProfile
+  updateAthleteProfile,
+  isCoachSession
 } from '../utils/athleteAuth';
 import { 
   getStoredWorkoutLogs, 
@@ -48,11 +49,19 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     signInWithGoogleRedirect, 
     signOutUser 
   } = useFirebase();
+  const isCoach = Boolean(
+    (user?.email && (
+      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
+      user.email.toLowerCase() === 'risnerathletics@gmail.com'
+    )) ||
+    isCoachSession()
+  );
+
   const [isSigningInGoogle, setIsSigningInGoogle] = useState(false);
   const [copiedDomain, setCopiedDomain] = useState(false);
-  const [athletes, setAthletes] = useState<AthleteProfile[]>(() => getSelectableAthletes());
+  const [athletes, setAthletes] = useState<AthleteProfile[]>(() => getSelectableAthletes(isCoach));
   const [currentAthlete, setCurrentAthleteState] = useState<AthleteProfile>(() => getCurrentAthlete());
-  const [viewMode, setViewMode] = useState<'switch' | 'register' | 'login' | 'profile'>('switch');
+  const [viewMode, setViewMode] = useState<'switch' | 'register' | 'login' | 'profile'>(() => isCoach ? 'switch' : 'profile');
 
   // Registration Form State
   const [regName, setRegName] = useState('');
@@ -284,17 +293,31 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="grid grid-cols-3 bg-[#0a0f1d] p-1.5 border-b border-slate-800/80 text-xs font-bold shrink-0">
+        <div className={`grid ${isCoach ? 'grid-cols-3' : 'grid-cols-2'} bg-[#0a0f1d] p-1.5 border-b border-slate-800/80 text-xs font-bold shrink-0`}>
+          {isCoach && (
+            <button
+              onClick={() => setViewMode('switch')}
+              className={`py-2 px-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                viewMode === 'switch'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Agency Roster</span>
+            </button>
+          )}
+
           <button
-            onClick={() => setViewMode('switch')}
+            onClick={() => setViewMode('profile')}
             className={`py-2 px-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              viewMode === 'switch'
+              viewMode === 'profile'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <User className="w-3.5 h-3.5" />
-            <span>Switch Athlete</span>
+            <Activity className="w-3.5 h-3.5" />
+            <span>My Stats &amp; Readiness</span>
           </button>
 
           <button
@@ -306,19 +329,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Create Profile</span>
-          </button>
-
-          <button
-            onClick={() => setViewMode('profile')}
-            className={`py-2 px-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              viewMode === 'profile'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>My Stats</span>
+            <span>{isCoach ? 'Create Profile' : 'Edit Profile'}</span>
           </button>
         </div>
 
@@ -450,41 +461,51 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
               {authError.isDomainError && (
                 <div className="space-y-2 text-zinc-300">
                   <p className="leading-relaxed">
-                    Firebase Authentication rejected the request because the current domain is not yet on the authorized list for project <strong className="text-white font-mono">teak-router-m53bd</strong>.
+                    Authentication requires opening the application in a full browser tab.
                   </p>
-                  <div className="p-2.5 bg-black/50 border border-zinc-800 rounded-xl space-y-1.5">
-                    <div className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">
-                      Current App Domain To Authorize:
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <code className="text-blue-300 font-mono text-xs font-bold break-all">
-                        {typeof window !== 'undefined' ? window.location.hostname : 'run.app'}
-                      </code>
+                  {isCoach ? (
+                    <>
+                      <div className="p-2.5 bg-black/50 border border-zinc-800 rounded-xl space-y-1.5">
+                        <div className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">
+                          App Domain To Authorize (Admin Only):
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <code className="text-blue-300 font-mono text-xs font-bold break-all">
+                            {typeof window !== 'undefined' ? window.location.hostname : 'run.app'}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={handleCopyDomain}
+                            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 border border-slate-700 cursor-pointer shrink-0"
+                          >
+                            {copiedDomain ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
+                            <span>{copiedDomain ? 'Copied!' : 'Copy'}</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={handleOpenStandalone}
+                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-lg text-[11px] flex items-center gap-1.5 cursor-pointer shadow-md transition-all border border-blue-400/40"
+                        >
+                          <span>Open in Standalone Tab</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="pt-1">
                       <button
                         type="button"
-                        onClick={handleCopyDomain}
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 border border-slate-700 cursor-pointer shrink-0"
+                        onClick={handleOpenStandalone}
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-all border border-blue-400/40"
                       >
-                        {copiedDomain ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
-                        <span>{copiedDomain ? 'Copied!' : 'Copy'}</span>
+                        <span>Open in Full Browser Tab to Sign In</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <a
-                      href="https://console.firebase.google.com/project/teak-router-m53bd/authentication/settings"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-lg text-[11px] flex items-center gap-1.5 cursor-pointer shadow-md transition-all border border-blue-400/40"
-                    >
-                      <span>1. Open Firebase Console Settings</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                    <span className="text-[11px] text-slate-400">
-                      2. Paste into <strong>Authorized Domains</strong> & Save.
-                    </span>
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -518,17 +539,16 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
               {authError.isOperationDisabled && (
                 <div className="space-y-2 text-slate-300">
                   <p className="leading-relaxed">
-                    Google Sign-In is disabled for Firebase project <strong className="text-white font-mono">teak-router-m53bd</strong>.
+                    Google Sign-In is temporarily updating. Please use your email login or click below to open in a full window.
                   </p>
-                  <a
-                    href="https://console.firebase.google.com/project/teak-router-m53bd/authentication/providers"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs cursor-pointer border border-blue-400/40"
+                  <button
+                    type="button"
+                    onClick={handleOpenStandalone}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs cursor-pointer border border-blue-400/40 shadow-sm"
                   >
-                    <span>Enable Google Sign-In Provider in Console</span>
+                    <span>Open in Full Browser Tab to Complete Sign-In</span>
                     <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  </button>
                 </div>
               )}
 

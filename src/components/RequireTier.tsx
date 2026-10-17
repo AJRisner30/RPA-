@@ -213,7 +213,7 @@ export const RequireTier: React.FC<RequireTierProps> = ({
               <p className="text-xs text-zinc-400">
                 {trialExpired
                   ? '14-Day Free Trial Concluded • Upgrade to Continue'
-                  : 'Custom Claim RBAC Protection Active'}
+                  : 'Patrol Ready Performance • Pro Tactical Plan Required'}
               </p>
             </div>
           </div>

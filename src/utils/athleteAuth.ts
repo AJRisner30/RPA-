@@ -98,10 +98,19 @@ export function getAthletes(): AthleteProfile[] {
 }
 
 /**
- * Returns only the athletes that anyone using the app is permitted to select from.
- * Coach Aryan's name is strictly filtered out so no user sees his name to select.
+ * Returns only the athletes that the current user is permitted to select from.
+ * Strict Isolation: Standard officers can ONLY see their own profile.
+ * Only Coach Aryan Risner (explicit admin session) can view other officers.
  */
-export function getSelectableAthletes(): AthleteProfile[] {
+export function getSelectableAthletes(allowAdminRoster = false): AthleteProfile[] {
+  const isCoach = allowAdminRoster || isCoachSession();
+  const current = getCurrentAthlete();
+
+  // If not authenticated as coach, isolate strictly to the officer's own account!
+  if (!isCoach) {
+    return [current];
+  }
+
   const all = getAthletes();
   return all.filter((a) => {
     if (a.id === 'athlete-aj-risner') return false;

@@ -30,10 +30,13 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
   const { user } = useFirebase();
 
   // Determine if viewer is Coach AJ / Administrator
-  const isCoachOrAdmin = 
-    user?.email === 'risneraryan@gmail.com' ||
-    user?.email === 'risnerathletics@gmail.com' ||
-    isCoachSession();
+  const isCoachOrAdmin = Boolean(
+    (user?.email && (
+      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
+      user.email.toLowerCase() === 'risnerathletics@gmail.com'
+    )) ||
+    isCoachSession()
+  );
 
   // State for the logged-in officer's individual assigned program
   const [officerProgram, setOfficerProgram] = useState<OfficerAssignedProgram | null>(null);
@@ -172,6 +175,7 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
   }, [isCoachOrAdmin, user]);
 
   const handleOpenUploadModal = (target?: AthleteProfile, existingProg?: OfficerAssignedProgram) => {
+    if (!isCoachOrAdmin) return;
     if (target) {
       setSelectedTargetOfficer(target);
     }
@@ -383,11 +387,18 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-athletic font-black uppercase tracking-wider text-white">
-              Individualized Officer Training Portal
+              {isCoachOrAdmin ? 'Officer Portal Administration' : 'My Confidential Duty Protocol'}
             </h1>
             <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Every officer account has an isolated, private training portal. Upload a 
-              customized duty protocol tailored specifically to their shift schedule, body armor load, and physical goals — <strong className="text-blue-300 font-semibold">visible only to them and no one else</strong>.
+              {isCoachOrAdmin ? (
+                <>
+                  Agency Roster &amp; Duty Protocols • Upload and prescribe custom training splits for individual officers. <strong className="text-blue-300 font-semibold">Each officer account can only see their own.</strong>
+                </>
+              ) : (
+                <>
+                  Isolated training protocol prescribed specifically for Officer <strong className="text-white">{currentAthlete.name}</strong> by Coach Aryan &quot;AJ&quot; Risner. Scoped strictly to your profile.
+                </>
+              )}
             </p>
           </div>
 
@@ -868,7 +879,7 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
       </div>
 
       {/* SECTION 3: UPLOAD / EDIT MODAL FOR COACH AJ / ADMIN */}
-      {isUploadModalOpen && (
+      {isCoachOrAdmin && isUploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0b1320] border border-blue-500/40 rounded-2xl shadow-2xl flex flex-col">
             {/* Modal Header */}

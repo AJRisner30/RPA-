@@ -121,24 +121,35 @@ export const SignInGate: React.FC = () => {
 
           {/* Auth Error Notification */}
           {authError && (
-            <div className="mb-5 p-3.5 bg-red-950/70 border border-red-500/60 rounded-xl text-left animate-in fade-in duration-150">
+            <div className="mb-5 p-3.5 bg-blue-950/80 border border-blue-500/50 rounded-2xl text-left animate-in fade-in duration-150">
               <div className="flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <div className="text-xs text-red-200 space-y-1">
-                  <div className="font-bold text-red-300">Sign-in Notice ({authError.code})</div>
-                  <p className="leading-snug text-red-200/90">{authError.message}</p>
-                  {authError.isDomainError && (
-                    <div className="text-[11px] text-blue-300 pt-1 font-mono">
-                      Domain: {authError.domain || window.location.hostname}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={clearAuthError}
-                    className="mt-1 text-[11px] underline text-red-400 hover:text-red-300 font-bold cursor-pointer"
-                  >
-                    Dismiss notification
-                  </button>
+                <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                <div className="text-xs text-slate-200 space-y-1.5 flex-1">
+                  <div className="font-bold text-white">Frontline Sign-In Advisory</div>
+                  <p className="leading-snug text-slate-300">
+                    {authError.isPopupBlocked || authError.isDomainError
+                      ? 'The current browser preview blocked the sign-in window. Open in a dedicated browser tab to securely authenticate.'
+                      : authError.message}
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open(window.location.href, '_blank');
+                      }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 cursor-pointer shadow"
+                    >
+                      <span>Open in Full Browser Tab</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearAuthError}
+                      className="text-[11px] text-slate-400 hover:text-slate-200 underline font-medium cursor-pointer"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

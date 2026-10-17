@@ -24,7 +24,13 @@ import { AndroidAppModal } from './components/AndroidAppModal';
 import { AndroidInstallBanner } from './components/AndroidInstallBanner';
 import { useAndroidBackButton } from './hooks/useAndroidBackButton';
 import { useAndroidWakeLock } from './hooks/useAndroidWakeLock';
-import { getCurrentAthlete, AthleteProfile, updateAthleteProfile, registerAthlete } from './utils/athleteAuth';
+import { 
+  getCurrentAthlete, 
+  AthleteProfile, 
+  updateAthleteProfile, 
+  registerAthlete, 
+  isCoachSession 
+} from './utils/athleteAuth';
 import { calculateReadinessScore } from './utils/readinessEngine';
 import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './components/BrandingLogos';
@@ -34,12 +40,23 @@ import { useFirebase } from './context/FirebaseContext';
 import { 
   subscribeToUserWorkoutLogs, 
   subscribeToUserAthlete, 
+  subscribeToOfficerProgram,
   saveWorkoutLogToFirestore,
   saveAthleteToFirestore
 } from './utils/firebaseSync';
 
 export default function App() {
   const { user, loading } = useFirebase();
+
+  const isCoach = Boolean(
+    (user?.email && (
+      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
+      user.email.toLowerCase() === 'risnerathletics@gmail.com'
+    )) ||
+    isCoachSession()
+  );
+
+  const [hasOfficerProgram, setHasOfficerProgram] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
   const [programs, setPrograms] = useState<WorkoutProgram[]>(() => getStoredPrograms());
   const [logs, setLogs] = useState<WorkoutSessionLog[]>(() => getStoredWorkoutLogs());
@@ -147,11 +164,24 @@ export default function App() {
       }
     });
 
+    // 3. Subscribe to officer individual assigned program
+    const unsubscribeOfficerProg = subscribeToOfficerProgram(user.uid, (prog) => {
+      setHasOfficerProgram(!!prog);
+    });
+
     return () => {
       unsubscribeLogs();
       unsubscribeAthlete();
+      unsubscribeOfficerProg();
     };
   }, [user]);
+
+  // Strict Tab Protection: Only Coach AJ or officers with an assigned program can view the officer portal
+  useEffect(() => {
+    if (activeTab === 'officer_portal' && !isCoach && !hasOfficerProgram) {
+      setActiveTab('workouts');
+    }
+  }, [activeTab, isCoach, hasOfficerProgram]);
 
   // Handle hash navigation to checkout/pricing modal
   useEffect(() => {
@@ -242,6 +272,7 @@ export default function App() {
         onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
         readinessScore={readiness.overallScore}
         readinessTier={readiness.tier}
+        hasOfficerProgram={hasOfficerProgram}
       />
 
       {/* Android Native App Install Banner */}
@@ -437,6 +468,7 @@ export default function App() {
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
         readinessScore={readiness.overallScore}
+        hasOfficerProgram={hasOfficerProgram}
       />
 
       {/* Android Native App Packaging & Installation Modal */}

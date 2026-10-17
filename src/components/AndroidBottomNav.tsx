@@ -22,6 +22,7 @@ import { useFirebase } from '../context/FirebaseContext';
 import { useUserTier } from '../hooks/useUserTier';
 import { useAndroidHaptics } from '../hooks/useAndroidHaptics';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
+import { isCoachSession } from '../utils/athleteAuth';
 
 interface AndroidBottomNavProps {
   activeTab: TabType;
@@ -31,6 +32,7 @@ interface AndroidBottomNavProps {
   onOpenPricingModal?: () => void;
   onOpenAndroidAppModal?: () => void;
   readinessScore?: number;
+  hasOfficerProgram?: boolean;
 }
 
 export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
@@ -41,6 +43,7 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
   onOpenPricingModal,
   onOpenAndroidAppModal,
   readinessScore,
+  hasOfficerProgram = false,
 }) => {
   const [isMoreSheetOpen, setIsMoreSheetOpen] = useState(false);
   const { user, signOutUser } = useFirebase();
@@ -64,6 +67,16 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
   };
 
   const isMoreTabActive = activeTab === 'logs' || activeTab === 'graphs' || activeTab === 'contact';
+
+  const isCoach = Boolean(
+    (user?.email && (
+      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
+      user.email.toLowerCase() === 'risnerathletics@gmail.com'
+    )) ||
+    isCoachSession()
+  );
+
+  const canViewOfficerPortal = isCoach || hasOfficerProgram;
 
   return (
     <>
@@ -97,79 +110,154 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
             </span>
           </button>
 
-          {/* 2. Officer Portal */}
-          <button
-            type="button"
-            onClick={() => handleTabClick('officer_portal')}
-            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
-              activeTab === 'officer_portal'
-                ? 'text-white'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all relative ${
-              activeTab === 'officer_portal' 
-                ? 'bg-amber-500 shadow-md shadow-amber-500/40 text-black scale-105' 
-                : 'text-amber-400/90 bg-amber-500/10'
-            }`}>
-              <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400" />
-            </div>
-            <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
-              activeTab === 'officer_portal' ? 'text-amber-400 font-black' : 'text-amber-300/80'
-            }`}>
-              Portal
-            </span>
-          </button>
+          {/* 2. Officer Portal (Only for Coach Aryan or Officer with assigned protocol) OR Warm-Ups */}
+          {canViewOfficerPortal ? (
+            <button
+              type="button"
+              onClick={() => handleTabClick('officer_portal')}
+              className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
+                activeTab === 'officer_portal'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all relative ${
+                activeTab === 'officer_portal' 
+                  ? 'bg-amber-500 shadow-md shadow-amber-500/40 text-black scale-105' 
+                  : 'text-amber-400/90 bg-amber-500/10'
+              }`}>
+                <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400" />
+              </div>
+              <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
+                activeTab === 'officer_portal' ? 'text-amber-400 font-black' : 'text-amber-300/80'
+              }`}>
+                {isCoach ? 'Portal' : 'Protocol'}
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleTabClick('warmups')}
+              className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
+                activeTab === 'warmups'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
+                activeTab === 'warmups' 
+                  ? 'bg-orange-600 shadow-md shadow-orange-600/40 text-white scale-105' 
+                  : 'text-slate-400'
+              }`}>
+                <Flame className="w-4 h-4 stroke-[2.3]" />
+              </div>
+              <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
+                activeTab === 'warmups' ? 'text-orange-400 font-black' : 'text-slate-400'
+              }`}>
+                Warm-Ups
+              </span>
+            </button>
+          )}
 
-          {/* 3. Warm-Ups */}
-          <button
-            type="button"
-            onClick={() => handleTabClick('warmups')}
-            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
-              activeTab === 'warmups'
-                ? 'text-white'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-              activeTab === 'warmups' 
-                ? 'bg-orange-600 shadow-md shadow-orange-600/40 text-white scale-105' 
-                : 'text-slate-400'
-            }`}>
-              <Flame className="w-4 h-4 stroke-[2.3]" />
-            </div>
-            <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
-              activeTab === 'warmups' ? 'text-orange-400 font-black' : 'text-slate-400'
-            }`}>
-              Warm-Ups
-            </span>
-          </button>
+          {/* 3. Warm-Ups (if portal shown) OR Calculators */}
+          {canViewOfficerPortal ? (
+            <button
+              type="button"
+              onClick={() => handleTabClick('warmups')}
+              className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
+                activeTab === 'warmups'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
+                activeTab === 'warmups' 
+                  ? 'bg-orange-600 shadow-md shadow-orange-600/40 text-white scale-105' 
+                  : 'text-slate-400'
+              }`}>
+                <Flame className="w-4 h-4 stroke-[2.3]" />
+              </div>
+              <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
+                activeTab === 'warmups' ? 'text-orange-400 font-black' : 'text-slate-400'
+              }`}>
+                Warm-Ups
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleTabClick('calculator')}
+              className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
+                activeTab === 'calculator'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
+                activeTab === 'calculator' 
+                  ? 'bg-blue-600 shadow-md shadow-blue-600/40 text-white scale-105' 
+                  : 'text-slate-400'
+              }`}>
+                <Calculator className="w-4 h-4 stroke-[2.3]" />
+              </div>
+              <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
+                activeTab === 'calculator' ? 'text-blue-400 font-black' : 'text-slate-400'
+              }`}>
+                Calculators
+              </span>
+            </button>
+          )}
 
-          {/* 4. Calculators */}
-          <button
-            type="button"
-            onClick={() => handleTabClick('calculator')}
-            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
-              activeTab === 'calculator'
-                ? 'text-white'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-              activeTab === 'calculator' 
-                ? 'bg-blue-600 shadow-md shadow-blue-600/40 text-white scale-105' 
-                : 'text-slate-400'
-            }`}>
-              <Calculator className="w-4 h-4 stroke-[2.3]" />
-            </div>
-            <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
-              activeTab === 'calculator' ? 'text-blue-400 font-black' : 'text-slate-400'
-            }`}>
-              Calculators
-            </span>
-          </button>
+          {/* 4. Calculators (if portal shown) OR Workout Logs */}
+          {canViewOfficerPortal ? (
+            <button
+              type="button"
+              onClick={() => handleTabClick('calculator')}
+              className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
+                activeTab === 'calculator'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
+                activeTab === 'calculator' 
+                  ? 'bg-blue-600 shadow-md shadow-blue-600/40 text-white scale-105' 
+                  : 'text-slate-400'
+              }`}>
+                <Calculator className="w-4 h-4 stroke-[2.3]" />
+              </div>
+              <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
+                activeTab === 'calculator' ? 'text-blue-400 font-black' : 'text-slate-400'
+              }`}>
+                Calculators
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleTabClick('logs')}
+              className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer select-none relative ${
+                activeTab === 'logs'
+                  ? 'text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
+                activeTab === 'logs' 
+                  ? 'bg-blue-600 shadow-md shadow-blue-600/40 text-white scale-105' 
+                  : 'text-slate-400'
+              }`}>
+                <History className="w-4 h-4 stroke-[2.3]" />
+              </div>
+              <span className={`text-[10px] font-athletic font-bold uppercase tracking-wider mt-0.5 ${
+                activeTab === 'logs' ? 'text-blue-400 font-black' : 'text-slate-400'
+              }`}>
+                Logs
+              </span>
+            </button>
+          )}
 
           {/* 5. More / Quick Actions Drawer */}
           <button

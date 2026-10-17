@@ -1629,3 +1629,113 @@ export function getTacticalHypertrophyWeekData(weekNumber: number): ProtocolPhas
 // Add base tactical hypertrophy into PROTOCOL_DATA
 PROTOCOL_DATA.tactical_hypertrophy = TACTICAL_HYPERTROPHY_BASE_PHASE;
 
+// ---------------------------------------------------------------------------
+// Universal Law Enforcement Physical Agility Test (PAT) & Academy Preparation Protocol
+// ---------------------------------------------------------------------------
+export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
+  id: 'universal_pat',
+  title: 'Universal Law Enforcement Physical Agility Test (PAT) Protocol',
+  weeks: 'Weeks 1-8',
+  desc: 'Comprehensive 8-week academy & state POST agility preparation. Peak 1.5-mile running speed, 300m anaerobic sprint output, unbroken push-up & sit-up density, and 165 lb dummy drag power.',
+  coachRule: 'Universal PAT Laws: Target +1 rep per week on continuous push-ups and 1-minute sit-ups. Drop 3-5 seconds off 300m interval repeats. Progressive +10 lbs on Trap Bar Deadlift. 1.5-Mile threshold goal: sub-11:00 passing standard.',
+  days: [
+    {
+      day: 'Monday',
+      focus: 'PAT Upper Density: Bench & Push-Up Volume',
+      warmup: "Universal Tactical Dynamic Warm-Up: Arm circles, band pull-aparts (2x15), push-up walkouts (2x8), scapular retractions.",
+      strength: [
+        'Flat Barbell Bench Press (4x8) [Overload: +5 lbs on 8 reps - Rest: 90s - Retract scapulae, touch lower sternum]',
+        'Strict Chest-to-Bar Pull-Ups (4x6-8) [Overload: +2.5 to 5 lbs - Rest: 90s - Full dead hang, clear chin above bar]',
+        'Standing Military Overhead Press (3x8) [Overload: +5 lbs on 8 reps - Rest: 90s - Core braced, glutes squeezed]',
+        'Incline Dumbbell Bench Press (3x10) [Overload: +5 lbs DBs on 10 reps - Rest: 75s - 30 deg incline, upper chest armor]',
+        'Barbell Bent-Over Row (4x8-10) [Overload: +5 lbs on 10 reps - Rest: 75s - Strict 45 deg hinge, pull to navel]',
+        'Academy Cadence Push-Up Benchmark (3xMax) [Cadence test: 2 sec down, 1 sec up - Rest: 90s - Track unbroken reps]'
+      ],
+      run: 'Rest from running',
+      pace: 'N/A',
+      progressionRule: 'Bench & OHP: +5 lbs on 8 reps; Pull-Ups: +2.5-5 lbs; Cadence Push-Ups: +2 reps weekly'
+    },
+    {
+      day: 'Tuesday',
+      focus: '300-Meter Anaerobic Sprint & Glycolytic Capacity',
+      warmup: "Dynamic Sprint Prep: 10 mins easy jog, high knees, butt kicks, A-skips, B-skips, and 3x40m progressive acceleration strides.",
+      strength: [
+        "Heavy Trap Bar Farmer's Walks (4x50m) [Overload: +10 lbs total on 50m - Rest: 90s - Upright posture, maximum grip crush]",
+        'Plank Series (Front & Side Planks) (3x60s) [Overload: +15s hold - Rest: 45s - Full body tension]',
+        'Hollow Body Holds (3x45s) [Overload: +10s hold - Rest: 45s - Lower back pressed into floor]'
+      ],
+      run: '4 x 300m Track Intervals (Maximal Pursuit Speed)',
+      pace: 'Target: 50-58 sec per 300m repeat. 2.5-3 min full walking recovery between rounds.',
+      progressionRule: '300m Intervals: Drop 1-2s per repeat; Farmer Walks: +10 lbs total load'
+    },
+    {
+      day: 'Wednesday',
+      focus: 'PAT Lower Strength & Posterior Armor',
+      warmup: "Dynamic Lower Prep: 5 min light spin, leg swings, bodyweight squats, deep hip openers, ankle wall mobilizations.",
+      strength: [
+        'Trap Bar Deadlift (4x6) [Overload: +10 lbs on 6 reps - Rest: 120s - Explosive hip extension, neutral spine]',
+        'Front Squat (Clean Grip or Cross-Arm) (3x8) [Overload: +10 lbs on 8 reps - Rest: 90s - High elbows, vertical torso]',
+        'Romanian Deadlift (RDL) (3x10) [Overload: +10 lbs on 10 reps - Rest: 90s - Deep hamstring hinge stretch]',
+        'Walking Dumbbell Lunges (3x12/leg) [Overload: +5 lbs DBs - Rest: 75s - Upright torso, knee taps floor]',
+        '1-Minute Academy Timed Sit-Up Benchmark (3x60s) [Rest: 90s - Interlocked fingers, elbows touch knees, track reps]'
+      ],
+      run: '20-25 Min Recovery Spin or Jog',
+      pace: 'Zone 2 / Conversational recovery (HR under 135 BPM)',
+      progressionRule: 'Trap Bar Deadlift & Front Squat: +10 lbs on target reps; 1-Min Sit-Ups: +2 reps weekly'
+    },
+    {
+      day: 'Thursday',
+      focus: 'Active Recovery & Tactical Decompression',
+      warmup: "Cat-cow transitions (2 min), 90/90 hip flow (3 min), couch stretch (90s/side), diaphragmatic box breathing (4 min).",
+      strength: [
+        'Passive foam rolling, tissue flossing, ankle dorsiflexion stretches, thoracic foam roll extensions.'
+      ],
+      run: 'Complete Rest (or Optional 15-min light walk)',
+      pace: 'N/A',
+      progressionRule: 'Rest, tissue hydration, and joint mobility restoration'
+    },
+    {
+      day: 'Friday',
+      focus: 'Obstacle Negotiation, Body Drag & Agility Circuit',
+      warmup: "Universal Tactical Dynamic Warm-Up: Jumping jacks, Spiderman lunges, inchworms, high knees.",
+      strength: [
+        'Heavy Sandbag / Dummy Drag Simulation (5x50 yards) [Overload: +10 lbs or faster time - Rest: 90s - Backward drag, low hip stance]',
+        'Explosive Box Jumps (4x5) [Overload: +2 inches height - Rest: 60s - 24-30 inch box, land soft, stand tall]',
+        'Plyometric Push-Ups (or Deficit Push-Ups) (3x10) [Overload: +2 reps - Rest: 60s - Explosive hands leave ground]',
+        'Dumbbell Step-Ups onto 20-inch Box (3x10/leg) [Overload: +5 lbs DBs - Rest: 60s - Simulates wall clearing drive]',
+        "Farmer's Suitcase Carry (Single Arm) (3x40m/side) [Overload: +5 lbs - Rest: 60s - Resists lateral trunk flexion]",
+        'Hanging Knee Tucks / Leg Raises (3x12) [Overload: +1 rep - Rest: 45s - Strict pelvic curl, no swinging]'
+      ],
+      run: '15-20 Min Tactical Flush Run',
+      pace: 'Zone 2 (130-145 BPM) easy flush',
+      progressionRule: 'Dummy Drag: 5x50y under 25s each; Box Jumps: +2 inches; Step-Ups: +5 lbs'
+    },
+    {
+      day: 'Saturday',
+      focus: '1.5-Mile Academy Test Benchmark & Aerobic Threshold',
+      warmup: "800m easy jog warm-up, dynamic leg swings, high skips, 3x50m acceleration strides.",
+      strength: [
+        'Post-Run Mandatory Core Bracing (3x15) [Deadbugs, bird-dogs, and side planks for lumbar spine integrity]'
+      ],
+      run: '1.5-Mile Academy Test Benchmark Run',
+      pace: 'Target Pace: 6:45-7:30 min/mile (Sub-10:30 to 11:30 1.5-mile passing standard). 800m cool-down jog.',
+      progressionRule: '1.5-Mile Benchmark: Drop 5-10s off total time bi-weekly; Maintain steady continuous split pacing'
+    },
+    {
+      day: 'Sunday',
+      focus: 'Full Rest & Systemic Recovery',
+      warmup: "None. Rest and recovery.",
+      strength: [
+        'Complete physiological reset, systemic recovery, hydration, optimal protein fueling and sleep.'
+      ],
+      run: 'Complete Rest',
+      pace: 'N/A',
+      progressionRule: 'Rest, 8+ hours sleep, optimal protein & micronutrient intake'
+    }
+  ]
+};
+
+// Add Universal PAT into PROTOCOL_DATA
+PROTOCOL_DATA.universal_pat = UNIVERSAL_PAT_PROTOCOL;
+
+

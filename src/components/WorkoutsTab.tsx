@@ -142,6 +142,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     if (selectedProgram === 'tactical_hypertrophy') {
       return getTacticalHypertrophyWeekData(activeTacticalWeek);
     }
+    if (selectedProgram === 'universal_pat') {
+      return PROTOCOL_DATA.universal_pat || PROTOCOL_DATA.phase1;
+    }
     if (selectedProgram === 'hybrid_db') {
       return PROTOCOL_DATA[activeDbPhaseKey] || PROTOCOL_DATA.db_phase1 || PROTOCOL_DATA.hybrid_db;
     }
@@ -639,11 +642,13 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       ? `Tactical Hypertrophy & Conditioning (${currentPhase.weeks} • ${day.day}: ${day.focus})`
       : selectedProgram === 'hybrid_protocol'
       ? `Hybrid Protocol (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
+      : selectedProgram === 'universal_pat'
+      ? `Universal PAT (${currentPhase.weeks} • ${day.day}: ${day.focus})`
       : `Hybrid DB & Bodyweight (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`;
 
     const recommendedWarmupId = selectedProgram === 'apex_protocol'
       ? 'warmup-apex-sop'
-      : selectedProgram === 'tactical_hypertrophy'
+      : (selectedProgram === 'tactical_hypertrophy' || selectedProgram === 'universal_pat')
       ? 'warmup-universal-tactical'
       : 'warmup-upper-primer';
 
@@ -879,6 +884,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     <>Patrol Ready <span className="text-blue-400">Tactical Hypertrophy &amp; Conditioning</span></>
                   ) : selectedProgram === 'hybrid_protocol' ? (
                     <>Patrol Ready <span className="text-blue-400">Hybrid Protocol</span></>
+                  ) : selectedProgram === 'universal_pat' ? (
+                    <>Universal Law Enforcement <span className="text-amber-400">Physical Agility Test (PAT)</span></>
                   ) : (
                     <>Patrol Ready <span className="text-blue-400">DB &amp; Bodyweight</span></>
                   )}
@@ -946,8 +953,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           </div>
         </div>
 
-        {/* Compact 4-Program Selector Bar (Responsive Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-800/80">
+        {/* Compact 5-Program Selector Bar (Responsive Grid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3 pt-3 border-t border-slate-800/80">
           {/* Program 1: The Apex Protocol */}
           <button
             type="button"
@@ -987,7 +994,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className={`w-2 h-2 rounded-full ${selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
                 <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Tactical Hypertrophy</span>
               </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">6-Wk Cycle • 4-Day Hyper + Conditioning</span>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">6-Wk Cycle • 4-Day + Conditioning</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
               selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
@@ -1033,14 +1040,38 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_db' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid DB & BW</span>
+                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid DB &amp; BW</span>
               </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • DB & Calisthenics</span>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Dumbbell &amp; Calisthenics</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
               selectedProgram === 'hybrid_db' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
             }`}>
               12 WKS
+            </span>
+          </button>
+
+          {/* Program 5: Universal PAT Protocol */}
+          <button
+            type="button"
+            onClick={() => handleProgramSwitch('universal_pat')}
+            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+              selectedProgram === 'universal_pat'
+                ? 'bg-amber-950/70 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
+                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'universal_pat' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
+                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Universal PAT</span>
+              </div>
+              <span className="text-[10px] text-slate-400 block font-mono truncate">8-Wk Cycle • Academy &amp; Agility</span>
+            </div>
+            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+              selectedProgram === 'universal_pat' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400'
+            }`}>
+              8 WKS
             </span>
           </button>
         </div>
@@ -1282,6 +1313,29 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">6-Wk Duty Conditioning</span>
                 <span className="text-sm font-black text-blue-400 font-mono">1.5-Mi Standard</span>
                 <span className="text-[10px] text-slate-400 block mt-0.5">Sub-7:30/mi Zone 4/5 pace</span>
+              </div>
+            </div>
+          ) : selectedProgram === 'universal_pat' ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-amber-500/30">
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider block">Cadence Push-Ups</span>
+                <span className="text-sm font-black text-amber-400 font-mono">+1-2 reps / wk</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Metronome cadence consistency</span>
+              </div>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-amber-500/30">
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider block">300m Sprint Intervals</span>
+                <span className="text-sm font-black text-amber-400 font-mono">-1 to 2 sec</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Target: sub-50s repeats</span>
+              </div>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-amber-500/30">
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider block">165 lb Dummy Drag</span>
+                <span className="text-sm font-black text-amber-400 font-mono">5x50y Sub-25s</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Relentless posterior drive</span>
+              </div>
+              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-amber-500/30">
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider block">1.5-Mile PAT Standard</span>
+                <span className="text-sm font-black text-amber-400 font-mono">Sub-11:00</span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Passing academy benchmark</span>
               </div>
             </div>
           ) : selectedProgram === 'hybrid_protocol' ? (

@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { WorkoutSessionLog, PersonalRecord, AthleteProfile } from '../types';
 import { extractPersonalRecords, calculate1RM } from '../utils/storage';
+import { useFirebase } from '../context/FirebaseContext';
+import { isCoachSession } from '../utils/athleteAuth';
 
 interface ProgressGraphsTabProps {
   logs: WorkoutSessionLog[];
@@ -21,15 +23,26 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
   currentAthlete,
   onNavigateToLogs,
 }) => {
+  const { user } = useFirebase();
+  const isCoach = Boolean(
+    (user?.email && (
+      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
+      user.email.toLowerCase() === 'risnerathletics@gmail.com'
+    )) ||
+    isCoachSession()
+  );
+
   const [athleteFilter, setAthleteFilter] = useState<'current' | 'all'>('current');
 
-  // Scope logs to active athlete so everyone starts fresh until they create their own
+  // Scope logs to active athlete so each account strictly sees only their own progression
   const activeLogs = useMemo(() => {
-    if (!currentAthlete || athleteFilter === 'all') return logs;
-    return logs.filter(
-      (l) => l.athleteId === currentAthlete.id || (!l.athleteId && (currentAthlete.id === 'athlete-default' || currentAthlete.id === 'athlete-aj-risner'))
-    );
-  }, [logs, currentAthlete, athleteFilter]);
+    if (!currentAthlete || !isCoach || athleteFilter !== 'all') {
+      return logs.filter(
+        (l) => l.athleteId === currentAthlete?.id || (!l.athleteId && (currentAthlete?.id === 'athlete-default' || currentAthlete?.id === 'athlete-aj-risner'))
+      );
+    }
+    return logs;
+  }, [logs, currentAthlete, athleteFilter, isCoach]);
 
   // Extract all unique exercise names from logs
   const allExercises = useMemo(() => {
@@ -185,8 +198,8 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
               </div>
             </div>
 
-            {/* Athlete Scope Toggle */}
-            {currentAthlete && (
+            {/* Athlete Scope Toggle - strictly restricted to Coach AJ only */}
+            {isCoach && currentAthlete && (
               <div className="inline-flex p-1 bg-zinc-950/80 border border-zinc-800 rounded-xl self-start sm:self-auto">
                 <button
                   type="button"
