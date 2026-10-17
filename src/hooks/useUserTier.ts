@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { onIdTokenChanged, User, IdTokenResult } from 'firebase/auth';
 import { auth } from '../firebase';
+import { getCurrentAthlete } from '../utils/athleteAuth';
+import { activateAthleteSubscription } from '../utils/squarePayments';
+import { activateTrialCode } from '../utils/trialCodes';
 
 export type UserTier = 'standard' | 'pro' | 'enterprise';
 export type UserAccountStatus = 'trialing' | 'active_subscriber' | 'past_due' | 'canceled' | 'unpaid';
@@ -25,7 +28,9 @@ export interface UserTierState {
   user: User | null;
   error: string | null;
   refreshClaims: () => Promise<IdTokenResult | null>;
-  setSimulatedOverride: (override: Partial<{ tier: UserTier; status: UserAccountStatus; trialEndOffsetDays: number }> | null) => void;
+  setSimulatedOverride: (override: Partial<{ tier: UserTier; status: UserAccountStatus; trialEndOffsetDays: number; trialEndMs?: number }> | null) => void;
+  activateSubscription: (tier: UserTier, providerDetails?: Record<string, any>) => Promise<void>;
+  activateTrialWithCode: (code: string) => Promise<{ success: boolean; message: string; daysGranted?: number }>;
 }
 
 const STORAGE_SIMULATION_KEY = 'rpa_tier_simulation_override_v1';
@@ -69,11 +74,24 @@ export function useUserTier(): UserTierState {
       let effectiveStatusRaw = (userClaims.status as string)?.toLowerCase() as UserAccountStatus;
       let effectiveTrialEnd = userClaims.trialEnd as number | undefined;
 
+      // Check athlete profile subscription state for instant client-side unlocking
+      const athlete = getCurrentAthlete();
+      if (athlete?.subscription && athlete.subscription.status === 'active_subscriber') {
+        effectiveTierRaw = athlete.subscription.tier;
+        effectiveStatusRaw = 'active_subscriber';
+      } else if (athlete?.trialActivation && athlete.trialActivation.trialEndMs > Date.now()) {
+        effectiveTierRaw = athlete.trialActivation.tier || 'pro';
+        effectiveStatusRaw = 'trialing';
+        effectiveTrialEnd = Math.floor(athlete.trialActivation.trialEndMs / 1000);
+      }
+
       if (simulatedOverride) {
         if (simulatedOverride.tier) effectiveTierRaw = simulatedOverride.tier;
         if (simulatedOverride.status) effectiveStatusRaw = simulatedOverride.status;
         if (typeof simulatedOverride.trialEndOffsetDays === 'number') {
           effectiveTrialEnd = Math.floor(Date.now() / 1000) + (simulatedOverride.trialEndOffsetDays * 86400);
+        } else if (typeof simulatedOverride.trialEndMs === 'number') {
+          effectiveTrialEnd = Math.floor(simulatedOverride.trialEndMs / 1000);
         }
       }
 
@@ -94,6 +112,8 @@ export function useUserTier(): UserTierState {
       let resolvedTrialEndMs: number | null = null;
       if (effectiveTrialEnd) {
         resolvedTrialEndMs = effectiveTrialEnd < 10000000000 ? effectiveTrialEnd * 1000 : effectiveTrialEnd;
+      } else if (athlete?.trialActivation?.trialEndMs) {
+        resolvedTrialEndMs = athlete.trialActivation.trialEndMs;
       } else {
         // Fallback default: 14 days from account creation or now
         resolvedTrialEndMs = Date.now() + 14 * 24 * 60 * 60 * 1000;
@@ -123,7 +143,6 @@ export function useUserTier(): UserTierState {
   }, [evaluateClaims]);
 
   const refreshClaims = useCallback(async () => {
-    if (!auth.currentUser) return null;
     return await evaluateClaims(auth.currentUser, true);
   }, [evaluateClaims]);
 
@@ -137,6 +156,28 @@ export function useUserTier(): UserTierState {
     } catch {}
     setSimOverride(override);
   }, []);
+
+  const activateSubscription = useCallback(async (newTier: UserTier, providerDetails?: Record<string, any>) => {
+    const uid = auth.currentUser?.uid || getCurrentAthlete()?.id || 'local-officer';
+    await activateAthleteSubscription(newTier, uid, providerDetails);
+    setSimulatedOverride({ tier: newTier, status: 'active_subscriber' });
+    await evaluateClaims(auth.currentUser, true);
+  }, [evaluateClaims, setSimulatedOverride]);
+
+  const activateTrialWithCode = useCallback(async (code: string) => {
+    const uid = auth.currentUser?.uid || getCurrentAthlete()?.id || 'local-officer';
+    const res = await activateTrialCode(code, uid);
+    if (res.success && res.daysGranted && res.activationRecord) {
+      setSimulatedOverride({
+        tier: res.activationRecord.tier,
+        status: 'trialing',
+        trialEndMs: res.activationRecord.trialEndMs,
+        trialEndOffsetDays: res.daysGranted,
+      });
+      await evaluateClaims(auth.currentUser, true);
+    }
+    return res;
+  }, [evaluateClaims, setSimulatedOverride]);
 
   // Compute trial time calculations
   const now = Date.now();
@@ -174,5 +215,7 @@ export function useUserTier(): UserTierState {
     error,
     refreshClaims,
     setSimulatedOverride,
+    activateSubscription,
+    activateTrialWithCode,
   };
 }

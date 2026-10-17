@@ -81,6 +81,8 @@ service cloud.firestore {
         (!('weightHistory' in data) || data.weightHistory is list) &&
         (!('recoveryHistory' in data) || data.recoveryHistory is list) &&
         (!('lastRecoveryCheckIn' in data) || data.lastRecoveryCheckIn is map) &&
+        (!('subscription' in data) || data.subscription is map) &&
+        (!('trialActivation' in data) || data.trialActivation is map) &&
         (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
         (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
     }
@@ -245,6 +247,24 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /performance_metrics/{metricId} {
       allow read, write: if hasActiveProAccess();
+    }
+
+    // ----------------------------------------------------
+    // System & Payment Configuration (Square Links)
+    // ----------------------------------------------------
+    match /settings/{settingId} {
+      allow get, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /square_config/{configId} {
+      allow get, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /trial_codes/{codeId} {
+      allow get, list: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // ----------------------------------------------------

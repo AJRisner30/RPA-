@@ -3,10 +3,11 @@ import {
   ShieldCheck, Upload, User, UserCheck, Dumbbell, Calendar, 
   Plus, Trash2, Edit3, CheckCircle2, AlertCircle, FileText, 
   Send, Sparkles, ChevronRight, Lock, Eye, RefreshCw, X,
-  BadgeAlert, Clock, ArrowRight, ShieldAlert, Award
+  BadgeAlert, Clock, ArrowRight, ShieldAlert, Award,
+  CreditCard, ExternalLink, Link2, Save, Sliders, Info
 } from 'lucide-react';
 import { useFirebase } from '../context/FirebaseContext';
-import { AthleteProfile, OfficerAssignedProgram, ExerciseTemplate, WorkoutProgram } from '../types';
+import { AthleteProfile, OfficerAssignedProgram, ExerciseTemplate, WorkoutProgram, SquareConfig } from '../types';
 import { 
   subscribeToOfficerProgram, 
   subscribeToAllOfficerPrograms, 
@@ -15,6 +16,12 @@ import {
   deleteOfficerProgramFromFirestore
 } from '../utils/firebaseSync';
 import { isCoachSession } from '../utils/athleteAuth';
+import { 
+  subscribeToSquareConfig, 
+  saveSquareConfig, 
+  DEFAULT_SQUARE_CONFIG, 
+  SQUARE_REQUIREMENTS_CHECKLIST 
+} from '../utils/squarePayments';
 
 interface OfficerPortalTabProps {
   currentAthlete: AthleteProfile;
@@ -52,6 +59,15 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
   const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Square Payment Link Configuration State
+  const [squareConfig, setSquareConfig] = useState<SquareConfig>(() => DEFAULT_SQUARE_CONFIG);
+  const [squareEnvInput, setSquareEnvInput] = useState<'sandbox' | 'production'>('sandbox');
+  const [squareStandardUrlInput, setSquareStandardUrlInput] = useState('');
+  const [squareProUrlInput, setSquareProUrlInput] = useState('');
+  const [squareAppIdInput, setSquareAppIdInput] = useState('');
+  const [savingSquareConfig, setSavingSquareConfig] = useState(false);
+  const [squareFeedbackMsg, setSquareFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Upload Form Fields
   const [progTitle, setProgTitle] = useState('');
@@ -168,11 +184,48 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
       setAllAssignedPrograms(programs);
     });
 
+    const unsubSquare = subscribeToSquareConfig((cfg) => {
+      setSquareConfig(cfg);
+      setSquareEnvInput(cfg.environment);
+      setSquareStandardUrlInput(cfg.standardPlanUrl);
+      setSquareProUrlInput(cfg.proPlanUrl);
+      setSquareAppIdInput(cfg.applicationId || '');
+    });
+
     return () => {
       unsubOfficers();
       unsubPrograms();
+      unsubSquare();
     };
   }, [isCoachOrAdmin, user]);
+
+  const handleSaveSquareConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isCoachOrAdmin) return;
+    try {
+      setSavingSquareConfig(true);
+      setSquareFeedbackMsg(null);
+      await saveSquareConfig({
+        environment: squareEnvInput,
+        standardPlanUrl: squareStandardUrlInput.trim() || DEFAULT_SQUARE_CONFIG.standardPlanUrl,
+        proPlanUrl: squareProUrlInput.trim() || DEFAULT_SQUARE_CONFIG.proPlanUrl,
+        applicationId: squareAppIdInput.trim() || undefined,
+        locationId: squareConfig.locationId,
+      }, user?.email || 'risnerathletics@gmail.com');
+      setSquareFeedbackMsg({
+        type: 'success',
+        text: `Square payment configuration successfully saved in ${squareEnvInput.toUpperCase()} mode!`,
+      });
+      setTimeout(() => setSquareFeedbackMsg(null), 6000);
+    } catch (err: any) {
+      setSquareFeedbackMsg({
+        type: 'error',
+        text: err?.message || 'Failed to save Square payment configuration.',
+      });
+    } finally {
+      setSavingSquareConfig(false);
+    }
+  };
 
   const handleOpenUploadModal = (target?: AthleteProfile, existingProg?: OfficerAssignedProgram) => {
     if (!isCoachOrAdmin) return;
@@ -632,6 +685,230 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Square Payment & Subscription Configuration Card (Coach AJ) */}
+          <div className="bg-[#0b1320] border border-blue-500/30 rounded-2xl p-5 sm:p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider font-athletic">
+                    Square Payment Configuration &amp; Subscription Setup
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Manage Square Hosted Payment Links for Standard ($15/mo) and Pro ($30/mo) recurring tiers.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase border ${
+                  squareEnvInput === 'production'
+                    ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50'
+                    : 'bg-amber-950 text-amber-300 border-amber-500/50'
+                }`}>
+                  Current Mode: {squareEnvInput}
+                </span>
+              </div>
+            </div>
+
+            {/* Status Alert */}
+            {squareFeedbackMsg && (
+              <div className={`p-3.5 rounded-xl text-xs flex items-center gap-2.5 border ${
+                squareFeedbackMsg.type === 'success'
+                  ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
+                  : 'bg-red-950/80 border-red-500/50 text-red-300'
+              }`}>
+                {squareFeedbackMsg.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                )}
+                <span>{squareFeedbackMsg.text}</span>
+              </div>
+            )}
+
+            {/* Checklist: Everything We Need From You */}
+            <div className="p-4 rounded-xl bg-[#070d17] border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5" />
+                  What We Need From You (Square Setup Guide)
+                </span>
+                <a
+                  href="https://squareup.com/dashboard/payment-links"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-mono"
+                >
+                  <span>Open Square Payment Links</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                {SQUARE_REQUIREMENTS_CHECKLIST.map((step) => (
+                  <div key={step.step} className="p-3 rounded-lg bg-slate-900/60 border border-slate-800/80 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600/30 text-blue-300 text-[10px] font-bold flex items-center justify-center">
+                        {step.step}
+                      </span>
+                      <strong className="text-white text-xs">{step.title}</strong>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed pl-7">
+                      {step.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Square Links Form */}
+            <form onSubmit={handleSaveSquareConfig} className="space-y-4">
+              {/* Environment Toggle */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
+                  Square Environment
+                </label>
+                <div className="grid grid-cols-2 gap-3 max-w-md">
+                  <button
+                    type="button"
+                    onClick={() => setSquareEnvInput('sandbox')}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      squareEnvInput === 'sandbox'
+                        ? 'bg-amber-950/60 border-amber-500 text-amber-300 shadow'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <span>⚡ Sandbox Mode (Testing)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSquareEnvInput('production')}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      squareEnvInput === 'production'
+                        ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300 shadow'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <span>🛡️ Production Mode (Live)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Standard Plan Link */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
+                    Standard Plan Recurring Payment Link ($15/mo)
+                  </label>
+                  {squareStandardUrlInput && (
+                    <a
+                      href={squareStandardUrlInput}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 font-mono"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      <span>Test URL</span>
+                    </a>
+                  )}
+                </div>
+                <input
+                  type="url"
+                  value={squareStandardUrlInput}
+                  onChange={(e) => setSquareStandardUrlInput(e.target.value)}
+                  placeholder="https://square.link/u/... or https://sandbox.square.link/u/..."
+                  className="w-full bg-[#070c14] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Copy from Square Dashboard &gt; Payment Links for the $15.00/month recurring plan.
+                </span>
+              </div>
+
+              {/* Pro Plan Link */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
+                    Pro Frontline Plan Recurring Payment Link ($30/mo)
+                  </label>
+                  {squareProUrlInput && (
+                    <a
+                      href={squareProUrlInput}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-mono"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      <span>Test URL</span>
+                    </a>
+                  )}
+                </div>
+                <input
+                  type="url"
+                  value={squareProUrlInput}
+                  onChange={(e) => setSquareProUrlInput(e.target.value)}
+                  placeholder="https://square.link/u/... or https://sandbox.square.link/u/..."
+                  className="w-full bg-[#070c14] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Copy from Square Dashboard &gt; Payment Links for the $30.00/month recurring plan.
+                </span>
+              </div>
+
+              {/* Optional Square App ID / Location ID */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    Square Application ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={squareAppIdInput}
+                    onChange={(e) => setSquareAppIdInput(e.target.value)}
+                    placeholder="sandbox-sq0idb-... or sq0idp-..."
+                    className="w-full bg-[#070c14] border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-700 font-mono focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    Square Location ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={squareConfig.locationId || ''}
+                    disabled
+                    className="w-full bg-[#070c14]/50 border border-slate-900 rounded-lg px-3 py-2 text-xs text-slate-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+                <span className="text-[11px] text-slate-400 font-mono">
+                  Last updated: {squareConfig.updatedAt ? new Date(squareConfig.updatedAt).toLocaleDateString() : 'Initial Setup'}
+                </span>
+
+                <button
+                  type="submit"
+                  disabled={savingSquareConfig}
+                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                >
+                  {savingSquareConfig ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}
+                  <span>{savingSquareConfig ? 'Saving Links...' : 'Save Square Links to Firestore'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

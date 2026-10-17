@@ -252,6 +252,47 @@ export interface ReadinessScoreBreakdown {
   statusBadgeColor: string;
 }
 
+export interface SubscriptionRecord {
+  tier: 'standard' | 'pro' | 'enterprise';
+  status: 'active_subscriber' | 'trialing' | 'canceled' | 'past_due';
+  provider: 'square' | 'manual' | 'promo';
+  squareOrderId?: string;
+  squarePaymentId?: string;
+  subscribedAt: string; // ISO string
+  amount: number; // 15 or 30
+  currency: 'USD';
+  environment?: 'sandbox' | 'production';
+}
+
+export interface SquareConfig {
+  environment: 'sandbox' | 'production';
+  standardPlanUrl: string;
+  proPlanUrl: string;
+  applicationId?: string;
+  locationId?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+export interface TrialCodeRecord {
+  code: string;
+  days: number;
+  tier: 'pro' | 'standard';
+  description: string;
+  createdAt?: string;
+  createdBy?: string;
+  maxUses?: number;
+  currentUses?: number;
+}
+
+export interface TrialActivationRecord {
+  code: string;
+  activatedAt: string;
+  trialEndMs: number;
+  daysGranted: number;
+  tier: 'pro' | 'standard';
+}
+
 export interface AthleteProfile {
   id: string;
   name: string;
@@ -269,6 +310,8 @@ export interface AthleteProfile {
   weightHistory?: BodyweightEntry[];
   recoveryHistory?: RecoveryCheckIn[];
   lastRecoveryCheckIn?: RecoveryCheckIn;
+  subscription?: SubscriptionRecord;
+  trialActivation?: TrialActivationRecord;
 }
 
 /**

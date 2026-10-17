@@ -1,0 +1,6 @@
+{
+  "summary": "Architectural implementation plan for integrating Square Payment Links into Patrol Ready Performance subscription tiers, including Standard ($15/mo) and Pro ($30/mo), sandbox testing configuration, automated tier unlocking upon return from Square, and coach admin payment link management.",
+  "updatedAt": "2026-10-17T14:54:43.582798922Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

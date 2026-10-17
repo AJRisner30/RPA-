@@ -16,6 +16,9 @@ import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { AthleteLoginModal } from './components/AthleteLoginModal';
 import { AbilityQuestionnaireModal } from './components/AbilityQuestionnaireModal';
 import { PricingTiersModal } from './components/PricingTiersModal';
+import { SquareConfirmationModal } from './components/SquareConfirmationModal';
+import { ActivateTrialCodeModal } from './components/ActivateTrialCodeModal';
+import { SubscriptionRecord } from './types';
 import { TrialBanner } from './components/TrialBanner';
 import { SignInGate } from './components/SignInGate';
 import { LoadingSplash } from './components/LoadingSplash';
@@ -24,6 +27,7 @@ import { AndroidAppModal } from './components/AndroidAppModal';
 import { AndroidInstallBanner } from './components/AndroidInstallBanner';
 import { useAndroidBackButton } from './hooks/useAndroidBackButton';
 import { useAndroidWakeLock } from './hooks/useAndroidWakeLock';
+import { useUserTier } from './hooks/useUserTier';
 import { 
   getCurrentAthlete, 
   AthleteProfile, 
@@ -65,6 +69,12 @@ export default function App() {
   const [isQuestionnaireOpen, setIsQuestionnaireOpen] = useState<boolean>(false);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState<boolean>(false);
   const [isAndroidModalOpen, setIsAndroidModalOpen] = useState<boolean>(false);
+  const [isSquareSuccessModalOpen, setIsSquareSuccessModalOpen] = useState<boolean>(false);
+  const [confirmedSquareTier, setConfirmedSquareTier] = useState<'standard' | 'pro' | 'enterprise'>('pro');
+  const [squareSubRecord, setSquareSubRecord] = useState<SubscriptionRecord | null>(null);
+
+  const { activateSubscription } = useUserTier();
+
   const [activeProgramKey, setActiveProgramKey] = useState<ProgramKey>(() => 
     getCurrentAthlete().questionnaire?.recommendedProgramKey || 'apex_protocol'
   );
@@ -81,11 +91,14 @@ export default function App() {
     isAthleteModalOpen || 
     isQuestionnaireOpen || 
     isPricingModalOpen || 
-    isAndroidModalOpen;
+    isAndroidModalOpen ||
+    isSquareSuccessModalOpen;
 
   const handleCloseTopModal = () => {
     if (activeLiveProgram !== null) {
       setActiveLiveProgram(null);
+    } else if (isSquareSuccessModalOpen) {
+      setIsSquareSuccessModalOpen(false);
     } else if (isAndroidModalOpen) {
       setIsAndroidModalOpen(false);
     } else if (isPricingModalOpen) {
@@ -107,18 +120,54 @@ export default function App() {
   // Android Screen Wake Lock: Keeps display on during live workouts
   useAndroidWakeLock(activeLiveProgram !== null);
 
-  // Handle URL query parameters (e.g. Android Home Screen Shortcuts ?tab=workouts / ?tab=officer_portal)
+  // Handle URL query parameters (e.g. Android Home Screen Shortcuts or Square payment return ?payment=success)
   useEffect(() => {
     const handleUrlParams = () => {
       if (typeof window === 'undefined') return;
       const params = new URLSearchParams(window.location.search);
+      
+      // 1. Square Checkout return handler: ?payment=success&tier=pro
+      const paymentParam = params.get('payment');
+      if (paymentParam === 'success') {
+        const rawTier = (params.get('tier') || 'pro').toLowerCase();
+        const tierParam = rawTier === 'standard' ? 'standard' : rawTier === 'enterprise' ? 'enterprise' : 'pro';
+        const orderIdParam = params.get('session_id') || params.get('order_id') || `sq_ord_${Date.now().toString(36)}`;
+
+        activateSubscription(tierParam, {
+          orderId: orderIdParam,
+          environment: 'sandbox',
+        }).then(() => {
+          setConfirmedSquareTier(tierParam);
+          setSquareSubRecord({
+            tier: tierParam,
+            status: 'active_subscriber',
+            provider: 'square',
+            squareOrderId: orderIdParam,
+            subscribedAt: new Date().toISOString(),
+            amount: tierParam === 'pro' ? 30 : tierParam === 'enterprise' ? 99 : 15,
+            currency: 'USD',
+            environment: 'sandbox',
+          });
+          setIsSquareSuccessModalOpen(true);
+        }).catch((err) => {
+          console.warn('[Square] Automated subscription unlock error:', err);
+        });
+
+        // Strip payment parameters cleanly without reloading
+        try {
+          const cleanUrl = window.location.pathname + window.location.hash;
+          window.history.replaceState({}, document.title, cleanUrl);
+        } catch {}
+      }
+
+      // 2. Navigation tab shortcut
       const tabParam = params.get('tab') as TabType | null;
       if (tabParam && ['workouts', 'officer_portal', 'warmups', 'calculator', 'logs', 'graphs', 'contact'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
     };
     handleUrlParams();
-  }, []);
+  }, [activateSubscription]);
 
   // Real-time Firestore sync when authenticated
   useEffect(() => {
@@ -373,10 +422,27 @@ export default function App() {
         onSaveQuestionnaire={handleSaveQuestionnaire}
       />
 
-      {/* RBAC Pricing Tiers & Custom Claims Modal */}
+      {/* RBAC Pricing Tiers & Square Payment Links Modal */}
       <PricingTiersModal
         isOpen={isPricingModalOpen}
         onClose={() => setIsPricingModalOpen(false)}
+        onPaymentSuccess={(activatedTier) => {
+          setIsPricingModalOpen(false);
+          setConfirmedSquareTier(activatedTier);
+          setIsSquareSuccessModalOpen(true);
+        }}
+      />
+
+      {/* Square Payment Activation Confirmation Modal */}
+      <SquareConfirmationModal
+        isOpen={isSquareSuccessModalOpen}
+        tier={confirmedSquareTier}
+        subscriptionRecord={squareSubRecord}
+        onClose={() => setIsSquareSuccessModalOpen(false)}
+        onNavigateToWorkouts={() => {
+          setIsSquareSuccessModalOpen(false);
+          setActiveTab('workouts');
+        }}
       />
 
       {/* Footer Branded with Patrol Ready Performance, Tactical Fitness for the Frontline */}

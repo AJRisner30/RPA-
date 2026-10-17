@@ -1,12 +1,13 @@
 import React from 'react';
 import { 
   AlertTriangle, Clock, Zap, Sparkles, ArrowRight, ShieldCheck, 
-  Lock, RefreshCw 
+  Lock, RefreshCw, KeyRound 
 } from 'lucide-react';
 import { useUserTier } from '../hooks/useUserTier';
 
 export interface TrialBannerProps {
   onOpenCheckout?: () => void;
+  onOpenCodeModal?: () => void;
   className?: string;
   compact?: boolean;
 }
@@ -19,6 +20,7 @@ export interface TrialBannerProps {
  */
 export const TrialBanner: React.FC<TrialBannerProps> = ({
   onOpenCheckout,
+  onOpenCodeModal,
   className = '',
   compact = false,
 }) => {
@@ -61,14 +63,26 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onOpenCheckout}
-            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 active:scale-95"
-          >
-            <span>Upgrade to Pro ($30/mo)</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            {onOpenCodeModal && (
+              <button
+                type="button"
+                onClick={onOpenCodeModal}
+                className="w-full sm:w-auto px-3.5 py-2 bg-slate-900/90 hover:bg-slate-800 border border-amber-500/50 text-amber-300 font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Activate Code</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onOpenCheckout}
+              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2 shrink-0 active:scale-95"
+            >
+              <span>Upgrade to Pro ($30/mo)</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -99,6 +113,16 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {onOpenCodeModal && (
+              <button
+                type="button"
+                onClick={onOpenCodeModal}
+                className="px-3 py-2 bg-slate-900/90 hover:bg-slate-800 border border-amber-500/50 text-amber-300 font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Activate Code</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenCheckout}
@@ -142,10 +166,21 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap justify-end">
             <span className="font-mono text-[11px] font-bold text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded border border-blue-500/40">
               {trialDaysRemaining} Days Left
             </span>
+            {onOpenCodeModal && (
+              <button
+                type="button"
+                onClick={onOpenCodeModal}
+                className="text-[11px] font-mono font-bold text-amber-300 hover:text-white px-2 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 flex items-center gap-1 cursor-pointer transition"
+                title="Redeem trial or agency code"
+              >
+                <KeyRound className="w-3 h-3 text-amber-400" />
+                <span>Have Code?</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenCheckout}
