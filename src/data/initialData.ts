@@ -1677,16 +1677,15 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
     id: 'warmup-universal-tactical',
     title: 'Universal Tactical Dynamic Warm-Up',
     category: 'Full Body / CNS',
-    durationMinutes: 10,
-    description: "Universal 10-minute dynamic preparation sequence engineered to elevate core temperature, mobilize thoracic spine & hip capsules, activate scapular stabilizers, and prime core bracing.",
+    durationMinutes: 8,
+    description: "Universal dynamic preparation sequence engineered to elevate core temperature, mobilize thoracic spine & hip capsules, activate scapular stabilizers, and prime core bracing through reps.",
     focusMuscles: ['Shoulders', 'Rotator Cuff', 'Thoracic Spine', 'Hips', 'Core'],
     steps: [
       {
         id: 'ut-jacks',
         name: 'Jumping Jacks / Seal Jumps',
         targetArea: 'Circulation & Core Temperature',
-        durationSeconds: 60,
-        repsText: '2 sets x 30 reps (Rest: 30s)',
+        repsText: '30 Continuous Reps',
         cues: [
           'Rhythmic bouncing on forefoot.',
           'Bring breathing rate up without inducing lactic fatigue.'
@@ -1697,8 +1696,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'ut-band-pullaparts',
         name: 'Band Pull-Aparts & Pass-Throughs',
         targetArea: 'Rotator Cuff & Scapular Stabilizers',
-        durationSeconds: 60,
-        repsText: '2 sets x 15 reps (Rest: 30s)',
+        repsText: '15 Controlled Reps',
         cues: [
           'Arms straight, pull band to upper chest.',
           'Scapular upward rotation and depression.'
@@ -1709,8 +1707,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'ut-wgs',
         name: "World's Greatest Stretch",
         targetArea: 'T-Spine, Hip Flexors & Hamstrings',
-        durationSeconds: 90,
-        repsText: '1 set x 5 reps per side (Rest: 30s)',
+        repsText: '8 Reps per side',
         cues: [
           'Deep lunge, inside elbow to instep.',
           'Rotate arm to ceiling, tracking thumb with eyes.',
@@ -1722,8 +1719,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'ut-goblet-pry',
         name: 'Goblet Squat Pry / Bootstrappers',
         targetArea: 'Deep Hip Capsule & Ankle Dorsiflexion',
-        durationSeconds: 60,
-        repsText: '1 set x 10 reps (Rest: 30s)',
+        repsText: '10 Pause Reps (2s hold)',
         cues: [
           'Sink into deep squat, pry knees apart with elbows.',
           'Maintain tall chest and upright spine.'
@@ -1732,10 +1728,9 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
       },
       {
         id: 'ut-deadbugs',
-        name: 'Deadbugs or Hollow Body Hold',
+        name: 'Deadbugs (Core Tension)',
         targetArea: 'Deep Core Bracing & Pelvic Neutral',
-        durationSeconds: 60,
-        repsText: '3 sets x 20 seconds (Rest: 30s)',
+        repsText: '12 Reps per side',
         cues: [
           'Lower back pressed flat against floor.',
           'Opposite arm and leg reach with controlled breathing.'
@@ -1748,16 +1743,15 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
     id: 'warmup-apex-sop',
     title: 'The Apex Protocol SOP Warmup (Elevate, Mobilize, Activate)',
     category: 'Full Body / CNS',
-    durationMinutes: 10,
-    description: "Standard Operating Procedures (WARMUP) - Execute this sequence before every strength session. Do not bypass the preparation phase. This lubricates the joints, activates the CNS, and primes the kinetic chain.",
+    durationMinutes: 8,
+    description: "Standard Operating Procedures (WARMUP) - Execute this rep-based sequence before every strength session to lubricate joints, activate the CNS, and prime the kinetic chain.",
     focusMuscles: ['Full Body', 'CNS Priming', 'Thoracic Spine', 'Hip Complex', 'Ankles'],
     steps: [
       {
         id: 'sop-elevate',
-        name: '1. Elevate: Row, Assault Bike, or Light Jog',
+        name: '1. Elevate: Row, Assault Bike, or Light Strides',
         targetArea: 'Systemic Temperature & Blood Flow',
-        durationSeconds: 240,
-        repsText: '3-5 Minutes',
+        repsText: '50 Continuous Strides / Revolutions',
         cues: [
           'Progressively elevate core body temperature and heart rate.',
           'Bring breathing rate up without inducing lactic fatigue.'
@@ -1769,7 +1763,6 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         name: "2. Mobilize: World's Greatest Stretch",
         targetArea: 'Hips, Thoracic Spine, Ankles & Hamstrings',
         repsText: '10 Reps per side',
-        durationSeconds: 90,
         cues: [
           'Deep lunge stance, place inside elbow toward ankle.',
           'Rotate arm to ceiling, tracking thumb with eyes.',
@@ -1781,8 +1774,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'sop-band-pullapart',
         name: '2. Mobilize: Band Pull-Aparts',
         targetArea: 'Scapular Retractors & Rear Delts',
-        repsText: '3 x 15 Reps',
-        durationSeconds: 60,
+        repsText: '15 Reps (1s hold)',
         cues: [
           'Keep arms straight, depress shoulders away from ears.',
           'Pull band until it contacts breastbone. 1s pause.'
@@ -1794,7 +1786,6 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         name: '2. Mobilize: Walking Lunge w/ Thoracic Twist',
         targetArea: 'Hip Flexors, Glutes & Thoracic Spine',
         repsText: '10 Reps per side',
-        durationSeconds: 75,
         cues: [
           'Step forward into deep lunge, knee tracking over toes.',
           'Rotate torso over lead knee with tall upright posture.'
@@ -1805,8 +1796,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'sop-goblet-squat',
         name: '3. Activate: KB Goblet Squat (3-sec pause)',
         targetArea: 'Quadriceps, Adductors & Deep Core',
-        repsText: '2 x 8 Reps (3s pause)',
-        durationSeconds: 60,
+        repsText: '8 Reps (3s pause)',
         cues: [
           'Hold kettlebell at sternum.',
           'Descend into deep squat, hold bottom position for 3 full seconds.',
@@ -1818,8 +1808,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'sop-shoulder-taps',
         name: '3. Activate: Plank Shoulder Taps',
         targetArea: 'Anti-Rotational Core & Scapular Stability',
-        repsText: '2 x 20 Reps (10/side)',
-        durationSeconds: 50,
+        repsText: '20 Reps (10 per side)',
         cues: [
           'Solid pushup plank, feet slightly wider than shoulder width.',
           'Tap opposite shoulder without letting hips sway side-to-side.'
@@ -1830,8 +1819,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'sop-broad-jumps',
         name: '3. Activate: Broad Jumps (Max Intent)',
         targetArea: 'CNS Neurological Firing & Triple Extension',
-        repsText: '2 x 3 Reps (Max Intent)',
-        durationSeconds: 45,
+        repsText: '5 Max-Intent Reps',
         cues: [
           'Load hips back, swing arms back, explode forward with 100% intent.',
           'Land softly in athletic quarter squat, absorbing force through hips.'
@@ -1844,7 +1832,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
     id: 'warmup-upper-primer',
     title: 'Patrol Ready Upper Body Scapular & Thoracic Primer',
     category: 'Upper Body',
-    durationMinutes: 7,
+    durationMinutes: 6,
     description: 'Essential pre-lift protocol designed to unlock thoracic spine mobility, lubricate the glenohumeral joint, and fire rotator cuff stabilizers prior to pressing and pulling.',
     focusMuscles: ['Thoracic Spine', 'Rotator Cuff', 'Pectorals', 'Serratus Anterior', 'Scapulae'],
     steps: [
@@ -1852,7 +1840,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-1',
         name: 'Thoracic Spine Foam Roller Extensions',
         targetArea: 'T-Spine & Posture',
-        durationSeconds: 45,
+        repsText: '10 Controlled Extensions',
         cues: [
           'Place roller at mid-back level (below scapulae).',
           'Support neck with hands; inhale as you arch back gently over the roller.',
@@ -1864,8 +1852,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-2',
         name: 'Band Pull-Aparts (Overhand & Underhand)',
         targetArea: 'Rear Delts & Rhomboids',
-        repsText: '20 reps (10 over / 10 under)',
-        durationSeconds: 40,
+        repsText: '20 Reps (10 over / 10 under)',
         cues: [
           'Keep elbows locked straight and shoulders depressed away from ears.',
           'Pull band horizontally across chest until it touches breastbone.',
@@ -1877,8 +1864,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-3',
         name: 'Quadruped Scapular Push-Ups',
         targetArea: 'Serratus Anterior',
-        repsText: '12 controlled reps',
-        durationSeconds: 35,
+        repsText: '12 Controlled Reps',
         cues: [
           'Arms remain completely straight in high plank or quadruped stance.',
           'Pinch shoulder blades together, then push the floor away to protract.',
@@ -1890,8 +1876,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-4',
         name: 'Banded Face Pulls with External Rotation',
         targetArea: 'Infraspinatus & Teres Minor',
-        repsText: '15 reps',
-        durationSeconds: 45,
+        repsText: '15 Reps (1s hold)',
         cues: [
           'Anchor band at eye level.',
           'Pull band towards eyes while rotating fists backward above elbows into a "double biceps" pose.',
@@ -1903,8 +1888,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-5',
         name: 'Push-Up to Downward Dog Flow',
         targetArea: 'Pecs, Lats & Posterior Chain',
-        repsText: '8 smooth reps',
-        durationSeconds: 45,
+        repsText: '8 Controlled Reps',
         cues: [
           'Perform a standard crisp pushup.',
           'Drive hips high into the ceiling, pushing chest back towards thighs.',
@@ -1918,7 +1902,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
     id: 'warmup-lower-hip',
     title: 'Patrol Ready Lower Body Hip Capsule & Ankle Opener',
     category: 'Lower Body',
-    durationMinutes: 8,
+    durationMinutes: 7,
     description: 'Targeted mobility protocol to open hip capsules, improve ankle dorsiflexion for deeper squats, and activate glute medius for knee tracking stability.',
     focusMuscles: ['Hip Flexors', 'Glutes', 'Adductors', 'Ankle Joint', 'Hamstrings'],
     steps: [
@@ -1926,7 +1910,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-l1',
         name: '90/90 Hip Mobility Flow',
         targetArea: 'Hip Internal & External Rotation',
-        durationSeconds: 60,
+        repsText: '8 Transitions per side',
         cues: [
           'Sit with front leg bent 90° and back leg bent 90° on the floor.',
           'Hinge forward over front shin with a tall neutral spine.',
@@ -1938,8 +1922,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-l2',
         name: 'Half-Kneeling Ankle Dorsiflexion Rocks',
         targetArea: 'Talocrural Joint & Achilles',
-        repsText: '10 rocks / ankle',
-        durationSeconds: 50,
+        repsText: '10 Rocks per ankle',
         cues: [
           'Drive lead knee forward directly over 2nd and 3rd toes.',
           'Keep heel glued to the floor with firm downward pressure.',
@@ -1951,8 +1934,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-l3',
         name: 'World\'s Greatest Stretch + Hamstring Floss',
         targetArea: 'Hip Flexor, Groin & Thoracic',
-        repsText: '5 reps / side',
-        durationSeconds: 60,
+        repsText: '6 Reps per side',
         cues: [
           'Long runner lunge with both hands inside front foot.',
           'Reach lead elbow down to inside ankle, then rotate chest up to the sky.',
@@ -1964,8 +1946,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-l4',
         name: 'Mini-Band Glute Bridges with Abduction',
         targetArea: 'Gluteus Maximus & Medius',
-        repsText: '15 reps + 5s hold',
-        durationSeconds: 45,
+        repsText: '15 Reps + 5s hold',
         cues: [
           'Place band just above knees.',
           'Drive through heels to full hip extension without hyperextending lumbar spine.',
@@ -1977,8 +1958,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-l5',
         name: 'Cossack Squats (Lateral Lunges)',
         targetArea: 'Adductors & Hip Mobility',
-        repsText: '6 reps / side',
-        durationSeconds: 45,
+        repsText: '8 Reps per side',
         cues: [
           'Wide sumo stance. Shift weight to one side, sitting deep into hip.',
           'Keep non-working leg straight with toes rotated upward.',
@@ -1993,14 +1973,14 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
     title: 'Patrol Ready Central Nervous System Potentiation & Ramp',
     category: 'Full Body / CNS',
     durationMinutes: 5,
-    description: 'Short, high-intensity neural primer designed to elevate heart rate, recruit high-threshold motor units (Type IIx fibers), and synchronize coordination.',
+    description: 'Short, high-intensity neural primer designed to recruit high-threshold motor units (Type IIx fibers) and synchronize coordination through reps.',
     focusMuscles: ['CNS', 'Core Bracing', 'Posterior Chain', 'Foot & Ankle Stiffness'],
     steps: [
       {
         id: 'wus-c1',
         name: 'Reactive Pogo Hops (Ankle Stiffness)',
         targetArea: 'Achilles Spring & CNS Frequency',
-        durationSeconds: 30,
+        repsText: '30 Rapid Spring Hops',
         cues: [
           'Bounce rapidly on balls of feet with minimal knee bend.',
           'Pull toes up towards shins in midair (dorsiflexion).',
@@ -2012,8 +1992,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-c2',
         name: 'Deadbugs with Contrasting Tension',
         targetArea: 'Anterior Core & Pelvic Anti-Extension',
-        repsText: '10 reps (slow & deliberate)',
-        durationSeconds: 40,
+        repsText: '12 Reps per side',
         cues: [
           'Flatten lower back into the floor until zero light can pass under.',
           'Extend opposite arm and leg while maintaining continuous abdominal pressure.',
@@ -2025,8 +2004,7 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
         id: 'wus-c3',
         name: 'Explosive Medicine Ball Slams or Broad Jumps',
         targetArea: 'Full Body Power Transfer',
-        repsText: '5 max-effort reps',
-        durationSeconds: 35,
+        repsText: '6 Max-Effort Reps',
         cues: [
           'Triple extension reaching overhead.',
           'Hinge violently through hips and slam ball straight down.',

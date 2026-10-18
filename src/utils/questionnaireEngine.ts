@@ -7,6 +7,21 @@ export interface AbilityBenchmarkOption<T> {
   score: number;
 }
 
+export const PAT_PREPARATION_OPTIONS = [
+  {
+    id: 'yes_upcoming_pat' as const,
+    label: 'YES — Preparing for Academy / State POST Physical Agility Test (PAT)',
+    badge: 'Triggers Universal PAT Protocol',
+    description: 'Directly triggers and enrolls you in the Universal Law Enforcement PAT Protocol (1.5-mile run, 300m sprint, push-ups, dummy drag, obstacle agility).',
+  },
+  {
+    id: 'no_general_tactical' as const,
+    label: 'NO — General Tactical Duty Fitness, Strength Armor & Hypertrophy',
+    badge: 'Comprehensive Tactical Track',
+    description: 'Customized based on your lifting experience, equipment access, and primary operational fitness goals.',
+  },
+];
+
 export const PUSH_UP_OPTIONS: AbilityBenchmarkOption<QuestionnaireAnswers['pushUpScore']>[] = [
   {
     id: 'under_15',
@@ -205,7 +220,29 @@ export function calculateProgramRecommendation(
     fitnessTier = 'Tactical Elite';
   }
 
-  // 2. Hardware / Equipment constraint takes absolute priority
+  // 2. Direct PAT Question Trigger takes top priority: If athlete is preparing for an upcoming PAT
+  if (answers.preparingForPat === 'yes_upcoming_pat' || answers.primaryGoalCategory === 'universal_pat_testing') {
+    return {
+      programKey: 'universal_pat',
+      programTitle: 'Universal Law Enforcement Physical Agility Test (PAT) Protocol',
+      badge: 'State POST & PAT Passing Standard',
+      durationText: '8-Week High-Stakes Agility & Speed Prep',
+      weeklySplit: '5 Days Lift & Obstacle Agility + 1-2 Days 1.5-Mi & 300m Sprint',
+      fitnessTier,
+      startingWeek: 1,
+      startingPhaseTitle: 'Weeks 1-8: Foundational Agility & Benchmark Capacity',
+      primaryRationale:
+        'Selected directly by your answer: actively preparing for an upcoming Physical Agility Test. Engineered specifically to ace state POST and academy Physical Agility Tests: 1.5-mile run, 300-meter sprint, continuous cadence push-ups, 1-minute timed sit-ups, and 165 lb dummy drag.',
+      keyActionPoints: [
+        'Cadence metronome push-ups build unbreakable chest and shoulder stamina under fatigue.',
+        'Weekly 300m anaerobic sprint intervals build high-intensity lactate threshold.',
+        'Heavy dummy drags, sled pulls, and farmer carries guarantee maximum grip and posterior obstacle drive.',
+      ],
+      equipmentNotice: 'Barbell, trap bar, pull-up bar, and running track recommended.',
+    };
+  }
+
+  // 3. Hardware / Equipment constraint
   if (answers.equipmentAccess === 'bodyweight_dumbbells' || answers.primaryGoalCategory === 'station_db_minimal') {
     return {
       programKey: 'hybrid_db',
@@ -227,8 +264,8 @@ export function calculateProgramRecommendation(
     };
   }
 
-  // 3. Goal & Schedule matching
-  if (answers.primaryGoalCategory === 'muscle_armor_hypertrophy' || (answers.weeklyDays === 4 && answers.primaryGoalCategory !== 'complete_apex_peak')) {
+  // 4. Goal & Schedule matching
+  if (answers.primaryGoalCategory === 'muscle_armor_hypertrophy') {
     const startWeek = fitnessTier === 'Recruit Foundation' ? 1 : 1;
     return {
       programKey: 'tactical_hypertrophy',
@@ -244,7 +281,7 @@ export function calculateProgramRecommendation(
       keyActionPoints: [
         'Upper/Lower split allows maximal CNS recovery between duty shifts.',
         'Double progression on trap bar deadlifts, barbell bench, and strict pull-ups.',
-        'Dedicated foot pursuit intervals and 1.5-mile conditioning sessions on Tuesdays and Saturdays.',
+        'Dedicated foot pursuit intervals and 1.5-mile conditioning sessions on Day 2 and Day 6.',
       ],
     };
   }
@@ -266,27 +303,6 @@ export function calculateProgramRecommendation(
         'Zone 2 conversational base running develops high cardiac stroke volume.',
         'Threshold runs expand your sustained top speed and stamina under fatigue.',
       ],
-    };
-  }
-
-  if (answers.primaryGoalCategory === 'universal_pat_testing') {
-    return {
-      programKey: 'universal_pat',
-      programTitle: 'Universal Law Enforcement Physical Agility Test (PAT) Protocol',
-      badge: 'Academy Agility & Benchmark Standard',
-      durationText: '8-Week High-Stakes Agility & Speed Prep',
-      weeklySplit: '5 Days Lift & Obstacle Agility + 1-2 Days 1.5-Mi & 300m Sprint',
-      fitnessTier,
-      startingWeek: 1,
-      startingPhaseTitle: 'Weeks 1-8: Foundational Agility & Benchmark Capacity',
-      primaryRationale:
-        'Engineered specifically to ace state POST and academy Physical Agility Tests. Systematically peaks the 1.5-mile run, 300-meter sprint, continuous cadence push-ups, 1-minute timed sit-ups, and 165 lb dummy drag.',
-      keyActionPoints: [
-        'Cadence metronome push-ups build unbreakable chest and shoulder stamina.',
-        'Weekly 300m anaerobic sprint intervals build high-intensity lactate threshold.',
-        'Heavy dummy drags and farmer carries guarantee maximum grip and posterior obstacle drive.',
-      ],
-      equipmentNotice: 'Barbell, trap bar, pull-up bar, and running track recommended.',
     };
   }
 

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Flame, Play, Pause, RotateCcw, CheckCircle2, ChevronRight, 
-  Clock, ShieldCheck, Sparkles, X, Activity, Volume2 
+  Flame, CheckCircle2, ChevronRight, ChevronLeft, 
+  ShieldCheck, Sparkles, X, Activity, Dumbbell, Play, RotateCcw
 } from 'lucide-react';
 import { WarmUpRoutine, WarmUpStep } from '../types';
 import { INITIAL_WARMUPS } from '../data/initialData';
@@ -19,12 +19,10 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
     return INITIAL_WARMUPS[0];
   });
 
-  // Guided Warmup Player State
+  // Guided Reps-Based Warmup Tracker State
   const [isPlayingGuided, setIsPlayingGuided] = useState<boolean>(false);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [stepSecondsRemaining, setStepSecondsRemaining] = useState<number>(45);
-  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
-  const timerRef = useRef<number | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
 
   // Update routine if selectedWarmupId changes externally
   useEffect(() => {
@@ -36,64 +34,40 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
     }
   }, [selectedWarmupId, routines]);
 
-  // Guided timer ticker
-  useEffect(() => {
-    if (isTimerRunning && isPlayingGuided) {
-      timerRef.current = window.setInterval(() => {
-        setStepSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            soundManager.playRestComplete();
-            // Advance to next step or finish
-            if (currentStepIndex < activeRoutine.steps.length - 1) {
-              const nextIdx = currentStepIndex + 1;
-              setCurrentStepIndex(nextIdx);
-              return activeRoutine.steps[nextIdx].durationSeconds || 45;
-            } else {
-              setIsTimerRunning(false);
-              return 0;
-            }
-          }
-          if (prev <= 4 && prev > 1) {
-            soundManager.playCountdownBeep(false);
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isTimerRunning, isPlayingGuided, currentStepIndex, activeRoutine]);
-
   const handleStartGuided = (routine: WarmUpRoutine) => {
     setActiveRoutine(routine);
     setCurrentStepIndex(0);
-    setStepSecondsRemaining(routine.steps[0].durationSeconds || 45);
+    setCompletedSteps({});
     setIsPlayingGuided(true);
-    setIsTimerRunning(true);
     soundManager.playCountdownBeep(true);
+  };
+
+  const handleCompleteCurrentStep = () => {
+    soundManager.playRestComplete();
+    setCompletedSteps((prev) => ({ ...prev, [currentStepIndex]: true }));
+    if (currentStepIndex < activeRoutine.steps.length - 1) {
+      setCurrentStepIndex((prev) => prev + 1);
+    } else {
+      // Completed all steps
+      setTimeout(() => {
+        setIsPlayingGuided(false);
+      }, 600);
+    }
   };
 
   const handleNextStep = () => {
     if (currentStepIndex < activeRoutine.steps.length - 1) {
-      const nextIdx = currentStepIndex + 1;
-      setCurrentStepIndex(nextIdx);
-      setStepSecondsRemaining(activeRoutine.steps[nextIdx].durationSeconds || 45);
+      setCurrentStepIndex((prev) => prev + 1);
       soundManager.playCountdownBeep(true);
     } else {
-      setIsTimerRunning(false);
       soundManager.playRestComplete();
+      setIsPlayingGuided(false);
     }
   };
 
   const handlePrevStep = () => {
     if (currentStepIndex > 0) {
-      const prevIdx = currentStepIndex - 1;
-      setCurrentStepIndex(prevIdx);
-      setStepSecondsRemaining(activeRoutine.steps[prevIdx].durationSeconds || 45);
+      setCurrentStepIndex((prev) => prev - 1);
     }
   };
 
@@ -105,10 +79,14 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
       <div className="relative overflow-hidden bg-gradient-to-r from-[#0c1322] via-[#0f172a] to-[#0c1322] border border-blue-500/30 rounded-3xl p-6 sm:p-8 shadow-xl">
         <div className="absolute -right-12 -top-12 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
               <Flame className="w-3.5 h-3.5" />
-              Dynamic Mobility & CNS Primer
+              Dynamic Mobility &amp; CNS Primers
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1 font-mono">
+              <Dumbbell className="w-3.5 h-3.5" />
+              100% Reps-Based (No Timers)
             </span>
             <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
@@ -121,7 +99,7 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
           </h1>
           <p className="text-sm text-slate-300 mt-2 leading-relaxed">
             Patrol Ready Performance joint lubrication, rotator cuff activation, hip capsule mobilization,
-            and CNS neural potentiation routines prior to frontline duty loading.
+            and CNS neural potentiation routines executed through controlled repetitions prior to frontline loading.
           </p>
         </div>
       </div>
@@ -138,7 +116,6 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
                 setActiveRoutine(routine);
                 if (isPlayingGuided) {
                   setIsPlayingGuided(false);
-                  setIsTimerRunning(false);
                 }
               }}
               className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
@@ -152,9 +129,8 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-950/60 text-blue-300 border border-blue-800/40">
                     {routine.category}
                   </span>
-                  <span className="text-xs font-mono font-bold text-slate-400 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    ~{routine.durationMinutes} mins
+                  <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    {routine.steps.length} Rep Drills
                   </span>
                 </div>
                 <h3 className="text-lg font-black text-white font-athletic tracking-wide">
@@ -164,17 +140,17 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                <span className="text-xs text-slate-400">{routine.steps.length} Steps</span>
+                <span className="text-xs text-slate-400 font-mono">Dynamic Primer</span>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleStartGuided(routine);
                   }}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition-all border border-blue-400/40"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition-all border border-blue-400/40 cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
-                  Start Guided
+                  Start Reps Guide
                 </button>
               </div>
             </div>
@@ -191,8 +167,8 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
                 {activeRoutine.category}
               </span>
               <span className="text-slate-500">•</span>
-              <span className="text-xs text-slate-400 font-mono">
-                {activeRoutine.steps.length} Priming Drills
+              <span className="text-xs text-amber-300 font-mono font-bold">
+                {activeRoutine.steps.length} Rep Priming Drills
               </span>
             </div>
             <h2 className="text-2xl font-black text-white font-athletic tracking-wide mt-1">
@@ -215,7 +191,7 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
             className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-blue-950/40 flex items-center justify-center gap-2 transition-all cursor-pointer self-start sm:self-auto border border-blue-400/40"
           >
             <Play className="w-4 h-4 fill-white" />
-            Launch Step-by-Step Guided Timer
+            Launch Step-by-Step Reps Primer
           </button>
         </div>
 
@@ -227,7 +203,7 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
               className="p-4 bg-[#060b14] rounded-xl border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
               <div className="space-y-1.5 flex-1">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 flex-wrap">
                   <span className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center justify-center text-xs font-mono font-bold shrink-0">
                     {idx + 1}
                   </span>
@@ -251,9 +227,10 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
                 </p>
               </div>
 
+              {/* Bold Reps Target Badge */}
               <div className="flex items-center gap-3 pl-8 md:pl-0 shrink-0">
-                <span className="font-mono text-sm font-bold text-blue-400 bg-[#0f172a] px-3 py-1.5 rounded-lg border border-slate-800">
-                  {step.repsText || `${step.durationSeconds}s`}
+                <span className="font-mono text-xs sm:text-sm font-black text-amber-300 bg-amber-500/10 px-3.5 py-1.5 rounded-xl border border-amber-500/30 uppercase tracking-wide">
+                  {step.repsText || '10-15 Controlled Reps'}
                 </span>
               </div>
             </div>
@@ -261,26 +238,28 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
         </div>
       </div>
 
-      {/* Guided Warm-up Interactive Modal */}
+      {/* Guided Reps-Based Interactive Primer Modal */}
       {isPlayingGuided && currentGuidedStep && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-[#0c1322] border border-blue-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative flex flex-col">
+          <div className="w-full max-w-xl bg-[#0c1322] border-2 border-blue-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative flex flex-col">
             <button
-              onClick={() => {
-                setIsPlayingGuided(false);
-                setIsTimerRunning(false);
-              }}
-              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
+              onClick={() => setIsPlayingGuided(false)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Guided Player Header */}
             <div className="text-center pb-4 border-b border-slate-800">
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                Guided Warm-Up • Step {currentStepIndex + 1} of {activeRoutine.steps.length}
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black text-white font-athletic mt-2">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  Guided Reps Primer • Drill {currentStepIndex + 1} of {activeRoutine.steps.length}
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-mono font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  Reps Mode
+                </span>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-white font-athletic mt-1">
                 {currentGuidedStep.name}
               </h3>
               <p className="text-xs text-slate-400 mt-1">
@@ -288,30 +267,29 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
               </p>
             </div>
 
-            {/* Big Countdown Timer */}
+            {/* Prominent Rep Target Card (Heroic Reps Display - NO TIMER) */}
             <div className="my-6 flex flex-col items-center justify-center">
-              <div className="relative w-44 h-44 rounded-full border-4 border-slate-800 flex flex-col items-center justify-center bg-[#060b14] shadow-inner">
-                <div
-                  className="absolute inset-0 rounded-full border-4 border-blue-400 transition-all duration-300 pointer-events-none"
-                  style={{
-                    clipPath: `inset(0 0 ${100 - (stepSecondsRemaining / (currentGuidedStep.durationSeconds || 45)) * 100}% 0)`,
-                  }}
-                />
-                <span
-                  className={`font-mono text-5xl font-black tracking-tight ${
-                    stepSecondsRemaining <= 5 && isTimerRunning ? 'text-blue-400 animate-pulse' : 'text-white'
-                  }`}
+              <div className="w-full py-6 px-4 rounded-2xl bg-gradient-to-b from-[#080d18] to-[#040810] border-2 border-amber-500/50 flex flex-col items-center justify-center shadow-xl shadow-amber-950/20 text-center">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400/90 font-bold flex items-center gap-1.5 mb-1">
+                  <Dumbbell className="w-4 h-4 text-amber-400" />
+                  Target Repetition Prescription
+                </span>
+                <span className="font-athletic text-3xl sm:text-4xl font-black text-amber-300 tracking-wide mt-1">
+                  {currentGuidedStep.repsText || '10-15 Reps'}
+                </span>
+                <p className="text-xs text-slate-400 mt-2 max-w-sm">
+                  Perform complete repetitions with controlled tempo and full range of motion. No timer rush.
+                </p>
+
+                {/* Mark Reps Completed Check Button */}
+                <button
+                  type="button"
+                  onClick={handleCompleteCurrentStep}
+                  className="mt-4 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-950/50 transition cursor-pointer flex items-center gap-2 active:scale-95"
                 >
-                  {stepSecondsRemaining}
-                </span>
-                <span className="text-[11px] text-slate-400 uppercase tracking-wider mt-1">
-                  Seconds
-                </span>
-                {currentGuidedStep.repsText && (
-                  <span className="text-[11px] text-blue-300 font-bold mt-0.5">
-                    {currentGuidedStep.repsText}
-                  </span>
-                )}
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                  <span>Mark Drill Completed</span>
+                </button>
               </div>
             </div>
 
@@ -328,6 +306,9 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
                   </p>
                 ))}
               </div>
+              <p className="text-[11px] text-blue-300/80 italic font-mono pt-1 border-t border-slate-800/80 mt-2">
+                💡 {currentGuidedStep.coachingPoint}
+              </p>
             </div>
 
             {/* Player Controls */}
@@ -336,27 +317,22 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
                 type="button"
                 disabled={currentStepIndex === 0}
                 onClick={handlePrevStep}
-                className="px-4 py-2 bg-slate-800 disabled:opacity-30 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl"
+                className="px-4 py-2 bg-slate-800 disabled:opacity-30 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"
               >
-                Previous Step
+                <ChevronLeft className="w-4 h-4" />
+                <span>Previous Drill</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setIsTimerRunning(!isTimerRunning)}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-                  isTimerRunning ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'bg-blue-600 text-white font-black shadow-lg shadow-blue-900/50 border border-blue-400/40'
-                }`}
-              >
-                {isTimerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5 fill-white" />}
-              </button>
+              <div className="text-[11px] font-mono text-slate-400">
+                {currentStepIndex + 1} / {activeRoutine.steps.length}
+              </div>
 
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 border border-blue-400/40 shadow-md shadow-blue-950/40"
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 border border-blue-400/40 shadow-md shadow-blue-950/40 cursor-pointer active:scale-95"
               >
-                {currentStepIndex === activeRoutine.steps.length - 1 ? 'Finish Warmup' : 'Next Step'}
+                <span>{currentStepIndex === activeRoutine.steps.length - 1 ? 'Finish Warmup' : 'Next Drill'}</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -366,3 +342,5 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
     </div>
   );
 };
+
+export default WarmupsTab;

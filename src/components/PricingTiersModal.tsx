@@ -5,7 +5,7 @@ import {
   Mail, ShieldCheck, CreditCard,
   ExternalLink, Info, Smartphone,
   CheckCircle, ArrowRight, KeyRound,
-  AlertCircle
+  AlertCircle, RefreshCw
 } from 'lucide-react';
 import { useUserTier } from '../hooks/useUserTier';
 import { getCurrentAthlete } from '../utils/athleteAuth';
@@ -35,9 +35,14 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
     tier, 
     trialDaysRemaining, 
     isTrialActive, 
+    isTrialExpired,
     isActiveSubscriber,
     activateSubscription,
     activateTrialWithCode,
+    startFreeTrial,
+    simulateTrialDaysRemaining,
+    setSimulatedOverride,
+    isExempt,
   } = useUserTier();
 
   const [squareConfig, setSquareConfig] = useState<SquareConfig>(() => getCachedSquareConfig());
@@ -377,6 +382,20 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-800 space-y-2">
+                {!isTrialActive && !isActiveSubscriber && !isExempt && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await startFreeTrial(14);
+                      if (onPaymentSuccess) onPaymentSuccess('pro');
+                    }}
+                    className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Start 14-Day Free Trial ($0 Today)</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => handleSquareCheckout('pro')}
@@ -523,15 +542,54 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800 bg-[#0d1527]">
-          <div className="text-xs text-slate-400 flex items-center gap-1.5 font-mono">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>256-Bit Encrypted Square Checkout • Instant Automated Account Unlock</span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-slate-800 bg-[#0d1527]">
+          <div className="flex flex-col gap-1">
+            <div className="text-xs text-slate-400 flex items-center gap-1.5 font-mono">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>256-Bit Encrypted Square Checkout • Instant Automated Account Unlock</span>
+            </div>
+            {/* Quick Testing Controls */}
+            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 pt-0.5 flex-wrap">
+              <span>Test Live Trial:</span>
+              <button
+                type="button"
+                onClick={() => simulateTrialDaysRemaining(14)}
+                className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 border border-slate-700 cursor-pointer"
+                title="Simulate fresh 14 days"
+              >
+                14d
+              </button>
+              <button
+                type="button"
+                onClick={() => simulateTrialDaysRemaining(2)}
+                className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 cursor-pointer"
+                title="Simulate 2 days remaining"
+              >
+                2d Left
+              </button>
+              <button
+                type="button"
+                onClick={() => simulateTrialDaysRemaining(0)}
+                className="px-1.5 py-0.5 rounded bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 cursor-pointer"
+                title="Simulate trial ended (lock everything)"
+              >
+                Expired Lockdown
+              </button>
+              <button
+                type="button"
+                onClick={() => setSimulatedOverride(null)}
+                className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 cursor-pointer"
+                title="Clear simulation override"
+              >
+                Reset
+              </button>
+            </div>
           </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
           >
             Close
           </button>

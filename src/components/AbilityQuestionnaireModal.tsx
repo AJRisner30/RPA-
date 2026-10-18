@@ -12,6 +12,7 @@ import {
   EQUIPMENT_OPTIONS, 
   EXPERIENCE_OPTIONS, 
   GOAL_OPTIONS, 
+  PAT_PREPARATION_OPTIONS,
   calculateProgramRecommendation,
   RecommendationResult
 } from '../utils/questionnaireEngine';
@@ -32,7 +33,10 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
 }) => {
   const existing = currentAthlete.questionnaire;
 
-  // Step 1: Benchmarks
+  // Step 1: PAT Trigger & Benchmarks
+  const [preparingForPat, setPreparingForPat] = useState<QuestionnaireAnswers['preparingForPat']>(
+    existing?.preparingForPat || 'no_general_tactical'
+  );
   const [pushUpScore, setPushUpScore] = useState<QuestionnaireAnswers['pushUpScore']>(
     existing?.pushUpScore || '15_to_30'
   );
@@ -87,6 +91,7 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
 
   const handleCalculateRecommendation = () => {
     const result = calculateProgramRecommendation({
+      preparingForPat,
       pushUpScore,
       pullUpScore,
       aerobicScore,
@@ -106,6 +111,7 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
     const chosenKey = overrideProgramKey || recommendation.programKey;
     const finalAnswers: QuestionnaireAnswers = {
       completedAt: new Date().toISOString(),
+      preparingForPat,
       pushUpScore,
       pullUpScore,
       aerobicScore,
@@ -187,6 +193,74 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
                 <p className="text-xs text-slate-400 mt-1">
                   Be honest with your current numbers. This ensures you start at an overload intensity that builds real durability without early burnout or injury.
                 </p>
+              </div>
+
+              {/* HIGH PRIORITY: Physical Agility Test (PAT) Preparation Question */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0c1626] to-[#080d18] border-2 border-amber-500/50 shadow-lg space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <label className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300 flex items-center gap-2 font-athletic">
+                    <Award className="w-4 h-4 text-amber-400" />
+                    <span>Physical Agility Test (PAT) / Academy Preparation</span>
+                  </label>
+                  <span className="text-[10px] font-mono font-black uppercase px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    High Priority Filter
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-snug">
+                  Are you currently preparing for an upcoming Police Academy or State POST Physical Agility Test (PAT)?
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {PAT_PREPARATION_OPTIONS.map((opt) => {
+                    const isSelected = preparingForPat === opt.id;
+                    const isYes = opt.id === 'yes_upcoming_pat';
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          setPreparingForPat(opt.id);
+                          if (isYes) {
+                            setPrimaryGoalCategory('universal_pat_testing');
+                          }
+                        }}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? isYes
+                              ? 'bg-amber-950/80 border-amber-400 shadow-md ring-2 ring-amber-400/40 text-white'
+                              : 'bg-blue-950/80 border-blue-400 shadow-md ring-2 ring-blue-400/40 text-white'
+                            : 'bg-[#060b14] border-slate-800 hover:border-slate-700 text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-xs sm:text-sm font-bold font-athletic uppercase">
+                            {opt.label}
+                          </span>
+                          {isSelected && (
+                            <CheckCircle2 className={`w-5 h-5 shrink-0 ${isYes ? 'text-amber-400' : 'text-blue-400'}`} />
+                          )}
+                        </div>
+                        <span className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+                          {opt.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {preparingForPat === 'yes_upcoming_pat' && (
+                  <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 flex items-start gap-2 animate-in fade-in duration-200">
+                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-white block font-athletic uppercase tracking-wide">
+                        Universal PAT Protocol Activated
+                      </strong>
+                      <span className="text-amber-200/90 text-[11px]">
+                        This evaluation will direct-match you to the 8-Week Universal Law Enforcement PAT Protocol, prioritizing 1.5-mile Cooper speed, 300m sprint intervals, cadence metronome push-ups, and the 165 lb dummy drag.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 1. Push-ups */}
@@ -592,6 +666,7 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {[
+                        { key: 'universal_pat' as const, name: 'Universal PAT Protocol', weeks: '8 Wks', desc: 'Academy & State POST physical agility test peak' },
                         { key: 'apex_protocol' as const, name: 'The Apex Protocol', weeks: '26 Wks', desc: '5 mesocycles from base to peak tactical readiness' },
                         { key: 'tactical_hypertrophy' as const, name: 'Tactical Hypertrophy', weeks: '6 Wks', desc: 'Upper/Lower body armor & pursuit sprints' },
                         { key: 'hybrid_protocol' as const, name: 'Hybrid Protocol', weeks: '12 Wks', desc: 'Heavy barbell lifts + running progression' },

@@ -25,10 +25,7 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
 }) => {
   const { user } = useFirebase();
   const isCoach = Boolean(
-    (user?.email && (
-      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
-      user.email.toLowerCase() === 'risnerathletics@gmail.com'
-    )) ||
+    (user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com') ||
     isCoachSession()
   );
 

@@ -26,7 +26,7 @@ export interface HybridStrengthLogItem {
   estimated1RM?: number;
 }
 
-// 12-Week Protocol (Sunday Start + Warmups) - Patrol Ready Performance Law Enforcement Template
+// 12-Week Protocol (7-Day Split + Warmups) - Patrol Ready Performance Law Enforcement Template
 export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
   phase1: {
     id: 'phase1',
@@ -36,7 +36,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     coachRule: "Patrol Ready Performance Overload Laws: +10 lbs on lower compound lifts (Squat, Deadlift) and +5 lbs on upper compound lifts (Bench, OHP, Rows) upon completing top rep range with strict form. Weekly Zone 2 volume increases by 0.5 - 1.0 mile.",
     days: [
       {
-        day: "Sunday",
+        day: 'Day 1',
         focus: "Lower Strength + Base",
         warmup: "5 mins light cardio, dynamic leg swings, bodyweight squats, and ankle mobility.",
         strength: [
@@ -49,7 +49,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Back Squat: +10 lbs upon hitting 8 reps; Base Run: +0.5 mi/wk"
       },
       {
-        day: "Monday",
+        day: 'Day 2',
         focus: "Upper Hypertrophy",
         warmup: "Arm circles, band pull-aparts, push-up walkouts, and thoracic rotations.",
         strength: [
@@ -62,7 +62,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Bench: +5 lbs on 8 reps; Pull-Ups: +2.5-5 lbs on 8 reps"
       },
       {
-        day: "Tuesday",
+        day: 'Day 3',
         focus: "Interval Speed Work",
         warmup: "10 mins easy jog, high knees, butt kicks, A-skips, and 3 short strides.",
         strength: [
@@ -75,7 +75,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Intervals: Drop 2-3s per 400m repeat; Planks: +15s"
       },
       {
-        day: "Wednesday",
+        day: 'Day 4',
         focus: "Full Body + Tempo",
         warmup: "Dynamic lunges, inchworms, light kettlebell swings, and hip openers.",
         strength: [
@@ -88,7 +88,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Deadlift: +10 lbs on 5 reps; Push Press: +5 lbs on 6 reps"
       },
       {
-        day: "Thursday",
+        day: 'Day 5',
         focus: "Active Recovery",
         warmup: "Cat-cow transitions, 90/90 hip stretches, and deep diaphragmatic breathing.",
         strength: ["Stretching, foam rolling, or light yoga."],
@@ -97,7 +97,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Active recovery & mobility. Heart rate < 110 bpm."
       },
       {
-        day: "Friday",
+        day: 'Day 6',
         focus: "Long Endurance",
         warmup: "5 mins brisk walk, calf stretching, and hip flexor activation.",
         strength: ["Pre-hab exercises (glute bridges, clamshells)."],
@@ -106,7 +106,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Zone 2 Long Run: +0.5 to +1.0 mile/week base building"
       },
       {
-        day: "Saturday",
+        day: 'Day 7',
         focus: "Complete Rest",
         warmup: "None. Enjoy the rest!",
         strength: ["Rest and meal prep."],
@@ -124,7 +124,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     coachRule: "Coach Aryan's Overload Laws: +10 lbs on lower compound lifts (Squat, Deadlift) and +5 lbs on upper compound lifts (Bench, OHP, Rows) upon completing top rep range with strict form. Weekly Zone 2 volume increases by 0.5 - 1.0 mile.",
     days: [
       {
-        day: "Sunday",
+        day: 'Day 1',
         focus: "Lower Power + Recovery",
         warmup: "5 mins bike, glute bridges, pogo jumps, and empty bar warm-up sets.",
         strength: [
@@ -137,7 +137,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Back Squat: +10 lbs on 5x5; Hip Thrusts: +10 lbs"
       },
       {
-        day: "Monday",
+        day: 'Day 2',
         focus: "Upper Body Strength",
         warmup: "Band dislocates, scapular pull-ups, and light dumbbell presses.",
         strength: [
@@ -150,7 +150,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Incline Bench: +5 lbs on 6 reps; Rows: +5 lbs on 6 reps"
       },
       {
-        day: "Tuesday",
+        day: 'Day 3',
         focus: "Threshold Intervals",
         warmup: "10-15 mins easy jog, dynamic stretches, and 3-4 tempo buildups.",
         strength: [
@@ -162,7 +162,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "800m Repeats: Maintain target 5K pace; Rest: strict 2 min"
       },
       {
-        day: "Wednesday",
+        day: 'Day 4',
         focus: "Full Body Volume",
         warmup: "PVC pipe overhead squats, bird-dogs, and kettlebell halos.",
         strength: [
@@ -175,7 +175,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Deadlift: +10 lbs on 4x4; DB Bench: +5 lbs on 10 reps"
       },
       {
-        day: "Thursday",
+        day: 'Day 5',
         focus: "Active Recovery",
         warmup: "Foam rolling calves and quads, followed by a light mobility flow.",
         strength: ["Light mobility work."],
@@ -184,7 +184,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Active recovery & low-impact aerobic flush"
       },
       {
-        day: "Friday",
+        day: 'Day 6',
         focus: "Long Endurance",
         warmup: "Ankle circles, walking lunges, and gentle dynamic stretching.",
         strength: ["None."],
@@ -193,7 +193,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Long Run: Zone 2 pacing with 2-3 surges in final 2 miles"
       },
       {
-        day: "Saturday",
+        day: 'Day 7',
         focus: "Complete Rest",
         warmup: "None.",
         strength: ["Hydrate and recover."],
@@ -211,7 +211,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     coachRule: "Coach Aryan's Overload Laws: +10 lbs on lower compound lifts (Squat, Deadlift) and +5 lbs on upper compound lifts (Bench, OHP, Rows) upon completing top rep range with strict form. Weekly Zone 2 volume increases by 0.5 - 1.0 mile.",
     days: [
       {
-        day: "Sunday",
+        day: 'Day 1',
         focus: "Lower Max Strength",
         warmup: "CNS Prep: Box jumps (3x3), heavy sled pushes, and dynamic stretches.",
         strength: [
@@ -224,7 +224,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Back Squat: +10 lbs on heavy triple; CNS Max Power"
       },
       {
-        day: "Monday",
+        day: 'Day 2',
         focus: "Upper Max Strength",
         warmup: "Plyo push-ups (3x3), medicine ball slams, and rotator cuff warm-up.",
         strength: [
@@ -237,7 +237,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Bench Press: +5 lbs on triple; Weighted Pull-Ups: +5 lbs"
       },
       {
-        day: "Tuesday",
+        day: 'Day 3',
         focus: "Speed Endurance",
         warmup: "15 mins easy jog, thorough dynamic stretching, and full-speed 50m sprints (x3).",
         strength: [
@@ -249,7 +249,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Sprint Intervals: 10x200m at Mile Pace (RPE 9+)"
       },
       {
-        day: "Wednesday",
+        day: 'Day 4',
         focus: "Race Pace Sim",
         warmup: "10 mins easy jog, dynamic stretches, and dial into race pace for 1 min.",
         strength: [
@@ -261,7 +261,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Trap Bar Deadlift: +10 lbs on 5 reps; Race Pace Sim"
       },
       {
-        day: "Thursday",
+        day: 'Day 5',
         focus: "Active Recovery",
         warmup: "Yoga flow, deep stretching, and parasympathetic breathing.",
         strength: ["Yoga or dynamic stretching."],
@@ -270,7 +270,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Parasympathetic breathing, light yoga, and recovery"
       },
       {
-        day: "Friday",
+        day: 'Day 6',
         focus: "Long Endurance (Taper)",
         warmup: "Light walk, hip mobility, and mental visualization.",
         strength: ["None."],
@@ -279,7 +279,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Taper & peak: reduce volume by 50% in Week 12"
       },
       {
-        day: "Saturday",
+        day: 'Day 7',
         focus: "Complete Rest",
         warmup: "None.",
         strength: ["Refuel and rest."],
@@ -297,7 +297,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     coachRule: "Phase 1 Overload Laws: Floor press +5 lbs when hitting 3x12. Push-ups +1 rep every session. Zone 2 run +0.5 mi/wk. Sprints +1 repeat.",
     days: [
       {
-        day: "Monday",
+        day: 'Day 1',
         focus: "Upper Body & Zone 2 Run",
         warmup: "Arm circles, band pull-aparts, push-up walkouts, scapular wall slides (5-8 mins).",
         strength: [
@@ -311,7 +311,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Floor Press: +5 lbs upon hitting 12 reps; Push-ups: +1 rep/session; Run: +0.5 mi/wk"
       },
       {
-        day: "Tuesday",
+        day: 'Day 2',
         focus: "Lower Power & Core",
         warmup: "Dynamic leg swings, bodyweight squats, hip 90/90 openers, and glute bridges.",
         strength: [
@@ -325,7 +325,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Bulgarian Split Squats: +5 lbs; DB RDL: +5-10 lbs upon hitting 12 reps"
       },
       {
-        day: "Wednesday",
+        day: 'Day 3',
         focus: "Active Recovery & Mobility",
         warmup: "Full-body yoga flow, hip openers, band dislocates (10-15 mins).",
         strength: [
@@ -338,7 +338,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Active recovery: flush metabolic byproducts, perfect mobility"
       },
       {
-        day: "Thursday",
+        day: 'Day 4',
         focus: "Full Body Work Capacity",
         warmup: "Inchworms, jumping jacks, mountain climbers, light dumbbell halos.",
         strength: [
@@ -352,7 +352,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Clean & Push Press: +5 lbs on 8 reps; Metcon: drop 2s per interval"
       },
       {
-        day: "Friday",
+        day: 'Day 5',
         focus: "Foot Pursuit Conditioning & Farmer Carries",
         warmup: "Calf stretch, brisk unloaded walk 5 mins, hip flexor stretch, shoulder band pulls.",
         strength: [
@@ -365,7 +365,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Duty Base Run: +0.5 miles weekly; Farmer Carries: +5 lbs upon completing 50 yards"
       },
       {
-        day: "Saturday",
+        day: 'Day 6',
         focus: "Long Aerobic Endurance",
         warmup: "Dynamic lower-body routine, high knees, butt kicks, leg swings.",
         strength: [
@@ -377,7 +377,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Zone 2 Long Run: +0.5 mi weekly aerobic volume expansion"
       },
       {
-        day: "Sunday",
+        day: 'Day 7',
         focus: "Complete Rest & Prep",
         warmup: "Gentle walking and hydration.",
         strength: ["Full recovery, meal prep, and sleep restoration."],
@@ -395,7 +395,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     coachRule: "Phase 2 Overload Laws: Floor press +5 lbs on 3x8-10. Push-ups: add 5-10 lbs plate or elevate feet (+1 rep/session). Long run 6-8 mi at Zone 2. Tempo run pace target sub-7:30/mi.",
     days: [
       {
-        day: "Monday",
+        day: 'Day 1',
         focus: "Upper Strength & Push Density",
         warmup: "Arm swings, scapular push-ups, light DB external rotations, band pull-aparts.",
         strength: [
@@ -409,7 +409,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Floor Press: +5 lbs on 10 reps; Weighted Push-ups: +1 rep or +5 lbs vest"
       },
       {
-        day: "Tuesday",
+        day: 'Day 2',
         focus: "Lower Strength & Posterior Chain",
         warmup: "Leg swings, hip airplanes, bodyweight squats, deep ankle dorsiflexion rocks.",
         strength: [
@@ -423,7 +423,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "DB RDL: +10 lbs on 10 reps; Weighted Plank: +10 lbs plate"
       },
       {
-        day: "Wednesday",
+        day: 'Day 3',
         focus: "Aerobic Threshold / Hill Intervals",
         warmup: "10 mins easy jog, dynamic drills, 3x50m strides.",
         strength: [
@@ -435,7 +435,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Track Intervals: drop 2s per 400m repeat over mesocycle"
       },
       {
-        day: "Thursday",
+        day: 'Day 4',
         focus: "Tactical Full Body Density",
         warmup: "World's greatest stretch, inchworms, bear crawls.",
         strength: [
@@ -449,7 +449,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Clean & Press: +5 lbs on 8 reps; DB Lunges: +5 lbs bells"
       },
       {
-        day: "Friday",
+        day: 'Day 5',
         focus: "Foot Pursuit Speed & Heavy Carries",
         warmup: "Brisk walk 5 mins, hip flexor stretches, calf stretching, sprint drill warmups.",
         strength: [
@@ -462,7 +462,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Foot Pursuit Run: hold sub-7:45 pace on tempo segments before increasing to Phase 3"
       },
       {
-        day: "Saturday",
+        day: 'Day 6',
         focus: "Long Aerobic Base Run",
         warmup: "Dynamic mobility, leg swings, glute activation.",
         strength: [
@@ -474,7 +474,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Weekly aerobic volume expansion (+0.5 mi/wk)"
       },
       {
-        day: "Sunday",
+        day: 'Day 7',
         focus: "Complete Rest & Nutrition Prep",
         warmup: "Light walk and mobility.",
         strength: ["Recovery, sleep, mobility work."],
@@ -492,7 +492,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     coachRule: "Phase 3 Overload Laws: Max DB loads (3x6 heavy). Plyo push-ups for explosive height. Sprint repeats at maximum velocity. Week 12: Peak taper and tactical physical fitness test (Max push-ups, 1.5-mile run, 5k time trial).",
     days: [
       {
-        day: "Monday",
+        day: 'Day 1',
         focus: "Upper Max DB Power & Plyo Push-Ups",
         warmup: "Explosive medicine ball drops, band dislocates, plyo clapping push-ups (2x3).",
         strength: [
@@ -506,7 +506,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Floor Press: +5 lbs on heavy 6; Plyo Push-ups: max explosive drive"
       },
       {
-        day: "Tuesday",
+        day: 'Day 2',
         focus: "Lower Max Power & Posterior Drive",
         warmup: "Hip openers, glute activation, box jumps (3x3), dynamic hamstrings.",
         strength: [
@@ -520,7 +520,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "DB RDL: +10 lbs on heavy 6; Goblet Squats: +10 lbs"
       },
       {
-        day: "Wednesday",
+        day: 'Day 3',
         focus: "Race Pace Sim / Track Speed",
         warmup: "12 mins easy jog, dynamic stretches, 4x60m accelerations.",
         strength: [
@@ -532,7 +532,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Dial into target race pacing with minimal split variance"
       },
       {
-        day: "Thursday",
+        day: 'Day 4',
         focus: "Tactical Full Body Peak",
         warmup: "Dynamic movement primer, inchworms, bear crawls.",
         strength: [
@@ -546,7 +546,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Farmer Carries: maximal grip and core stability under max load"
       },
       {
-        day: "Friday",
+        day: 'Day 5',
         focus: "Tactical Pursuit Intervals (Track Sprints)",
         warmup: "Dynamic movement prep, sprint drills, 4x50m progressive accelerations.",
         strength: [
@@ -559,7 +559,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Pursuit Sprints: maintain sub-55s pace across all 8 repeats"
       },
       {
-        day: "Saturday",
+        day: 'Day 6',
         focus: "Peak Long Run / Fitness Test",
         warmup: "Dynamic lower-body prep, mental focus visualization.",
         strength: [
@@ -571,7 +571,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Week 12: 5K Time Trial + Max Push-Up Test + 1.5-Mile POST Run Test"
       },
       {
-        day: "Sunday",
+        day: 'Day 7',
         focus: "Complete Rest & Restoration",
         warmup: "Gentle recovery walk.",
         strength: ["Full recovery, hydration, celebratory recap."],
@@ -589,7 +589,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
     coachRule: "Patrol Ready Performance Overload Laws: +5 lbs floor press when completing all sets at 12 reps (max reps). +1 rep on push-ups every session. +0.5 miles weekly on Zone 2 runs. +0.5 miles weekly on duty conditioning runs.",
     days: [
       {
-        day: "Monday",
+        day: 'Day 1',
         focus: "Upper Body & Run",
         warmup: "Arm circles, band pull-aparts, push-up walkouts, scapular wall slides (5-8 mins).",
         strength: [
@@ -603,7 +603,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Floor Press: +5 lbs upon hitting 12 reps; Push-ups: +1 rep/session; Run: +0.5 mi/wk"
       },
       {
-        day: "Tuesday",
+        day: 'Day 2',
         focus: "Lower Power & Core",
         warmup: "Dynamic leg swings, bodyweight squats, hip 90/90 openers, and glute bridges.",
         strength: [
@@ -617,7 +617,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Bulgarian Split Squats: +5 lbs; DB RDL: +5-10 lbs"
       },
       {
-        day: "Wednesday",
+        day: 'Day 3',
         focus: "Active Recovery & Mobility",
         warmup: "Full-body yoga flow, hip openers, band dislocates (10-15 mins).",
         strength: [
@@ -630,7 +630,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Active recovery: flush metabolic byproducts, perfect mobility"
       },
       {
-        day: "Thursday",
+        day: 'Day 4',
         focus: "Full Body Work Capacity",
         warmup: "Inchworms, jumping jacks, mountain climbers, light dumbbell halos.",
         strength: [
@@ -644,7 +644,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Clean & Push Press: +5 lbs on 8 reps"
       },
       {
-        day: "Friday",
+        day: 'Day 5',
         focus: "Duty Pursuit Intervals & Loaded Carries",
         warmup: "Calf stretch, brisk walk 5 mins, hip flexor stretch, shoulder band pulls.",
         strength: [
@@ -657,7 +657,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Duty Tempo Run: +0.5 miles or -5s/mile pace progression"
       },
       {
-        day: "Saturday",
+        day: 'Day 6',
         focus: "Long Aerobic Endurance",
         warmup: "Dynamic lower-body routine, high knees, butt kicks, leg swings.",
         strength: [
@@ -669,7 +669,7 @@ export const PROTOCOL_DATA: Record<string, ProtocolPhase> = {
         progressionRule: "Zone 2 Long Run: +0.5 mi weekly aerobic volume expansion"
       },
       {
-        day: "Sunday",
+        day: 'Day 7',
         focus: "Complete Rest & Prep",
         warmup: "Gentle walking and hydration.",
         strength: ["Full recovery, meal prep, and sleep restoration."],
@@ -889,7 +889,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     coachRule: "Coach Aryan's Overload Laws: Add 2.5 to 5 lbs to your main compound lifts each week, provided form remains pristine. Strict Overhead Press: Add 2.5lbs from last week. Strict Zone 2 aerobic base on Day 2 & Day 6.",
     days: [
       {
-        day: 'Sunday (Day 1)',
+        day: 'Day 1',
         focus: 'Lower Body Prime (Structural Leg Strength)',
         warmup: 'Execute SOP Warmup Sequence (Elevate, Mobilize, Activate). Lubricate joints and prime CNS.',
         strength: [
@@ -903,7 +903,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Back Squat: +2.5 to 5 lbs upon hitting 10 reps; RDL: +5 to 10 lbs'
       },
       {
-        day: 'Monday (Day 2)',
+        day: 'Day 2',
         focus: 'Energy Systems (Aerobic Capacity)',
         warmup: '5 mins dynamic leg swings, ankle mobility drills, and high knees.',
         strength: [
@@ -914,7 +914,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: '+5 Min duration per week (W1: 35m, W2: 40m, W3: 45m, W4: 50m)'
       },
       {
-        day: 'Tuesday (Day 3)',
+        day: 'Day 3',
         focus: 'Upper Body Push/Pull (Torso & Grip Integrity)',
         warmup: 'Band pull-aparts, shoulder dislocates, scapular retractions, and push-up walkouts.',
         strength: [
@@ -929,7 +929,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Strict OHP: +2.5 lbs weekly; Weighted Pull-Ups: +2.5 to 5 lbs; Farmer Carries: +5 lbs'
       },
       {
-        day: 'Wednesday (Day 4)',
+        day: 'Day 4',
         focus: 'Active Recovery (CNS Down-regulation)',
         warmup: 'Gentle foam rolling, thoracic spine rotations, and diaphragmatic breathing.',
         strength: [
@@ -940,7 +940,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Hydration, tissue quality, and joint decompression.'
       },
       {
-        day: 'Thursday (Day 5)',
+        day: 'Day 5',
         focus: 'Full Body Power (Combat Chassis Development)',
         warmup: 'Execute SOP Warmup Sequence (Goblet squats with pause, broad jumps max intent).',
         strength: [
@@ -954,7 +954,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Trap Bar Deadlift: +2.5 to 5 lbs upon hitting 10 reps; Push Press: +5 lbs'
       },
       {
-        day: 'Friday (Day 6)',
+        day: 'Day 6',
         focus: 'Tactical Endurance (Zone 2 Output)',
         warmup: 'Dynamic lunges, calf pumps, ankle rotations, and 3 light strides.',
         strength: [
@@ -965,7 +965,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Progress by +2 mins weekly: W1: 47m, W2: 49m, W3: 51m, W4: 53m'
       },
       {
-        day: 'Saturday (Day 7)',
+        day: 'Day 7',
         focus: 'Complete Rest & Nutrition Replenishment',
         warmup: 'None',
         strength: [
@@ -985,7 +985,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     coachRule: "Compound lifts transition to 5-8 reps. Increase load progressively. Day 2 introduces Zone 3 Tempo (40 Min). Day 6 LSD run climbs from 55 to 65 minutes (+2 min weekly).",
     days: [
       {
-        day: 'Sunday (Day 1)',
+        day: 'Day 1',
         focus: 'Lower Body Strength & Neural Drive',
         warmup: 'Execute SOP Warmup Sequence (Elevate, Mobilize, Activate).',
         strength: [
@@ -999,7 +999,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Back Squat: +2.5 to 5 lbs upon hitting 8 reps'
       },
       {
-        day: 'Monday (Day 2)',
+        day: 'Day 2',
         focus: 'Lactate Threshold & Tempo',
         warmup: '5 mins light jog, dynamic leg swings, and ankle circles.',
         strength: [
@@ -1010,7 +1010,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Maintain target tempo pace across full 40 minutes.'
       },
       {
-        day: 'Tuesday (Day 3)',
+        day: 'Day 3',
         focus: 'Upper Body Heavy Push/Pull',
         warmup: 'Band pull-aparts, shoulder dislocations, scapular shrugs, push-up walkouts.',
         strength: [
@@ -1025,7 +1025,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Strict OHP: +2.5 lbs weekly; Weighted Pull-Ups: +2.5 to 5 lbs'
       },
       {
-        day: 'Wednesday (Day 4)',
+        day: 'Day 4',
         focus: 'Active Recovery & Tissue Care',
         warmup: 'Full body mobility flow and foam rolling.',
         strength: [
@@ -1036,7 +1036,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Hydration and active flushing.'
       },
       {
-        day: 'Thursday (Day 5)',
+        day: 'Day 5',
         focus: 'Full Body Power & Posterior Chain',
         warmup: 'Execute SOP Warmup Sequence (Goblet squats, broad jumps).',
         strength: [
@@ -1050,7 +1050,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Trap Bar Deadlift: +2.5 to 5 lbs on 8 reps; Push Press: +5 lbs'
       },
       {
-        day: 'Friday (Day 6)',
+        day: 'Day 6',
         focus: 'Tactical Endurance (LSD Run)',
         warmup: 'Dynamic lunges, calf stretch, and strides.',
         strength: [
@@ -1061,7 +1061,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Progress by +2 mins weekly: W5: 55m, W6: 57m, W7: 59m, W8: 61m, W9: 63m, W10: 65m'
       },
       {
-        day: 'Saturday (Day 7)',
+        day: 'Day 7',
         focus: 'Complete Rest & Nutrition Replenishment',
         warmup: 'None',
         strength: [
@@ -1081,7 +1081,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     coachRule: "Compound lifts shift to heavy 3-5 reps for explosive power. Day 2 features 8 x 400m track repeats (VO2 Max). Day 6 LSD run advances from 67 to 77 minutes (+2 min weekly).",
     days: [
       {
-        day: 'Sunday (Day 1)',
+        day: 'Day 1',
         focus: 'Lower Body Maximal Force & Power',
         warmup: 'Execute SOP Warmup Sequence (Elevate, Mobilize, Activate).',
         strength: [
@@ -1095,7 +1095,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Back Squat: +2.5 to 5 lbs upon hitting 5 reps'
       },
       {
-        day: 'Monday (Day 2)',
+        day: 'Day 2',
         focus: 'VO2 Max Intervals (Track)',
         warmup: '10 mins jog, high knees, butt kicks, A-skips, and 3 build-up strides.',
         strength: [
@@ -1106,7 +1106,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Target consistent or dropping 400m split times each week.'
       },
       {
-        day: 'Tuesday (Day 3)',
+        day: 'Day 3',
         focus: 'Upper Body Maximal Strength',
         warmup: 'Band pull-aparts, shoulder circles, scapular retractions, push-ups.',
         strength: [
@@ -1121,7 +1121,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Strict OHP: +2.5 lbs weekly; Weighted Pull-Ups: +2.5 to 5 lbs'
       },
       {
-        day: 'Wednesday (Day 4)',
+        day: 'Day 4',
         focus: 'Active Recovery & Joint Decompression',
         warmup: 'Gentle mobility flow and hip openers.',
         strength: [
@@ -1132,7 +1132,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Soft tissue care and parasympathetic reset.'
       },
       {
-        day: 'Thursday (Day 5)',
+        day: 'Day 5',
         focus: 'Full Body Explosive Power',
         warmup: 'Execute SOP Warmup Sequence (Goblet squats, broad jumps).',
         strength: [
@@ -1146,7 +1146,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Trap Bar Deadlift: +2.5 to 5 lbs on 5 reps; Push Press: +5 lbs'
       },
       {
-        day: 'Friday (Day 6)',
+        day: 'Day 6',
         focus: 'Tactical Endurance (LSD Run)',
         warmup: 'Dynamic lunges, calf pumps, and strides.',
         strength: [
@@ -1157,7 +1157,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Progress by +2 mins weekly: W11: 67m, W12: 69m, W13: 71m, W14: 73m, W15: 75m, W16: 77m'
       },
       {
-        day: 'Saturday (Day 7)',
+        day: 'Day 7',
         focus: 'Complete Rest & Nutrition Replenishment',
         warmup: 'None',
         strength: [
@@ -1177,7 +1177,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     coachRule: "5x5 Strength protocol for primary compound lifts. Duty conditioning initiates: Aerobic Base on Day 2 (45-70 min) and Duty Long Run on Day 6 (3-8 Miles). Maintain Zone 2-3 aerobic discipline.",
     days: [
       {
-        day: 'Sunday (Day 1)',
+        day: 'Day 1',
         focus: 'Combat Chassis Leg Strength (5x5)',
         warmup: 'Execute SOP Warmup Sequence (Elevate, Mobilize, Activate).',
         strength: [
@@ -1191,7 +1191,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Back Squat: +2.5 to 5 lbs on solid 5 reps'
       },
       {
-        day: 'Monday (Day 2)',
+        day: 'Day 2',
         focus: 'Duty Aerobic Conditioning',
         warmup: 'Dynamic leg swings, shoulder rolls, and foot prep.',
         strength: [
@@ -1202,7 +1202,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Add +5 mins duration weekly while keeping pace steady.'
       },
       {
-        day: 'Tuesday (Day 3)',
+        day: 'Day 3',
         focus: 'Upper Body Combat Armor (5x5)',
         warmup: 'Band pull-aparts, shoulder dislocates, scapular retractions, push-ups.',
         strength: [
@@ -1217,7 +1217,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Strict OHP: +2.5 lbs weekly; Farmer Carries: +5 lbs'
       },
       {
-        day: 'Wednesday (Day 4)',
+        day: 'Day 4',
         focus: 'Active Recovery & Spinal Decompression',
         warmup: 'Spine decompression, dead hangs, and hip mobility.',
         strength: [
@@ -1228,7 +1228,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Decompress spine, foam roll lats, and hydrate.'
       },
       {
-        day: 'Thursday (Day 5)',
+        day: 'Day 5',
         focus: 'Posterior Chain Power (5x5)',
         warmup: 'Execute SOP Warmup Sequence (Goblet squats, broad jumps).',
         strength: [
@@ -1242,7 +1242,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Trap Bar Deadlift: +2.5 to 5 lbs on 5 reps; Push Press: +5 lbs'
       },
       {
-        day: 'Friday (Day 6)',
+        day: 'Day 6',
         focus: 'Tactical Duty Run (Aerobic Engine)',
         warmup: 'Dynamic lower-body mobility, hip openers, and ankle mobilization.',
         strength: [
@@ -1253,7 +1253,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: '+1.0 Mile distance weekly.'
       },
       {
-        day: 'Saturday (Day 7)',
+        day: 'Day 7',
         focus: 'Complete Rest & Nutrition Replenishment',
         warmup: 'None',
         strength: [
@@ -1273,7 +1273,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     coachRule: "Peak CNS output with 3x3 triples. Day 2 targets 2-Mile Race Pace. Day 6 features 6 x 800m track sprints with 2-minute rest intervals at maximum sustainable race pace. Execute and conquer.",
     days: [
       {
-        day: 'Sunday (Day 1)',
+        day: 'Day 1',
         focus: 'Lower Body Peaking Triples (3x3)',
         warmup: 'Execute SOP Warmup Sequence (Elevate, Mobilize, Activate).',
         strength: [
@@ -1287,7 +1287,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Back Squat: Max barbell velocity on 3 reps'
       },
       {
-        day: 'Monday (Day 2)',
+        day: 'Day 2',
         focus: "2-Mile Race Pace Calibration",
         warmup: '10 mins jog, dynamic mobility, and 3 race-pace strides.',
         strength: [
@@ -1298,7 +1298,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: "Dial in exact goal pace per mile. Review heart rate and splits."
       },
       {
-        day: 'Tuesday (Day 3)',
+        day: 'Day 3',
         focus: 'Upper Body Peaking Triples (3x3)',
         warmup: 'Band pull-aparts, shoulder dislocates, scapular retractions, push-ups.',
         strength: [
@@ -1313,7 +1313,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Strict OHP: +2.5 lbs weekly; Max explosive pressing speed'
       },
       {
-        day: 'Wednesday (Day 4)',
+        day: 'Day 4',
         focus: 'Active Recovery & Championship Taper',
         warmup: 'Light foam rolling and mobility work.',
         strength: [
@@ -1324,7 +1324,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'CNS preservation and neural recovery.'
       },
       {
-        day: 'Thursday (Day 5)',
+        day: 'Day 5',
         focus: 'Full Body Power Peaking Triples (3x3)',
         warmup: 'Execute SOP Warmup Sequence (Goblet squats, broad jumps).',
         strength: [
@@ -1338,7 +1338,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: 'Trap Bar Deadlift: Max power production on 3 reps'
       },
       {
-        day: 'Friday (Day 6)',
+        day: 'Day 6',
         focus: "Track Sprints (Speed & Tactical Peak)",
         warmup: '15 mins dynamic warmup, A-skips, B-skips, dynamic lunges, 3 progressive strides.',
         strength: [
@@ -1349,7 +1349,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         progressionRule: "Lock in target 800m split times with pristine running mechanics."
       },
       {
-        day: 'Saturday (Day 7)',
+        day: 'Day 7',
         focus: "Peak Restoration & Assessment Readiness",
         warmup: 'None',
         strength: [
@@ -1493,7 +1493,7 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
   coachRule: 'Double Progression Rule: +5 lbs for upper body or +10 lbs for lower body upon achieving top of target rep range at target RPE. Compound structural lifts stay within RPE 7.5-8.5. Accessories reach RPE 9.0-10.0. Conditioning intervals strictly in Zone 3; Long base runs strictly in Zone 2 (120-140 BPM).',
   days: [
     {
-      day: 'Monday',
+      day: 'Day 1',
       focus: 'Heavy Upper: Tactical Press & Pull',
       warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
       strength: [
@@ -1510,7 +1510,7 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
       progressionRule: 'OHP & Pull-Ups: +2.5-5 lbs upon hitting 8 reps; Incline Bench & Rows: +5 lbs on 10 reps'
     },
     {
-      day: 'Tuesday',
+      day: 'Day 2',
       focus: 'Heavy Lower: Posterior Chain & Base Drive',
       warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
       strength: [
@@ -1526,7 +1526,7 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
       progressionRule: 'Trap Bar Deadlift & Front Squat: +10 lbs on top reps; RDL: +10 lbs; Split Squat: +5 lbs'
     },
     {
-      day: 'Wednesday',
+      day: 'Day 3',
       focus: 'Conditioning Session A: Aerobic Engine & Lactate Clearance',
       warmup: "Dynamic Engine Prep (5 mins): 2 min easy row/bike + 10 diaphragmatic breaths child's pose + 10 alternating Spiderman lunges with thoracic reach.",
       strength: [
@@ -1539,7 +1539,7 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
       progressionRule: 'Flush & Pace Intervals: Maintain identical 500m split or RPM output across all 5 rounds'
     },
     {
-      day: 'Thursday',
+      day: 'Day 4',
       focus: 'Density Upper: Armor Building & Volume',
       warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
       strength: [
@@ -1556,7 +1556,7 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
       progressionRule: 'Bench Press & Push Press: +5 lbs on top reps; Rows & Arms: +5 lbs'
     },
     {
-      day: 'Friday',
+      day: 'Day 5',
       focus: 'Power Lower: Grip, Carries & Squat Drive',
       warmup: "Universal Tactical Dynamic Warm-Up: Jumping Jacks (2x30), Band Pull-Aparts (2x15), World's Greatest Stretch (1x5/side), Goblet Squat Pry (1x10), Deadbugs/Hollow Body (3x20s).",
       strength: [
@@ -1573,7 +1573,7 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
       progressionRule: 'Back Squat & Hip Thrusts: +10 lbs upon hitting top reps; Carries: +5 lbs'
     },
     {
-      day: 'Saturday',
+      day: 'Day 6',
       focus: 'Conditioning Session B: Duty Cardio Progression & Zone 2 Base',
       warmup: 'Pre-Run Foot & Hip Prep (5 mins): Banded ankle distractions (10/side) + Tibialis raises (20 reps) + Glute bridges with mini-band (15 reps).',
       strength: [
@@ -1585,7 +1585,7 @@ export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
       progressionRule: 'Zone 2 Duty Engine: Maintain target pace without exceeding Zone 2 HR (120-140 BPM)'
     },
     {
-      day: 'Sunday',
+      day: 'Day 7',
       focus: 'Full Rest & Tissue Regeneration',
       warmup: 'None. Passive rest and recovery.',
       strength: [
@@ -1608,7 +1608,7 @@ export function getTacticalHypertrophyWeekData(weekNumber: number): ProtocolPhas
 
   const clonedDays = JSON.parse(JSON.stringify(TACTICAL_HYPERTROPHY_BASE_PHASE.days)) as ProtocolDay[];
 
-  // Dynamically configure Day 6 (Saturday Run)
+  // Dynamically configure Day 6 (Aerobic Duty Run)
   const deloadBadge = cardioPrescription.is_deload ? ' (DELOAD FLUSH)' : '';
   clonedDays[5].run = `${cardioPrescription.distance_miles.toFixed(1)} Mile Duty Aerobic Run${deloadBadge}`;
   clonedDays[5].pace = `Target: ${cardioPrescription.target_pace} • Zone 2 HR (120-140 BPM). Week ${week}: ${cardioPrescription.focus}.`;
@@ -1640,7 +1640,7 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
   coachRule: 'Universal PAT Laws: Target +1 rep per week on continuous push-ups and 1-minute sit-ups. Drop 3-5 seconds off 300m interval repeats. Progressive +10 lbs on Trap Bar Deadlift. 1.5-Mile threshold goal: sub-11:00 passing standard.',
   days: [
     {
-      day: 'Monday',
+      day: 'Day 1',
       focus: 'PAT Upper Density: Bench & Push-Up Volume',
       warmup: "Universal Tactical Dynamic Warm-Up: Arm circles, band pull-aparts (2x15), push-up walkouts (2x8), scapular retractions.",
       strength: [
@@ -1656,7 +1656,7 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
       progressionRule: 'Bench & OHP: +5 lbs on 8 reps; Pull-Ups: +2.5-5 lbs; Cadence Push-Ups: +2 reps weekly'
     },
     {
-      day: 'Tuesday',
+      day: 'Day 2',
       focus: '300-Meter Anaerobic Sprint & Glycolytic Capacity',
       warmup: "Dynamic Sprint Prep: 10 mins easy jog, high knees, butt kicks, A-skips, B-skips, and 3x40m progressive acceleration strides.",
       strength: [
@@ -1669,7 +1669,7 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
       progressionRule: '300m Intervals: Drop 1-2s per repeat; Farmer Walks: +10 lbs total load'
     },
     {
-      day: 'Wednesday',
+      day: 'Day 3',
       focus: 'PAT Lower Strength & Posterior Armor',
       warmup: "Dynamic Lower Prep: 5 min light spin, leg swings, bodyweight squats, deep hip openers, ankle wall mobilizations.",
       strength: [
@@ -1684,7 +1684,7 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
       progressionRule: 'Trap Bar Deadlift & Front Squat: +10 lbs on target reps; 1-Min Sit-Ups: +2 reps weekly'
     },
     {
-      day: 'Thursday',
+      day: 'Day 4',
       focus: 'Active Recovery & Tactical Decompression',
       warmup: "Cat-cow transitions (2 min), 90/90 hip flow (3 min), couch stretch (90s/side), diaphragmatic box breathing (4 min).",
       strength: [
@@ -1695,7 +1695,7 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
       progressionRule: 'Rest, tissue hydration, and joint mobility restoration'
     },
     {
-      day: 'Friday',
+      day: 'Day 5',
       focus: 'Obstacle Negotiation, Body Drag & Agility Circuit',
       warmup: "Universal Tactical Dynamic Warm-Up: Jumping jacks, Spiderman lunges, inchworms, high knees.",
       strength: [
@@ -1711,7 +1711,7 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
       progressionRule: 'Dummy Drag: 5x50y under 25s each; Box Jumps: +2 inches; Step-Ups: +5 lbs'
     },
     {
-      day: 'Saturday',
+      day: 'Day 6',
       focus: '1.5-Mile Academy Test Benchmark & Aerobic Threshold',
       warmup: "800m easy jog warm-up, dynamic leg swings, high skips, 3x50m acceleration strides.",
       strength: [
@@ -1722,7 +1722,7 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
       progressionRule: '1.5-Mile Benchmark: Drop 5-10s off total time bi-weekly; Maintain steady continuous split pacing'
     },
     {
-      day: 'Sunday',
+      day: 'Day 7',
       focus: 'Full Rest & Systemic Recovery',
       warmup: "None. Rest and recovery.",
       strength: [
@@ -1737,5 +1737,87 @@ export const UNIVERSAL_PAT_PROTOCOL: ProtocolPhase = {
 
 // Add Universal PAT into PROTOCOL_DATA
 PROTOCOL_DATA.universal_pat = UNIVERSAL_PAT_PROTOCOL;
+
+/**
+ * Returns customized week data for any week 1 through 8 of the Universal PAT Protocol.
+ * Dynamically injects progressive 300m pursuit repeats, dummy drag conditioning, and 1.5-mile test milestones.
+ */
+export function getUniversalPatWeekData(weekNumber: number): ProtocolPhase {
+  const week = Math.max(1, Math.min(8, weekNumber));
+  const clonedDays = JSON.parse(JSON.stringify(UNIVERSAL_PAT_PROTOCOL.days)) as ProtocolDay[];
+
+  // Dynamic weekly progressions across the 8-week academy preparation cycle
+  if (week === 1) {
+    clonedDays[1].run = '4 x 300m Track Intervals (Maximal Pursuit Speed)';
+    clonedDays[1].pace = 'Target: 52-58 sec per 300m repeat. 2.5-3 min full walking recovery between rounds.';
+    clonedDays[1].progressionRule = 'Week 1 Benchmark: Establish baseline 300m pursuit turnover.';
+    clonedDays[5].run = '1.5-Mile Academy Test Benchmark Run';
+    clonedDays[5].pace = 'Target: 6:45-7:30 min/mile (Sub-11:15 academy benchmark). 800m cool-down jog.';
+    clonedDays[5].progressionRule = 'Week 1 Diagnostic: Establish baseline 1.5-mile academy readiness time.';
+  } else if (week === 2) {
+    clonedDays[1].run = '4 x 300m Track Intervals (Lactate Tolerance)';
+    clonedDays[1].pace = 'Target: 51-56 sec per 300m repeat. 2.5 min recovery.';
+    clonedDays[1].progressionRule = '300m Repeats: Drop 1-2s from Week 1 baseline.';
+    clonedDays[5].run = '1.5-Mile Aerobic Threshold Pace Run';
+    clonedDays[5].pace = 'Target: 6:40-7:20 min/mile (Negative split last 800m).';
+    clonedDays[5].progressionRule = 'Pacing Discipline: Run second half 5-10s faster than first half.';
+  } else if (week === 3) {
+    clonedDays[1].run = '5 x 300m Track Intervals (Volume Overload)';
+    clonedDays[1].pace = 'Target: 50-54 sec per 300m repeat. 2.5 min walking recovery.';
+    clonedDays[1].progressionRule = '+1 Repeat added. Maintain sub-54s speed across all 5 intervals.';
+    clonedDays[5].run = '1.75-Mile Over-Distance Capacity Run';
+    clonedDays[5].pace = 'Target: 6:50-7:15 min/mile. Over-distance aerobic endurance building.';
+    clonedDays[5].progressionRule = 'Over-distance: Build aerobic stamina beyond test distance.';
+  } else if (week === 4) {
+    // Deload & CNS Reset
+    clonedDays[1].run = '3 x 300m Technical Strides (Deload Flush)';
+    clonedDays[1].pace = 'Smooth 75-80% mechanics. 3 min full recovery. Restore CNS.';
+    clonedDays[1].progressionRule = 'Deload: Focus on sprint mechanics, posture, and arm drive.';
+    clonedDays[5].run = '1.25-Mile Light Flush Jog (Deload)';
+    clonedDays[5].pace = 'Conversational Zone 2 pace (125-135 BPM). Joint & nervous system recovery.';
+    clonedDays[5].progressionRule = 'Deload Flush: Complete tissue restoration before Phase 2 intensity.';
+  } else if (week === 5) {
+    clonedDays[1].run = '5 x 300m Track Intervals (Max Pursuit Drive)';
+    clonedDays[1].pace = 'Target: 48-52 sec per 300m repeat. 2 min walking recovery.';
+    clonedDays[1].progressionRule = 'Speed Surge: Drop interval recovery to 2 mins while holding sub-52s.';
+    clonedDays[5].run = '1.5-Mile Speed Endurance Run';
+    clonedDays[5].pace = 'Target: 6:35-7:10 min/mile (Sub-11:00 standard). Fast cadence focus.';
+    clonedDays[5].progressionRule = 'Target: Break the 11:00 barrier for 1.5 miles.';
+  } else if (week === 6) {
+    clonedDays[1].run = '6 x 300m Track Intervals (Peak Anaerobic Output)';
+    clonedDays[1].pace = 'Target: 47-50 sec per 300m repeat. 2 min recovery.';
+    clonedDays[1].progressionRule = 'Max Repeat Volume: 6 high-intensity reps under 50s.';
+    clonedDays[5].run = '1.5-Mile Academy Passing Threshold Push';
+    clonedDays[5].pace = 'Target: 6:30-7:00 min/mile (Sub-10:45 pace standard).';
+    clonedDays[5].progressionRule = 'Passing Standard: Target sub-10:45 state POST distinction mark.';
+  } else if (week === 7) {
+    clonedDays[1].run = '4 x 300m Race-Simulation Intervals';
+    clonedDays[1].pace = 'Target: 46-49 sec per 300m. Exact academy test pacing.';
+    clonedDays[1].progressionRule = 'Test Simulation: Rehearse exact start-line cadence and turn mechanics.';
+    clonedDays[5].run = 'Full 1.5-Mile Mock Agility Test Run';
+    clonedDays[5].pace = 'Maximal continuous effort. Goal: Official POST qualifying time.';
+    clonedDays[5].progressionRule = 'Mock Test: Official simulation of physical agility test standards.';
+  } else {
+    // Week 8: Peak & Official Assessment
+    clonedDays[1].run = '3 x 300m High-Speed Openers (Taper)';
+    clonedDays[1].pace = 'Target: 45-48s. Explosive turnover with 4 min full recovery.';
+    clonedDays[1].progressionRule = 'Taper Openers: Prime nervous system without accumulating fatigue.';
+    clonedDays[5].run = 'OFFICIAL 1.5-MILE PAT BENCHMARK ASSESSMENT';
+    clonedDays[5].pace = 'Maximum competitive effort. Sub-10:30 academy distinction standard.';
+    clonedDays[5].progressionRule = 'Official PAT: Record best passing score for academy admission.';
+  }
+
+  const isDeload = week === 4;
+  const isPeak = week === 8;
+
+  return {
+    ...UNIVERSAL_PAT_PROTOCOL,
+    id: `universal_pat_week_${week}`,
+    title: `Universal PAT Protocol — Week ${week}${isDeload ? ' (DELOAD)' : isPeak ? ' (PEAK ASSESSMENT)' : ''}`,
+    weeks: `Week ${week} of 8`,
+    days: clonedDays
+  };
+}
+
 
 

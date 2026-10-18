@@ -8,7 +8,7 @@ import {
   LogOut, RefreshCw, BatteryCharging
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey } from '../types';
-import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData } from '../data/protocolData';
+import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData, getUniversalPatWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { RequireTier } from './RequireTier';
@@ -57,7 +57,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   readinessScore,
   readinessTier,
 }) => {
-  // Primary program selector: 'apex_protocol' (26-week tactical blueprint) vs 'tactical_hypertrophy' (6-week hypertrophy & conditioning) vs 'hybrid_protocol' vs 'hybrid_db'
+  // Primary program selector: 'apex_protocol' vs 'tactical_hypertrophy' vs 'hybrid_protocol' vs 'hybrid_db' vs 'universal_pat'
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>(
     activeProgramKey || currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol'
   );
@@ -76,6 +76,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   
   // Active week inside Tactical Hypertrophy & Conditioning (Weeks 1 to 6)
   const [activeTacticalWeek, setActiveTacticalWeek] = useState<number>(1);
+
+  // Active week inside Universal PAT Protocol (Weeks 1 to 8)
+  const [activePatWeek, setActivePatWeek] = useState<number>(1);
 
   // Active phase inside The Apex Protocol (5 Mesocycles)
   const [activeApexPhaseKey, setActiveApexPhaseKey] = useState<
@@ -143,18 +146,13 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       return getTacticalHypertrophyWeekData(activeTacticalWeek);
     }
     if (selectedProgram === 'universal_pat') {
-      return PROTOCOL_DATA.universal_pat || PROTOCOL_DATA.phase1;
+      return getUniversalPatWeekData(activePatWeek);
     }
     if (selectedProgram === 'hybrid_db') {
       return PROTOCOL_DATA[activeDbPhaseKey] || PROTOCOL_DATA.db_phase1 || PROTOCOL_DATA.hybrid_db;
     }
     return PROTOCOL_DATA[activeProtocolPhaseKey] || PROTOCOL_DATA.phase1;
-  }, [selectedProgram, activeApexWeek, activeTacticalWeek, activeDbPhaseKey, activeProtocolPhaseKey]);
-
-  // Determine current day of week to highlight in schedule
-  const todayDayName = useMemo(() => {
-    return new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  }, []);
+  }, [selectedProgram, activeApexWeek, activeTacticalWeek, activePatWeek, activeDbPhaseKey, activeProtocolPhaseKey]);
 
   const getExerciseRest = (exerciseString: string): number => {
     const cleanStr = exerciseString.replace(/\[.*?\]/g, '').trim();
@@ -1078,7 +1076,48 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       </div>
 
       {/* Dynamic Program Content - Smooth CSS Fade-in Transition When Switching Programs */}
-      <div key={`${selectedProgram}-${activeApexPhaseKey}-${activeApexWeek}-${activeTacticalWeek}`} className="animate-tab-fade space-y-6">
+      <div key={`${selectedProgram}-${activeApexPhaseKey}-${activeApexWeek}-${activeTacticalWeek}-${activePatWeek}`} className="animate-tab-fade space-y-6">
+        {/* COMPACT UNIVERSAL PAT WEEK SELECTOR RAIL */}
+        {selectedProgram === 'universal_pat' && (
+          <div className="bg-[#0f172a] border border-amber-500/40 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 shrink-0 flex items-center gap-1 mr-1">
+                  <Calendar className="w-3 h-3 text-amber-400" />
+                  PAT Week:
+                </span>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((w) => {
+                  const isSelectedWeek = activePatWeek === w;
+                  const isDeload = w === 4;
+                  const isPeak = w === 8;
+                  return (
+                    <button
+                      key={w}
+                      type="button"
+                      onClick={() => {
+                        setActivePatWeek(w);
+                        setDayViewMode('all');
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer border flex items-center gap-1 ${
+                        isSelectedWeek
+                          ? 'bg-amber-500 text-black border-amber-400 shadow-sm font-black'
+                          : 'bg-[#0a0f1d] text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                      }`}
+                    >
+                      <span>Week {w}</span>
+                      {isDeload && <span className="text-[9px] font-black uppercase bg-red-950/80 text-red-300 border border-red-500/40 px-1 rounded">Deload</span>}
+                      {isPeak && <span className="text-[9px] font-black uppercase bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-1 rounded">Peak Test</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-[11px] font-mono text-amber-400 font-bold shrink-0">
+                Week {activePatWeek} Active • Academy Benchmarks Synced
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* COMPACT TACTICAL HYPERTROPHY WEEK SELECTOR RAIL */}
         {selectedProgram === 'tactical_hypertrophy' && (
           <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
@@ -1463,7 +1502,6 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           {currentPhase.days.map((day, idx) => {
             const isSelected = dayViewMode === idx;
             const isRest = isProtocolRestDay(day);
-            const isToday = day.day.toLowerCase() === todayDayName.toLowerCase();
 
             return (
               <button
@@ -1478,10 +1516,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     : 'bg-[#0a0f1d] text-slate-200 border-slate-700 hover:border-blue-400 hover:text-white'
                 }`}
               >
-                <span>{day.day}</span>
-                {isToday && (
-                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-400 shadow-sm shadow-emerald-400/50'}`} />
-                )}
+                <span>{`Day ${idx + 1}`}</span>
                 {isRest && (
                   <span className="text-[9px] uppercase font-mono opacity-80">(Rest)</span>
                 )}
@@ -1508,7 +1543,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </button>
 
             <span className="text-xs sm:text-sm font-black text-white px-2">
-              {currentPhase.days[dayViewMode]?.day} • {currentPhase.days[dayViewMode]?.focus}
+              Day {dayViewMode + 1} • {currentPhase.days[dayViewMode]?.focus}
             </span>
 
             <button
@@ -1539,7 +1574,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       <div className="space-y-5">
         {daysToShow.map((day, idx) => {
           const isRestDay = isProtocolRestDay(day);
-          const isToday = day.day.toLowerCase() === todayDayName.toLowerCase();
+          const dayNum = dayViewMode === 'all' ? idx + 1 : (typeof dayViewMode === 'number' ? dayViewMode + 1 : idx + 1);
 
           return (
             <div
@@ -1554,18 +1589,13 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               <div className="bg-zinc-800/70 px-5 py-4 flex justify-between items-center border-b border-zinc-800 flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-center font-black text-sm text-white font-mono">
-                    {day.day.length > 5 ? day.day.substring(0, 3) : day.day}
+                    {`D${dayNum}`}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-black text-white text-base sm:text-lg tracking-wide font-athletic">
-                        {day.day}
+                        {`Day ${dayNum}`}
                       </h3>
-                      {isToday && (
-                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold rounded-full uppercase">
-                          Today's Target
-                        </span>
-                      )}
                     </div>
                     <span className="text-xs text-blue-400 font-bold tracking-wide">
                       {day.focus}
@@ -1838,7 +1868,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                       className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black rounded-xl text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-950/40 border border-blue-400/40 cursor-pointer active:scale-98"
                     >
                       <Play className="w-4 h-4 fill-white" />
-                      <span>Start & Track {day.day} Session</span>
+                      <span>Start & Track Day {dayNum} Session</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>

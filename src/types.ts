@@ -152,6 +152,7 @@ export interface QuestionnaireAnswers {
     | 'station_db_minimal' 
     | 'complete_apex_peak'
     | 'universal_pat_testing';
+  preparingForPat?: 'yes_upcoming_pat' | 'no_general_tactical';
   injuryConstraints?: string;
   recommendedProgramKey: ProgramKey;
   recommendedProgramTitle: string;
@@ -312,6 +313,13 @@ export interface AthleteProfile {
   lastRecoveryCheckIn?: RecoveryCheckIn;
   subscription?: SubscriptionRecord;
   trialActivation?: TrialActivationRecord;
+  trialState?: {
+    startedAtMs: number;
+    trialEndMs: number;
+    hasSelectedPlan: boolean;
+    tier: 'pro' | 'standard';
+    status: 'trialing' | 'active_subscriber' | 'expired';
+  };
 }
 
 /**

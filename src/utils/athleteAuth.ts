@@ -39,6 +39,76 @@ export const COACH_PROFILE: AthleteProfile = {
   notes: 'Founder & Head Coach. Hybrid strength & conditioning protocol focus.',
 };
 
+export const MASTER_EXEMPT_EMAIL = 'risneraryan@gmail.com';
+
+/**
+ * Checks if an email is the single exempt Coach/Owner account with permanent full access
+ */
+export function isMasterExemptAccount(email?: string | null): boolean {
+  if (!email) return false;
+  return email.trim().toLowerCase() === MASTER_EXEMPT_EMAIL.toLowerCase();
+}
+
+export const TRIAL_STORAGE_PREFIX = 'rpa_trial_v2_';
+
+export function getAthleteTrialState(athleteId: string, email?: string): {
+  startedAtMs: number;
+  trialEndMs: number;
+  hasSelectedPlan: boolean;
+  tier: 'pro' | 'standard';
+  status: 'trialing' | 'active_subscriber' | 'expired';
+} | null {
+  if (typeof window === 'undefined') return null;
+  if (email && isMasterExemptAccount(email)) {
+    return {
+      startedAtMs: Date.now() - 86400000,
+      trialEndMs: Date.now() + 365 * 86400000,
+      hasSelectedPlan: true,
+      tier: 'pro',
+      status: 'active_subscriber',
+    };
+  }
+  try {
+    const raw = localStorage.getItem(`${TRIAL_STORAGE_PREFIX}${athleteId}`);
+    if (raw) return JSON.parse(raw);
+    const athlete = getCurrentAthlete();
+    if (athlete?.trialState) return athlete.trialState;
+  } catch {}
+  return null;
+}
+
+export function startAthleteFreeTrial(athleteId: string, days = 14): {
+  startedAtMs: number;
+  trialEndMs: number;
+  hasSelectedPlan: boolean;
+  tier: 'pro';
+  status: 'trialing';
+} {
+  const startedAtMs = Date.now();
+  const trialEndMs = startedAtMs + days * 24 * 60 * 60 * 1000;
+  const trialState = {
+    startedAtMs,
+    trialEndMs,
+    hasSelectedPlan: true,
+    tier: 'pro' as const,
+    status: 'trialing' as const,
+  };
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${athleteId}`, JSON.stringify(trialState));
+    }
+    const athlete = getCurrentAthlete();
+    if (athlete) {
+      updateAthleteProfile(athlete.id, {
+        ...athlete,
+        trialState,
+      });
+    }
+    window.dispatchEvent(new CustomEvent('trial_state_changed', { detail: trialState }));
+  } catch {}
+  return trialState;
+}
+
 /**
  * Checks if the current session is explicitly authenticated as Coach AJ
  */

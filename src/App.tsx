@@ -36,7 +36,11 @@ import {
   isCoachSession 
 } from './utils/athleteAuth';
 import { calculateReadinessScore } from './utils/readinessEngine';
-import { Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, Instagram, ExternalLink, Zap, Smartphone } from 'lucide-react';
+import { PlanSelectionModal } from './components/PlanSelectionModal';
+import { 
+  Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, 
+  Instagram, ExternalLink, Zap, Smartphone, Lock, CreditCard, ArrowRight 
+} from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PWAInstallButton } from './components/PWAInstallButton';
@@ -52,13 +56,11 @@ import {
 export default function App() {
   const { user, loading } = useFirebase();
 
-  const isCoach = Boolean(
-    (user?.email && (
-      user.email.toLowerCase() === 'risneraryan@gmail.com' ||
-      user.email.toLowerCase() === 'risnerathletics@gmail.com'
-    )) ||
-    isCoachSession()
+  // Aryan Risner (risneraryan@gmail.com) is the single exempt account with permanent full access
+  const isMasterExempt = Boolean(
+    user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
   );
+  const isCoach = isMasterExempt || isCoachSession();
 
   const [hasOfficerProgram, setHasOfficerProgram] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
@@ -70,10 +72,23 @@ export default function App() {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState<boolean>(false);
   const [isAndroidModalOpen, setIsAndroidModalOpen] = useState<boolean>(false);
   const [isSquareSuccessModalOpen, setIsSquareSuccessModalOpen] = useState<boolean>(false);
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState<boolean>(false);
   const [confirmedSquareTier, setConfirmedSquareTier] = useState<'standard' | 'pro' | 'enterprise'>('pro');
   const [squareSubRecord, setSquareSubRecord] = useState<SubscriptionRecord | null>(null);
 
-  const { activateSubscription } = useUserTier();
+  const { 
+    tier, 
+    status, 
+    isTrialActive, 
+    isTrialExpired, 
+    trialDaysRemaining,
+    trialHoursRemaining,
+    hasActiveAccess, 
+    hasSelectedPlan, 
+    isExempt,
+    activateSubscription,
+    startFreeTrial,
+  } = useUserTier();
 
   const [activeProgramKey, setActiveProgramKey] = useState<ProgramKey>(() => 
     getCurrentAthlete().questionnaire?.recommendedProgramKey || 'apex_protocol'
@@ -92,11 +107,14 @@ export default function App() {
     isQuestionnaireOpen || 
     isPricingModalOpen || 
     isAndroidModalOpen ||
-    isSquareSuccessModalOpen;
+    isSquareSuccessModalOpen ||
+    isCodeModalOpen;
 
   const handleCloseTopModal = () => {
     if (activeLiveProgram !== null) {
       setActiveLiveProgram(null);
+    } else if (isCodeModalOpen) {
+      setIsCodeModalOpen(false);
     } else if (isSquareSuccessModalOpen) {
       setIsSquareSuccessModalOpen(false);
     } else if (isAndroidModalOpen) {
@@ -334,64 +352,151 @@ export default function App() {
         {/* 14-Day Risk-Free Trial Status & Upgrade Warning Banner */}
         <TrialBanner 
           onOpenCheckout={() => setIsPricingModalOpen(true)}
+          onOpenCodeModal={() => setIsCodeModalOpen(true)}
           className="mb-4"
         />
 
-        <div key={activeTab} className="animate-tab-fade">
-          {activeTab === 'workouts' && (
-            <WorkoutsTab
-              programs={programs}
-              onStartWorkout={handleStartWorkout}
-              onSelectWarmup={handleSelectWarmupFromProgram}
-              onSavePrograms={handleUpdatePrograms}
-              currentAthlete={currentAthlete}
-              activeProgramKey={activeProgramKey}
-              onSelectProgram={(key) => setActiveProgramKey(key)}
-              onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
-              onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
-              readinessScore={readiness.overallScore}
-              readinessTier={readiness.tier}
-            />
-          )}
+        {/* STRICT TRIAL EXPIRATION LOCKDOWN: When 14-day free trial ends, lock everything until subscription */}
+        {isTrialExpired && !isMasterExempt && status !== 'active_subscriber' ? (
+          <div className="rounded-3xl border-2 border-red-500/60 bg-gradient-to-b from-[#18080c] via-[#0d1322] to-[#070b14] p-6 sm:p-10 text-center shadow-2xl relative overflow-hidden my-4 animate-in fade-in duration-200">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-600 via-amber-500 to-red-600 animate-pulse" />
+            
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center text-red-400 mb-4 shadow-lg shadow-red-950/50">
+              <Lock className="w-8 h-8" />
+            </div>
 
-          {activeTab === 'officer_portal' && (
-            <OfficerPortalTab
-              currentAthlete={currentAthlete}
-              onStartCustomWorkout={handleStartWorkout}
-              onOpenPricingModal={() => setIsPricingModalOpen(true)}
-            />
-          )}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/90 border border-red-700/60 text-red-200 text-xs font-mono font-black uppercase mb-3">
+              <span>Access Locked • 14-Day Free Trial Ended</span>
+            </div>
 
-          {activeTab === 'warmups' && (
-            <WarmupsTab selectedWarmupId={targetWarmupId} />
-          )}
+            <h2 className="text-2xl sm:text-4xl font-black uppercase text-white font-athletic tracking-wide">
+              14-Day Risk-Free Trial Concluded
+            </h2>
 
-          {activeTab === 'calculator' && (
-            <RepLoadCalculatorTab logs={logs} />
-          )}
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto mt-2 leading-relaxed">
+              Your 14-day free trial access to Patrol Ready Performance has ended. All tactical training protocols, automated progressive overload tracking, and readiness metrics are locked. Subscribe to an active membership plan to restore immediate access.
+            </p>
 
-          {activeTab === 'logs' && (
-            <WorkoutLogsTab
-              logs={logs}
-              currentAthlete={currentAthlete}
-              onUpdateLogs={setLogs}
-              onOpenLiveWorkout={() => handleStartWorkout(programs[0])}
-              onNavigateToGraphs={() => setActiveTab('graphs')}
-            />
-          )}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto text-left">
+              {/* Pro Tier Card */}
+              <div className="p-5 rounded-2xl bg-[#0e1628] border-2 border-amber-500/60 flex flex-col justify-between shadow-lg">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-mono font-bold text-amber-400 uppercase">Pro Frontline</span>
+                    <span className="text-xs font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-black">$30/mo</span>
+                  </div>
+                  <h4 className="text-base font-black text-white font-athletic uppercase">Full Auto-Overload Engine</h4>
+                  <p className="text-xs text-slate-400 mt-1">Complete 26-week periodization, automated double progression (+2.5 to +10 lbs), Universal PAT protocol, and readiness telemetry.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPricingModalOpen(true)}
+                  className="mt-5 w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Subscribe to Pro ($30)</span>
+                </button>
+              </div>
 
-          {activeTab === 'graphs' && (
-            <ProgressGraphsTab 
-              logs={logs} 
-              currentAthlete={currentAthlete}
-              onNavigateToLogs={() => setActiveTab('logs')}
-            />
-          )}
+              {/* Standard Tier Card */}
+              <div className="p-5 rounded-2xl bg-[#090f1d] border border-slate-700 flex flex-col justify-between shadow-md">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-mono font-bold text-slate-400 uppercase">Standard Tier</span>
+                    <span className="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-bold">$15/mo</span>
+                  </div>
+                  <h4 className="text-base font-black text-white font-athletic uppercase">Core Workout Logging</h4>
+                  <p className="text-xs text-slate-400 mt-1">Access all protocols and core workout logs without automated telemetry.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPricingModalOpen(true)}
+                  className="mt-5 w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 border border-slate-700"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Subscribe Standard ($15)</span>
+                </button>
+              </div>
+            </div>
 
-          {activeTab === 'contact' && (
-            <ContactTab />
-          )}
-        </div>
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
+              <button
+                type="button"
+                onClick={() => setIsPricingModalOpen(true)}
+                className="text-white hover:text-blue-300 font-bold uppercase tracking-wider cursor-pointer underline flex items-center gap-1.5"
+              >
+                <span>View Full Plan Comparison &amp; Square Checkout</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              <span className="text-slate-600 hidden sm:inline">•</span>
+
+              <button
+                type="button"
+                onClick={() => setIsCodeModalOpen(true)}
+                className="text-amber-400 hover:text-amber-300 font-mono font-bold uppercase tracking-wider cursor-pointer"
+              >
+                Have an Agency / Promotional Code?
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div key={activeTab} className="animate-tab-fade">
+            {activeTab === 'workouts' && (
+              <WorkoutsTab
+                programs={programs}
+                onStartWorkout={handleStartWorkout}
+                onSelectWarmup={handleSelectWarmupFromProgram}
+                onSavePrograms={handleUpdatePrograms}
+                currentAthlete={currentAthlete}
+                activeProgramKey={activeProgramKey}
+                onSelectProgram={(key) => setActiveProgramKey(key)}
+                onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
+                onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
+                readinessScore={readiness.overallScore}
+                readinessTier={readiness.tier}
+              />
+            )}
+
+            {activeTab === 'officer_portal' && (
+              <OfficerPortalTab
+                currentAthlete={currentAthlete}
+                onStartCustomWorkout={handleStartWorkout}
+                onOpenPricingModal={() => setIsPricingModalOpen(true)}
+              />
+            )}
+
+            {activeTab === 'warmups' && (
+              <WarmupsTab selectedWarmupId={targetWarmupId} />
+            )}
+
+            {activeTab === 'calculator' && (
+              <RepLoadCalculatorTab logs={logs} />
+            )}
+
+            {activeTab === 'logs' && (
+              <WorkoutLogsTab
+                logs={logs}
+                currentAthlete={currentAthlete}
+                onUpdateLogs={setLogs}
+                onOpenLiveWorkout={() => handleStartWorkout(programs[0])}
+                onNavigateToGraphs={() => setActiveTab('graphs')}
+              />
+            )}
+
+            {activeTab === 'graphs' && (
+              <ProgressGraphsTab 
+                logs={logs} 
+                currentAthlete={currentAthlete}
+                onNavigateToLogs={() => setActiveTab('logs')}
+              />
+            )}
+
+            {activeTab === 'contact' && (
+              <ContactTab />
+            )}
+          </div>
+        )}
       </main>
 
       {/* Live Interactive Weights Tracker Modal */}
@@ -420,6 +525,26 @@ export default function App() {
         onClose={() => setIsQuestionnaireOpen(false)}
         currentAthlete={currentAthlete}
         onSaveQuestionnaire={handleSaveQuestionnaire}
+      />
+
+      {/* Plan Selection Onboarding Gate: Prompts everyone upon sign in to pick a free trial or subscription */}
+      <PlanSelectionModal
+        isOpen={!isMasterExempt && !hasSelectedPlan && !loading}
+        onStartTrial={async () => {
+          await startFreeTrial(14);
+        }}
+        onOpenPricingModal={() => setIsPricingModalOpen(true)}
+        onOpenCodeModal={() => setIsCodeModalOpen(true)}
+      />
+
+      {/* Agency & Promotional Code Redemption Modal */}
+      <ActivateTrialCodeModal
+        isOpen={isCodeModalOpen}
+        onClose={() => setIsCodeModalOpen(false)}
+        onCodeActivated={(record) => {
+          setIsCodeModalOpen(false);
+          setIsPricingModalOpen(false);
+        }}
       />
 
       {/* RBAC Pricing Tiers & Square Payment Links Modal */}
