@@ -241,9 +241,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Tier 2: Streamlined Single-Line Tab Rail (Horizontal Scroll, Zero Multi-Line Stacking) */}
+        {/* Tier 2: Streamlined Single-Line Tab Rail (Desktop/Tablet only; hidden on mobile because Android bottom selection bar handles mobile navigation) */}
         <nav 
-          className="border-t border-slate-800/80 bg-[#070c14]/95 px-2 sm:px-4 py-1.5 overflow-x-auto scrollbar-none"
+          className="hidden md:block border-t border-slate-800/80 bg-[#070c14]/95 px-2 sm:px-4 py-1.5 overflow-x-auto scrollbar-none"
           aria-label="Main Navigation"
         >
           <div className="flex items-center gap-1 sm:gap-1.5 sm:justify-center min-w-max">
