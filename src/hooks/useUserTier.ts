@@ -115,8 +115,8 @@ export function useUserTier(): UserTierState {
         effectiveStatusRaw = 'active_subscriber';
       }
 
-      // 3. Persistent 14-day Free Trial Check
-      const trialRecord = getAthleteTrialState(athlete?.id || currentUser.uid, userEmail);
+      // 3. Persistent 14-day Free Trial Check (Strict Per-User Check)
+      const trialRecord = getAthleteTrialState(currentUser.uid || athlete?.id || 'officer', userEmail);
       let resolvedTrialEndMs: number | null = null;
       let planChosen = false;
 
@@ -127,7 +127,7 @@ export function useUserTier(): UserTierState {
         resolvedTrialEndMs = trialRecord.trialEndMs;
         effectiveTierRaw = trialRecord.tier || 'pro';
         effectiveStatusRaw = Date.now() < trialRecord.trialEndMs ? 'trialing' : 'unpaid';
-      } else if (athlete?.trialActivation && athlete.trialActivation.trialEndMs) {
+      } else if (athlete?.trialActivation && athlete.trialActivation.trialEndMs && (athlete.id !== 'athlete-default' || (athlete.email && athlete.email.toLowerCase() === userEmail.toLowerCase()))) {
         planChosen = true;
         resolvedTrialEndMs = athlete.trialActivation.trialEndMs;
         effectiveTierRaw = athlete.trialActivation.tier || 'pro';
@@ -139,19 +139,23 @@ export function useUserTier(): UserTierState {
         effectiveStatusRaw = Date.now() < resolvedTrialEndMs ? 'trialing' : 'unpaid';
       }
 
-      // Simulated overrides for QA/testing
+      // Simulated overrides for QA/testing (only applied if targeted to this user or untargeted within session)
       if (simulatedOverride) {
-        if (simulatedOverride.tier) effectiveTierRaw = simulatedOverride.tier;
-        if (simulatedOverride.status) effectiveStatusRaw = simulatedOverride.status;
-        if (typeof simulatedOverride.trialEndOffsetDays === 'number') {
-          resolvedTrialEndMs = Date.now() + (simulatedOverride.trialEndOffsetDays * 86400 * 1000);
-          planChosen = true;
-        } else if (typeof simulatedOverride.trialEndMs === 'number') {
-          resolvedTrialEndMs = simulatedOverride.trialEndMs;
-          planChosen = true;
-        }
-        if (simulatedOverride.hasSelectedPlan !== undefined) {
-          planChosen = simulatedOverride.hasSelectedPlan;
+        const targetEmail = simulatedOverride.targetEmail;
+        const matchesUser = !targetEmail || (userEmail && targetEmail.toLowerCase() === userEmail.toLowerCase());
+        if (matchesUser) {
+          if (simulatedOverride.tier) effectiveTierRaw = simulatedOverride.tier;
+          if (simulatedOverride.status) effectiveStatusRaw = simulatedOverride.status;
+          if (typeof simulatedOverride.trialEndOffsetDays === 'number') {
+            resolvedTrialEndMs = Date.now() + (simulatedOverride.trialEndOffsetDays * 86400 * 1000);
+            planChosen = true;
+          } else if (typeof simulatedOverride.trialEndMs === 'number') {
+            resolvedTrialEndMs = simulatedOverride.trialEndMs;
+            planChosen = true;
+          }
+          if (simulatedOverride.hasSelectedPlan !== undefined) {
+            planChosen = simulatedOverride.hasSelectedPlan;
+          }
         }
       }
 
@@ -212,13 +216,20 @@ export function useUserTier(): UserTierState {
   }, []);
 
   const activateSubscription = useCallback(async (newTier: UserTier, providerDetails?: Record<string, any>) => {
+    const userEmail = auth.currentUser?.email || '';
     const uid = auth.currentUser?.uid || getCurrentAthlete()?.id || 'local-officer';
     await activateAthleteSubscription(newTier, uid, providerDetails);
-    setSimulatedOverride({ tier: newTier, status: 'active_subscriber', hasSelectedPlan: true });
+    setSimulatedOverride({ 
+      tier: newTier, 
+      status: 'active_subscriber', 
+      hasSelectedPlan: true,
+      targetEmail: userEmail,
+    });
     await evaluateClaims(auth.currentUser, true);
   }, [evaluateClaims, setSimulatedOverride]);
 
   const activateTrialWithCode = useCallback(async (code: string) => {
+    const userEmail = auth.currentUser?.email || '';
     const uid = auth.currentUser?.uid || getCurrentAthlete()?.id || 'local-officer';
     const res = await activateTrialCode(code, uid);
     if (res.success && res.daysGranted && res.activationRecord) {
@@ -228,6 +239,7 @@ export function useUserTier(): UserTierState {
         trialEndMs: res.activationRecord.trialEndMs,
         trialEndOffsetDays: res.daysGranted,
         hasSelectedPlan: true,
+        targetEmail: userEmail,
       });
       await evaluateClaims(auth.currentUser, true);
     }
@@ -236,8 +248,9 @@ export function useUserTier(): UserTierState {
 
   const startFreeTrial = useCallback(async (days = 14) => {
     const athlete = getCurrentAthlete();
-    const athleteId = athlete?.id || auth.currentUser?.uid || 'default-officer';
-    const newRecord = startAthleteFreeTrial(athleteId, days);
+    const userEmail = auth.currentUser?.email || athlete?.email || '';
+    const athleteId = auth.currentUser?.uid || athlete?.id || 'default-officer';
+    const newRecord = startAthleteFreeTrial(athleteId, days, userEmail);
     
     // Also store simulated override to ensure immediate reactivity
     setSimulatedOverride({
@@ -246,11 +259,13 @@ export function useUserTier(): UserTierState {
       trialEndMs: newRecord.trialEndMs,
       trialEndOffsetDays: days,
       hasSelectedPlan: true,
+      targetEmail: userEmail,
     });
     await evaluateClaims(auth.currentUser, true);
   }, [evaluateClaims, setSimulatedOverride]);
 
   const simulateTrialDaysRemaining = useCallback((days: number) => {
+    const userEmail = auth.currentUser?.email || '';
     if (days <= 0) {
       setSimulatedOverride({
         tier: 'pro',
@@ -258,6 +273,7 @@ export function useUserTier(): UserTierState {
         trialEndMs: Date.now() - 1000,
         trialEndOffsetDays: 0,
         hasSelectedPlan: true,
+        targetEmail: userEmail,
       });
     } else {
       setSimulatedOverride({
@@ -266,6 +282,7 @@ export function useUserTier(): UserTierState {
         trialEndMs: Date.now() + (days * 86400 * 1000),
         trialEndOffsetDays: days,
         hasSelectedPlan: true,
+        targetEmail: userEmail,
       });
     }
     evaluateClaims(auth.currentUser, true);

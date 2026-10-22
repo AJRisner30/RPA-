@@ -39,7 +39,7 @@ import { calculateReadinessScore } from './utils/readinessEngine';
 import { PlanSelectionModal } from './components/PlanSelectionModal';
 import { 
   Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, 
-  Instagram, ExternalLink, Zap, Smartphone, Lock, CreditCard, ArrowRight 
+  Instagram, ExternalLink, Zap, Smartphone, Lock, CreditCard, ArrowRight, Sparkles 
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -268,6 +268,12 @@ export default function App() {
   };
 
   const handleStartWorkout = (program: WorkoutProgram) => {
+    if (!hasActiveAccess && !isMasterExempt) {
+      if (isTrialExpired) {
+        setIsPricingModalOpen(true);
+      }
+      return;
+    }
     setActiveLiveProgram(program);
   };
 
@@ -356,90 +362,178 @@ export default function App() {
           className="mb-4"
         />
 
-        {/* STRICT TRIAL EXPIRATION LOCKDOWN: When 14-day free trial ends, lock everything until subscription */}
-        {isTrialExpired && !isMasterExempt && status !== 'active_subscriber' ? (
-          <div className="rounded-3xl border-2 border-red-500/60 bg-gradient-to-b from-[#18080c] via-[#0d1322] to-[#070b14] p-6 sm:p-10 text-center shadow-2xl relative overflow-hidden my-4 animate-in fade-in duration-200">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-600 via-amber-500 to-red-600 animate-pulse" />
-            
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center text-red-400 mb-4 shadow-lg shadow-red-950/50">
-              <Lock className="w-8 h-8" />
-            </div>
+        {/* STRICT TRIAL ACCESS GATE & TRIAL LOCKER:
+            Non-exempt users MUST start their 14-day free trial or subscribe before gaining access to anything.
+            - If !hasActiveAccess && !isMasterExempt:
+              1) If isTrialExpired: render the expired lockdown screen.
+              2) If !hasSelectedPlan: render the 14-day free trial required gate.
+            - Only render workout protocols and tabs when access is active or user is master exempt!
+        */}
+        {!hasActiveAccess && !isMasterExempt ? (
+          isTrialExpired ? (
+            /* 14-DAY TRIAL EXPIRED LOCKDOWN */
+            <div className="rounded-3xl border-2 border-red-500/60 bg-gradient-to-b from-[#18080c] via-[#0d1322] to-[#070b14] p-6 sm:p-10 text-center shadow-2xl relative overflow-hidden my-4 animate-in fade-in duration-200">
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-600 via-amber-500 to-red-600 animate-pulse" />
+              
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center text-red-400 mb-4 shadow-lg shadow-red-950/50">
+                <Lock className="w-8 h-8" />
+              </div>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/90 border border-red-700/60 text-red-200 text-xs font-mono font-black uppercase mb-3">
-              <span>Access Locked • 14-Day Free Trial Ended</span>
-            </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/90 border border-red-700/60 text-red-200 text-xs font-mono font-black uppercase mb-3">
+                <span>Access Locked • 14-Day Free Trial Ended</span>
+              </div>
 
-            <h2 className="text-2xl sm:text-4xl font-black uppercase text-white font-athletic tracking-wide">
-              14-Day Risk-Free Trial Concluded
-            </h2>
+              <h2 className="text-2xl sm:text-4xl font-black uppercase text-white font-athletic tracking-wide">
+                14-Day Risk-Free Trial Concluded
+              </h2>
 
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto mt-2 leading-relaxed">
-              Your 14-day free trial access to Patrol Ready Performance has ended. All tactical training protocols, automated progressive overload tracking, and readiness metrics are locked. Subscribe to an active membership plan to restore immediate access.
-            </p>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto mt-2 leading-relaxed">
+                Your 14-day free trial access to Patrol Ready Performance has ended. All tactical training protocols, automated progressive overload tracking, and readiness metrics are locked. Subscribe to an active membership plan to restore immediate access.
+              </p>
 
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto text-left">
-              {/* Pro Tier Card */}
-              <div className="p-5 rounded-2xl bg-[#0e1628] border-2 border-amber-500/60 flex flex-col justify-between shadow-lg">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono font-bold text-amber-400 uppercase">Pro Frontline</span>
-                    <span className="text-xs font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-black">$30/mo</span>
+              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto text-left">
+                {/* Pro Tier Card */}
+                <div className="p-5 rounded-2xl bg-[#0e1628] border-2 border-amber-500/60 flex flex-col justify-between shadow-lg">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-mono font-bold text-amber-400 uppercase">Pro Frontline</span>
+                      <span className="text-xs font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-black">$30/mo</span>
+                    </div>
+                    <h4 className="text-base font-black text-white font-athletic uppercase">Full Auto-Overload Engine</h4>
+                    <p className="text-xs text-slate-400 mt-1">Complete 26-week periodization, automated double progression (+2.5 to +10 lbs), Universal PAT protocol, and readiness telemetry.</p>
                   </div>
-                  <h4 className="text-base font-black text-white font-athletic uppercase">Full Auto-Overload Engine</h4>
-                  <p className="text-xs text-slate-400 mt-1">Complete 26-week periodization, automated double progression (+2.5 to +10 lbs), Universal PAT protocol, and readiness telemetry.</p>
+                  <button
+                    type="button"
+                    onClick={() => setIsPricingModalOpen(true)}
+                    className="mt-5 w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Subscribe to Pro ($30)</span>
+                  </button>
                 </div>
+
+                {/* Standard Tier Card */}
+                <div className="p-5 rounded-2xl bg-[#090f1d] border border-slate-700 flex flex-col justify-between shadow-md">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-mono font-bold text-slate-400 uppercase">Standard Tier</span>
+                      <span className="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-bold">$15/mo</span>
+                    </div>
+                    <h4 className="text-base font-black text-white font-athletic uppercase">Core Workout Logging</h4>
+                    <p className="text-xs text-slate-400 mt-1">Access all protocols and core workout logs without automated telemetry.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPricingModalOpen(true)}
+                    className="mt-5 w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 border border-slate-700"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Subscribe Standard ($15)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
                 <button
                   type="button"
                   onClick={() => setIsPricingModalOpen(true)}
-                  className="mt-5 w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow"
+                  className="text-white hover:text-blue-300 font-bold uppercase tracking-wider cursor-pointer underline flex items-center gap-1.5"
                 >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Subscribe to Pro ($30)</span>
+                  <span>View Full Plan Comparison &amp; Square Checkout</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+                <span className="text-slate-600 hidden sm:inline">•</span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsCodeModalOpen(true)}
+                  className="text-amber-400 hover:text-amber-300 font-mono font-bold uppercase tracking-wider cursor-pointer"
+                >
+                  Have an Agency / Promotional Code?
                 </button>
               </div>
+            </div>
+          ) : (
+            /* 14-DAY FREE TRIAL ONBOARDING REQUIRED GATE */
+            <div className="rounded-3xl border-2 border-blue-500/50 bg-gradient-to-b from-[#0b162c] via-[#081020] to-[#050a14] p-6 sm:p-10 text-center shadow-2xl relative overflow-hidden my-4 animate-in fade-in duration-200">
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-sky-400 to-amber-500 animate-pulse" />
 
-              {/* Standard Tier Card */}
-              <div className="p-5 rounded-2xl bg-[#090f1d] border border-slate-700 flex flex-col justify-between shadow-md">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono font-bold text-slate-400 uppercase">Standard Tier</span>
-                    <span className="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-bold">$15/mo</span>
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-500/20 border-2 border-blue-500/40 flex items-center justify-center text-blue-400 mb-4 shadow-lg shadow-blue-950/50">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/90 border border-blue-500/60 text-blue-200 text-xs font-mono font-black uppercase mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <span>14-Day Free Trial Required • $0 Today</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl font-black uppercase text-white font-athletic tracking-wide">
+                Start Your 14-Day Free Trial
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto mt-2 leading-relaxed">
+                Welcome to Patrol Ready Performance. Access to all tactical training programs, the Universal PAT 8-week protocol, automated progressive overload engine, and physical readiness scoring requires activating your 14-day risk-free trial or selecting a membership plan.
+              </p>
+
+              {/* Primary 1-Click Action Card */}
+              <div className="mt-8 max-w-xl mx-auto p-6 rounded-2xl bg-gradient-to-br from-blue-950/80 via-[#0d182e] to-amber-950/30 border-2 border-blue-500 shadow-xl text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono font-black uppercase px-2 py-0.5 rounded bg-amber-500 text-black">
+                        Recommended • $0 Today
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black uppercase text-white font-athletic">
+                      14-Day Risk-Free Pro Access
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-1 leading-snug">
+                      Instant access to all workouts, periodization plans, and double progression tracking for 14 days.
+                    </p>
+                    <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-blue-200 font-mono">
+                      <span>✓ All Protocols Unlocked</span>
+                      <span>✓ Auto-Overload Engine</span>
+                      <span>✓ No Commitment</span>
+                    </div>
                   </div>
-                  <h4 className="text-base font-black text-white font-athletic uppercase">Core Workout Logging</h4>
-                  <p className="text-xs text-slate-400 mt-1">Access all protocols and core workout logs without automated telemetry.</p>
+
+                  <div className="shrink-0 sm:text-right">
+                    <button
+                      type="button"
+                      onClick={() => startFreeTrial(14)}
+                      className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-blue-600 via-blue-500 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/40 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                    >
+                      <span>Start 14-Day Free Trial</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
+              </div>
+
+              {/* Secondary Options */}
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
                 <button
                   type="button"
                   onClick={() => setIsPricingModalOpen(true)}
-                  className="mt-5 w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2 border border-slate-700"
+                  className="text-slate-300 hover:text-white font-bold uppercase tracking-wider cursor-pointer underline flex items-center gap-1.5"
                 >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Subscribe Standard ($15)</span>
+                  <CreditCard className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Subscribe Directly (Pro $30 / Standard $15)</span>
+                </button>
+
+                <span className="text-slate-600 hidden sm:inline">•</span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsCodeModalOpen(true)}
+                  className="text-amber-400 hover:text-amber-300 font-mono font-bold uppercase tracking-wider cursor-pointer"
+                >
+                  Have an Agency Access Code?
                 </button>
               </div>
             </div>
-
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
-              <button
-                type="button"
-                onClick={() => setIsPricingModalOpen(true)}
-                className="text-white hover:text-blue-300 font-bold uppercase tracking-wider cursor-pointer underline flex items-center gap-1.5"
-              >
-                <span>View Full Plan Comparison &amp; Square Checkout</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-
-              <span className="text-slate-600 hidden sm:inline">•</span>
-
-              <button
-                type="button"
-                onClick={() => setIsCodeModalOpen(true)}
-                className="text-amber-400 hover:text-amber-300 font-mono font-bold uppercase tracking-wider cursor-pointer"
-              >
-                Have an Agency / Promotional Code?
-              </button>
-            </div>
-          </div>
+          )
         ) : (
           <div key={activeTab} className="animate-tab-fade">
             {activeTab === 'workouts' && (
@@ -616,15 +710,15 @@ export default function App() {
               <span className="text-slate-700 hidden sm:inline">•</span>
 
               <a
-                href="https://bckd.co/87uJC2e"
+                href="https://50callabz.com/risner55"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors font-bold cursor-pointer"
-                title="Bucked Up Supplement Partner"
+                className="flex items-center gap-1.5 text-amber-400 hover:text-amber-300 transition-colors font-bold cursor-pointer"
+                title="Official Supplement Partner: 50 Cal Labz (Use Code: PATROLREADY)"
               >
-                <Zap className="w-3.5 h-3.5 text-blue-400 fill-blue-400" />
-                <span>Bucked Up Supps</span>
-                <ExternalLink className="w-3 h-3 text-blue-400/60" />
+                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <span>50 Cal Labz Supps (Code: PATROLREADY)</span>
+                <ExternalLink className="w-3 h-3 text-amber-400/60" />
               </a>
             </div>
 

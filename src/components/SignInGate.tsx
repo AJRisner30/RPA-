@@ -302,13 +302,14 @@ export const SignInGate: React.FC = () => {
             <span className="text-blue-400 font-semibold">Tactical fitness for the Frontline.</span>
             <span className="text-slate-700 hidden sm:inline">•</span>
             <a
-              href="https://bckd.co/87uJC2e"
+              href="https://50callabz.com/risner55"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 transition-colors font-bold inline-flex items-center gap-1"
+              className="text-amber-400 hover:text-amber-300 transition-colors font-bold inline-flex items-center gap-1"
+              title="Official Supplement Partner: 50 Cal Labz (Code: PATROLREADY)"
             >
-              <Zap className="w-3 h-3 fill-blue-400 text-blue-400" />
-              <span>Bucked Up Partner</span>
+              <Zap className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span>50 Cal Labz Partner (Code: PATROLREADY)</span>
             </a>
             <span className="text-slate-700 hidden sm:inline">•</span>
             <a

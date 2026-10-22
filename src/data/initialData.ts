@@ -2030,12 +2030,12 @@ export const INITIAL_SUPPLEMENTS: SupplementProtocol[] = [
   },
   {
     id: 'supp-pre-2',
-    name: 'Bucked Up Non-Stim Pre-Workout',
-    dosage: '1 Scoop (6,000 mg L-Citrulline) in 10-12oz water',
+    name: '50 Cal Labz Shots Fired Hybrid Stim Free Pre Workout',
+    dosage: '1 Scoop in 10-12oz water',
     phase: 'pre_workout',
     phaseLabel: 'Pre-Workout Priming',
     timingWindow: 'T-Minus 20-30 Min Prior to Training',
-    benefit: 'Cellular hydration, peak vasodilation (6,000 mg L-Citrulline), and pump without caffeine or stims. Ideal for evening sessions or Zone 2 recovery runs.',
+    benefit: 'Peak vasodilation, cellular hydration, and laser endurance focus without caffeine or stims. Ideal for evening workouts, late patrol shifts, or Zone 2 recovery runs.',
     issaGuideline: 'ISSA Protocol: Non-stimulant nitric oxide boosters enhance capillary delivery without disrupting autonomic parasympathetic tone or sleep onset.',
     takenToday: false
   },
@@ -2052,13 +2052,13 @@ export const INITIAL_SUPPLEMENTS: SupplementProtocol[] = [
   },
   {
     id: 'supp-intra-1',
-    name: 'Original BCAA 2:1:1 Intra-Workout',
-    dosage: '1 Scoop (approx. 7g) in 20-24oz cold water',
+    name: '50 Cal Labz Strapped EAA',
+    dosage: '1 Scoop in 20-24oz cold water',
     phase: 'intra_workout',
     phaseLabel: 'Intra-Workout Fuel',
     timingWindow: 'During Session (Sip Steadily)',
-    benefit: 'Hybrid training rapidly depletes glycogen. Sipping aminos delays fatigue and starts the recovery process early. Sip throughout long runs or heavy lifts.',
-    issaGuideline: 'ISSA Protocol: Leucine:Isoleucine:Valine in 2:1:1 ratio halts exercise-induced proteolysis and spares muscle glycogen during concurrent aerobic/strength training.',
+    benefit: 'Full-spectrum essential amino acid matrix to halt exercise-induced muscle breakdown, spare glycogen, and accelerate recovery during long runs or heavy tactical sessions.',
+    issaGuideline: 'ISSA Protocol: Full-spectrum essential amino acids halt exercise-induced proteolysis and spare muscle glycogen during concurrent aerobic/strength training.',
     takenToday: false
   },
   {
@@ -2085,12 +2085,12 @@ export const INITIAL_SUPPLEMENTS: SupplementProtocol[] = [
   },
   {
     id: 'supp-post-2',
-    name: 'Buck Feed Protein (Grass-Fed Whey)',
+    name: '50 Cal Labz ISO Ammo (Pure Whey Isolate)',
     dosage: '1-2 Scoops (25-50g protein) in 12oz water/milk',
     phase: 'post_workout',
     phaseLabel: 'Post-Workout Recovery',
     timingWindow: 'Within 30 Min Post-Workout',
-    benefit: 'Fast-acting whey to restore glycogen and initiate rapid muscle protein synthesis (MPS). Essential for concurrent recovery.',
+    benefit: 'Ultra-pure 100% whey isolate for rapid muscle protein synthesis (MPS), lean mass recovery, and zero digestive bloat.',
     issaGuideline: 'ISSA Protocol: Delivers ≥3g leucine to trigger the mTOR anabolic cascade during the heightened post-exercise insulin sensitivity window.',
     takenToday: false
   },

@@ -69,15 +69,29 @@ export function getAthleteTrialState(athleteId: string, email?: string): {
     };
   }
   try {
-    const raw = localStorage.getItem(`${TRIAL_STORAGE_PREFIX}${athleteId}`);
-    if (raw) return JSON.parse(raw);
+    // 1. Strict per-user email lookup
+    if (email && email.trim()) {
+      const emailKey = `${TRIAL_STORAGE_PREFIX}${email.trim().toLowerCase()}`;
+      const rawEmail = localStorage.getItem(emailKey);
+      if (rawEmail) return JSON.parse(rawEmail);
+    }
+    // 2. Lookup by non-default athleteId or Firebase UID
+    if (athleteId && athleteId !== 'athlete-default') {
+      const raw = localStorage.getItem(`${TRIAL_STORAGE_PREFIX}${athleteId}`);
+      if (raw) return JSON.parse(raw);
+    }
+    // 3. Fallback to athlete profile ONLY if the profile email matches or is a dedicated registered profile
     const athlete = getCurrentAthlete();
-    if (athlete?.trialState) return athlete.trialState;
+    if (athlete && athlete.id !== 'athlete-default' && athlete.trialState) {
+      if (!email || (athlete.email && athlete.email.trim().toLowerCase() === email.trim().toLowerCase())) {
+        return athlete.trialState;
+      }
+    }
   } catch {}
   return null;
 }
 
-export function startAthleteFreeTrial(athleteId: string, days = 14): {
+export function startAthleteFreeTrial(athleteId: string, days = 14, email?: string): {
   startedAtMs: number;
   trialEndMs: number;
   hasSelectedPlan: boolean;
@@ -95,10 +109,15 @@ export function startAthleteFreeTrial(athleteId: string, days = 14): {
   };
   try {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${athleteId}`, JSON.stringify(trialState));
+      if (email && email.trim()) {
+        localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${email.trim().toLowerCase()}`, JSON.stringify(trialState));
+      }
+      if (athleteId && athleteId !== 'athlete-default') {
+        localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${athleteId}`, JSON.stringify(trialState));
+      }
     }
     const athlete = getCurrentAthlete();
-    if (athlete) {
+    if (athlete && (athlete.id === athleteId || (email && athlete.email?.toLowerCase() === email.toLowerCase()))) {
       updateAthleteProfile(athlete.id, {
         ...athlete,
         trialState,

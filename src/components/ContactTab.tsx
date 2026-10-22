@@ -15,7 +15,8 @@ export const ContactTab: React.FC = () => {
 
   const coachEmail = 'risnerathletics@gmail.com';
   const instagramUrl = 'https://www.instagram.com/ajrisner';
-  const buckedUpUrl = 'https://bckd.co/87uJC2e';
+  const fiftyCalLabzUrl = 'https://50callabz.com/risner55';
+  const discountCode = 'PATROLREADY';
 
   const handleCopyEmail = async () => {
     try {
@@ -35,7 +36,7 @@ export const ContactTab: React.FC = () => {
       coaching: '1-on-1 Tactical LEO Coaching Inquiry',
       programming: 'Custom Tactical Programming & Protocol Question',
       form_check: 'Duty Movement & Lift Form Review',
-      supplements: 'Bucked Up Duty Nutrition & Supplement Advice',
+      supplements: '50 Cal Labz Nutrition & Supplement Advice',
       general: 'Inquiry for Patrol Ready Performance',
     };
 
@@ -118,7 +119,7 @@ Sent via Patrol Ready Performance (Tactical fitness for the Frontline)`;
         </div>
       </div>
 
-      {/* 3 Quick Highlight Cards: Email, Instagram, Bucked Up Supplements */}
+      {/* 3 Quick Highlight Cards: Email, Instagram, 50 Cal Labz Supplements */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Email Card */}
         <div className="bg-[#0c1322] border border-slate-800 hover:border-blue-500/50 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition-all">
@@ -192,38 +193,43 @@ Sent via Patrol Ready Performance (Tactical fitness for the Frontline)`;
           </div>
         </div>
 
-        {/* Bucked Up Supplement Link Card */}
-        <div className="bg-gradient-to-b from-[#0c1322] to-[#080e18] border border-blue-500/30 hover:border-blue-500/60 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition-all relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-bl-lg font-mono border-b border-l border-blue-400/40">
+        {/* 50 Cal Labz Supplement Link Card */}
+        <div className="bg-gradient-to-b from-[#13151f] to-[#080e18] border border-amber-500/30 hover:border-amber-500/60 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition-all relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-amber-500 text-black text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-bl-lg font-mono border-b border-l border-amber-400/40">
             Official Supps
           </div>
 
           <div>
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center mb-3">
-              <Flame className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mb-3">
+              <Flame className="w-5 h-5 text-amber-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-blue-400">Official Partner</span>
-            <h3 className="text-lg font-bold text-white mt-0.5">Bucked Up Supplements</h3>
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">Official Partner</span>
+            <h3 className="text-lg font-bold text-white mt-0.5">50 Cal Labz Supplements</h3>
             <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-              Fuel your hybrid workouts with Coach AJ Risner&apos;s recommended Bucked Up pre-workouts, creatine, hydration electrolytes, and recovery protein.
+              Fuel your tactical workouts with Coach AJ Risner&apos;s personal recommendations: <strong className="text-white">Strapped EAA</strong>, <strong className="text-white">ISO Ammo</strong>, and <strong className="text-white">Shots Fired Hybrid Stim Free Pre Workout</strong>.
             </p>
-            <div className="mt-3.5 p-2.5 bg-blue-950/40 border border-blue-500/30 rounded-xl flex items-center justify-between">
-              <span className="text-xs font-bold text-blue-300">Athlete Discount Link</span>
-              <span className="text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">
-                bckd.co/87uJC2e
+            <div className="mt-3.5 p-2.5 bg-amber-950/40 border border-amber-500/30 rounded-xl flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-amber-300">Discount Code:</span>
+                <span className="text-xs font-mono font-black bg-amber-500 text-black px-2 py-0.5 rounded shadow-sm">
+                  {discountCode}
+                </span>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-slate-400">
+                50callabz.com/risner55
               </span>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-            <span className="text-[11px] text-blue-400/80 font-medium">Peak Performance Fuel</span>
+            <span className="text-[11px] text-amber-400/90 font-medium">Duty Readiness Fuel</span>
             <a
-              href={buckedUpUrl}
+              href={fiftyCalLabzUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer"
             >
-              <span>Shop Bucked Up</span>
+              <span>Shop 50 Cal Labz</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -255,7 +261,7 @@ Sent via Patrol Ready Performance (Tactical fitness for the Frontline)`;
                   { id: 'coaching', label: '1-on-1 Hybrid Coaching', icon: Dumbbell },
                   { id: 'programming', label: 'Custom 12-Week Protocol', icon: ShieldCheck },
                   { id: 'form_check', label: 'Lift Form & Technique Check', icon: Award },
-                  { id: 'supplements', label: 'Bucked Up & Nutrition Advice', icon: Flame },
+                  { id: 'supplements', label: '50 Cal Labz & Nutrition Advice', icon: Flame },
                   { id: 'general', label: 'General Athletic Inquiry', icon: User },
                 ].map((item) => {
                   const isSelected = inquiryType === item.id;
@@ -348,7 +354,7 @@ Sent via Patrol Ready Performance (Tactical fitness for the Frontline)`;
           </form>
         </div>
 
-        {/* Right Column: Coach Credentials & Bucked Up Spotlight */}
+        {/* Right Column: Coach Credentials & 50 Cal Labz Spotlight */}
         <div className="lg:col-span-5 space-y-6">
           {/* Coach Standards Box */}
           <div className="bg-[#0f172a] border border-blue-500/30 rounded-3xl p-6 shadow-xl">
@@ -388,62 +394,62 @@ Sent via Patrol Ready Performance (Tactical fitness for the Frontline)`;
             </div>
           </div>
 
-          {/* Bucked Up Featured Recommendation Box */}
-          <div className="bg-[#0c1322] border border-blue-500/30 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+          {/* 50 Cal Labz Featured Recommendation Box */}
+          <div className="bg-[#0c1322] border border-amber-500/30 rounded-3xl p-6 shadow-xl relative overflow-hidden">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-blue-400" />
+                <Flame className="w-4 h-4 text-amber-400" />
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider font-athletic">
                   Official Supplement Sponsor
                 </h3>
               </div>
-              <span className="text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30">
-                Bucked Up
+              <span className="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
+                50 Cal Labz
               </span>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Coach AJ recommends pairing the 12-Week Hybrid Protocol with Bucked Up&apos;s clinically dosed essentials:
+              Coach AJ personally recommends 50 Cal Labz for duty readiness. Use discount code <span className="font-mono font-black text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-500/40">{discountCode}</span> at checkout for exclusive athlete savings:
             </p>
 
             <div className="mt-3 space-y-2 text-xs">
               <div className="p-2.5 bg-[#060b14] rounded-xl border border-slate-800/80 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-white block">Bucked Up Pre-Workout</span>
-                  <span className="text-[11px] text-slate-400">Citrulline, Beta-Alanine, and focused CNS energy</span>
+                  <span className="font-bold text-white block">Shots Fired Hybrid Stim Free Pre Workout</span>
+                  <span className="text-[11px] text-slate-400">Cellular pump, nitric oxide vasodilation &amp; laser endurance focus without caffeine or crash</span>
                 </div>
-                <span className="text-[10px] font-mono text-blue-400 font-bold">Training Days</span>
+                <span className="text-[10px] font-mono text-amber-400 font-bold shrink-0 ml-2">Pre-Workout</span>
               </div>
 
               <div className="p-2.5 bg-[#060b14] rounded-xl border border-slate-800/80 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-white block">Creatine Monohydrate</span>
-                  <span className="text-[11px] text-slate-400">Cellular hydration, ATP resynthesis & power output</span>
+                  <span className="font-bold text-white block">Strapped EAA</span>
+                  <span className="text-[11px] text-slate-400">Full-spectrum essential amino acid matrix to halt muscle breakdown &amp; sustain hydration</span>
                 </div>
-                <span className="text-[10px] font-mono text-blue-400 font-bold">5g Daily</span>
+                <span className="text-[10px] font-mono text-amber-400 font-bold shrink-0 ml-2">Intra / Shifts</span>
               </div>
 
               <div className="p-2.5 bg-[#060b14] rounded-xl border border-slate-800/80 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-white block">Hydration Electrolytes</span>
-                  <span className="text-[11px] text-slate-400">Essential minerals for patrol shifts and threshold runs</span>
+                  <span className="font-bold text-white block">ISO Ammo (Pure Whey Isolate)</span>
+                  <span className="text-[11px] text-slate-400">Ultra-pure, rapid-digesting whey protein isolate for lean muscle armor and recovery</span>
                 </div>
-                <span className="text-[10px] font-mono text-blue-400 font-bold">Duty / Run Days</span>
+                <span className="text-[10px] font-mono text-amber-400 font-bold shrink-0 ml-2">Post-Workout</span>
               </div>
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-800">
               <a
-                href={buckedUpUrl}
+                href={fiftyCalLabzUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-blue-950/40 flex items-center justify-center gap-2 cursor-pointer border border-blue-400/40"
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-amber-950/40 flex items-center justify-center gap-2 cursor-pointer border border-amber-400/40"
               >
-                <span>Shop Bucked Up Supplements</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Shop 50 Cal Labz (Code: PATROLREADY)</span>
+                <ExternalLink className="w-3.5 h-3.5 text-black" />
               </a>
-              <span className="block text-center text-[10px] text-slate-500 font-mono mt-1.5">
-                Support Coach AJ via link: bckd.co/87uJC2e
+              <span className="block text-center text-[10px] text-slate-400 font-mono mt-1.5">
+                Support Coach AJ via link: 50callabz.com/risner55 • Code: PATROLREADY
               </span>
             </div>
           </div>

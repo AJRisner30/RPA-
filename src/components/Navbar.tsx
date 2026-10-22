@@ -82,20 +82,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Top Quick Links & Athlete Controls (Compact Micro-Pills) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Bucked Up Partner Pill */}
+            {/* 50 Cal Labz Partner Pill */}
             <a
-              href="https://bckd.co/87uJC2e"
+              href="https://50callabz.com/risner55"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-[#0f172a] hover:bg-blue-900/30 text-blue-200 hover:text-white border border-blue-500/40 hover:border-blue-400 rounded-lg text-[11px] font-black transition-all shadow-sm shrink-0 cursor-pointer"
-              title="Official Supplement Partner: Bucked Up"
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-[#0f172a] hover:bg-amber-950/30 text-amber-200 hover:text-white border border-amber-500/40 hover:border-amber-400 rounded-lg text-[11px] font-black transition-all shadow-sm shrink-0 cursor-pointer"
+              title="Official Supplement Partner: 50 Cal Labz (Discount Code: PATROLREADY)"
             >
-              <Zap className="w-3 h-3 text-blue-400 fill-blue-400 shrink-0" />
-              <span className="hidden sm:inline font-bold">Bucked Up</span>
-              <span className="text-[9px] bg-blue-600 text-white px-1 rounded font-mono font-black">
-                Supps
+              <Zap className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+              <span className="hidden sm:inline font-bold">50 Cal Labz</span>
+              <span className="text-[9px] bg-amber-500 text-black px-1 rounded font-mono font-black">
+                Code: PATROLREADY
               </span>
-              <ExternalLink className="w-2.5 h-2.5 text-blue-400/80 shrink-0" />
+              <ExternalLink className="w-2.5 h-2.5 text-amber-400/80 shrink-0" />
             </a>
 
             {/* Instagram: AJ Risner */}
