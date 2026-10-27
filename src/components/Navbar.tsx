@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
-  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck, Smartphone, Sparkles
+  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck, Smartphone, Sparkles, Lock
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { AthleteProfile, isCoachSession } from '../utils/athleteAuth';
@@ -40,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   hasOfficerProgram = false,
 }) => {
   const { user, isCloudConnected, authError, signOutUser } = useFirebase();
-  const { tier } = useUserTier();
+  const { tier, hasActiveAccess, isTrialActive, isTrialExpired, isExempt } = useUserTier();
 
   const isCoach = Boolean(
     (user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com') ||
@@ -229,16 +229,40 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={onOpenPricingModal}
               className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-black font-mono transition-all shadow-sm cursor-pointer border shrink-0 ${
-                tier === 'pro'
+                isTrialExpired
+                  ? 'bg-red-950/90 hover:bg-red-900 text-red-200 border-red-500 animate-pulse'
+                  : !hasActiveAccess && !isExempt
+                  ? 'bg-amber-950/90 hover:bg-amber-900 text-amber-200 border-amber-500'
+                  : tier === 'pro'
                   ? 'bg-amber-950/80 hover:bg-amber-900/80 text-amber-300 border-amber-500/50'
                   : tier === 'enterprise'
                   ? 'bg-blue-950/80 hover:bg-blue-900/80 text-blue-300 border-blue-500/50'
                   : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border-zinc-700'
               }`}
-              title={`Membership: ${tier.toUpperCase()} Tier. Click to inspect pricing tiers & plans.`}
+              title={
+                isTrialExpired
+                  ? 'Trial Ended: Access locked. Click to get a subscription.'
+                  : !hasActiveAccess && !isExempt
+                  ? 'Trial Not Activated: Click to activate your 14-day free trial.'
+                  : `Membership: ${tier.toUpperCase()} Tier. Click to inspect pricing tiers & plans.`
+              }
             >
-              <Zap className="w-3 h-3 text-amber-400 shrink-0" />
-              <span className="uppercase">{tier}</span>
+              {isTrialExpired ? (
+                <Lock className="w-3 h-3 text-red-400 shrink-0" />
+              ) : !hasActiveAccess && !isExempt ? (
+                <Lock className="w-3 h-3 text-amber-400 shrink-0" />
+              ) : (
+                <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+              )}
+              <span className="uppercase">
+                {isTrialExpired
+                  ? 'Locked • Subscribe'
+                  : !hasActiveAccess && !isExempt
+                  ? 'Activate Trial'
+                  : isTrialActive
+                  ? 'Trial Pro'
+                  : tier}
+              </span>
             </button>
 
             {/* Quick Sign Out Button */}
@@ -265,24 +289,38 @@ export const Navbar: React.FC<NavbarProps> = ({
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const isLocked = !hasActiveAccess && !isExempt;
 
               return (
                 <button
                   key={tab.id}
-                  onClick={() => onSelectTab(tab.id as TabType)}
+                  onClick={() => {
+                    if (isLocked) {
+                      if (onOpenPricingModal) onOpenPricingModal();
+                      return;
+                    }
+                    onSelectTab(tab.id as TabType);
+                  }}
                   className={`nav-tab-interactive group relative flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider whitespace-nowrap cursor-pointer select-none shrink-0 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-950/60 border border-blue-400 ring-1 ring-blue-400/40'
+                      : isLocked
+                      ? 'bg-[#0a0f1d] opacity-70 hover:opacity-100 text-slate-400 hover:text-amber-300 border border-slate-800 hover:border-amber-500/40'
                       : 'bg-[#0f172a] hover:bg-[#162238] text-slate-300 hover:text-white border border-slate-800 hover:border-blue-500/40'
                   }`}
+                  title={isLocked ? 'Access Locked: Activate 14-day free trial or subscribe to access' : tab.label}
                 >
-                  <Icon 
-                    className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ease-out ${
-                      isActive 
-                        ? 'text-white stroke-[2.5] scale-110' 
-                        : 'text-blue-400 stroke-[2] group-hover:scale-110'
-                    }`} 
-                  />
+                  {isLocked ? (
+                    <Lock className="w-3 h-3 text-amber-400/80 shrink-0" />
+                  ) : (
+                    <Icon 
+                      className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ease-out ${
+                        isActive 
+                          ? 'text-white stroke-[2.5] scale-110' 
+                          : 'text-blue-400 stroke-[2] group-hover:scale-110'
+                      }`} 
+                    />
+                  )}
                   <span className="whitespace-nowrap transition-colors duration-200">{tab.label}</span>
                   {isActive && (
                     <span 

@@ -382,7 +382,7 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-800 space-y-2">
-                {!isTrialActive && !isActiveSubscriber && !isExempt && (
+                {!isTrialActive && !isTrialExpired && !isActiveSubscriber && !isExempt && (
                   <button
                     type="button"
                     onClick={async () => {
@@ -394,6 +394,16 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Start 14-Day Free Trial ($0 Today)</span>
                   </button>
+                )}
+                {isTrialExpired && (
+                  <div className="p-2.5 bg-red-950/60 border border-red-500/40 rounded-xl text-center">
+                    <span className="text-[11px] font-mono text-red-300 font-bold uppercase block">
+                      14-Day Free Trial Expired
+                    </span>
+                    <span className="text-[10px] text-slate-300 mt-0.5 block">
+                      Subscribe below to restore full access to all protocols.
+                    </span>
+                  </div>
                 )}
 
                 <button

@@ -109,7 +109,7 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
                     <span>Activating Access...</span>
                   ) : (
                     <>
-                      <span>Start 14-Day Free Trial</span>
+                      <span>Activate 14-Day Free Trial</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

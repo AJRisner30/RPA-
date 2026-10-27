@@ -8,7 +8,15 @@ import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { useFirebase } from '../context/FirebaseContext';
 import { PWAInstallButton } from './PWAInstallButton';
 
-export const SignInGate: React.FC = () => {
+interface SignInGateProps {
+  onOpenPricingModal?: () => void;
+  onOpenCodeModal?: () => void;
+}
+
+export const SignInGate: React.FC<SignInGateProps> = ({
+  onOpenPricingModal,
+  onOpenCodeModal,
+}) => {
   const { 
     signInWithGoogle, 
     signInWithGoogleRedirect, 
@@ -20,6 +28,7 @@ export const SignInGate: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showAlternative, setShowAlternative] = useState<boolean>(false);
+  const [isReturningUserMode, setIsReturningUserMode] = useState<boolean>(false);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -80,10 +89,9 @@ export const SignInGate: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <PWAInstallButton variant="pill" className="text-xs py-1 px-2.5 hidden sm:inline-flex" />
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-blue-500/30 rounded-lg text-xs font-mono text-slate-300">
-            <Lock className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden xs:inline">Access:</span>
-            <span className="text-blue-400 font-bold">Secure Gate</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 border border-amber-500/40 rounded-lg text-xs font-mono text-amber-300 font-bold">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>14-Day Free Trial</span>
           </div>
         </div>
       </header>
@@ -100,24 +108,55 @@ export const SignInGate: React.FC = () => {
           </div>
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/15 border border-blue-500/40 rounded-full text-[11px] font-bold text-blue-300 uppercase tracking-widest font-mono mb-2">
-            <Shield className="w-3.5 h-3.5 text-blue-400" />
-            <span>Tactical &amp; Law Enforcement Portal • Authorized Sign-In</span>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>14-Day Risk-Free Trial • $0 Today • No Commitment</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white font-athletic">
-            Patrol Ready Performance
+            {isReturningUserMode ? 'Sign In to Patrol Ready' : 'Activate 14-Day Free Trial & Sign Up'}
           </h1>
 
           <p className="mt-2 text-xs sm:text-base text-slate-300 max-w-xl leading-relaxed">
-            Welcome to <span className="text-white font-bold">Patrol Ready Performance</span> — Tactical fitness for the Frontline. Sign in to access your duty-specific training protocols, automated progressive overload tracking, and secure officer performance records.
+            {isReturningUserMode
+              ? 'Welcome back. Sign in to access your workout protocols, automated overload logs, and physical readiness scoring.'
+              : 'Sign up to start your 14-day free trial. Instant access to all 5 tactical fitness protocols, the Universal PAT 8-week program, automated progressive overload, and the AI workout architect.'}
           </p>
         </div>
 
-        {/* Primary Sign-In Box */}
-        <div className="w-full max-w-md bg-[#0f172a]/95 border-2 border-blue-500/30 hover:border-blue-400/50 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative transition-all">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider font-athletic shadow-md border border-blue-400/40">
-            Frontline Officer Portal
+        {/* Primary Action Box */}
+        <div className="w-full max-w-lg bg-[#0f172a]/95 border-2 border-blue-500/40 hover:border-blue-400/60 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative transition-all">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-sky-500 text-white px-3.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider font-athletic shadow-md border border-blue-400/40">
+            {isReturningUserMode ? 'Officer Sign-In' : '14-Day Free Trial Gateway'}
           </div>
+
+          {/* Trial Value Callout Banner */}
+          {!isReturningUserMode && (
+            <div className="mb-5 p-3.5 bg-gradient-to-r from-blue-950/80 via-[#0a1224] to-indigo-950/60 border border-blue-500/40 rounded-2xl text-left">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-mono font-black uppercase text-amber-400 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  Full Pro Access Included
+                </span>
+                <span className="text-xs font-mono font-black text-white bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30">
+                  $0 / 14 Days
+                </span>
+              </div>
+              <div className="space-y-1.5 text-xs text-slate-300">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Apex, Tactical Hypertrophy, Hybrid &amp; PAT Protocols</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Automated Double Progression (+2.5 to +10 lbs)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>AI Workout Plan Architect Powered by Gemini</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Auth Error Notification */}
           {authError && (
@@ -125,7 +164,7 @@ export const SignInGate: React.FC = () => {
               <div className="flex items-start gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs text-slate-200 space-y-1.5 flex-1">
-                  <div className="font-bold text-white">Frontline Sign-In Advisory</div>
+                  <div className="font-bold text-white">Sign-In Advisory</div>
                   <p className="leading-snug text-slate-300">
                     {authError.isPopupBlocked || authError.isDomainError
                       ? 'The current browser preview blocked the sign-in window. Open in a dedicated browser tab to securely authenticate.'
@@ -155,13 +194,13 @@ export const SignInGate: React.FC = () => {
             </div>
           )}
 
-          {/* Google Sign-in CTA */}
+          {/* Primary Action Button */}
           <div className="space-y-3.5">
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading || isAuthenticating}
-              className="w-full py-3.5 px-4 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 rounded-2xl font-black text-sm tracking-wide transition-all shadow-lg hover:shadow-xl hover:shadow-blue-500/10 flex items-center justify-center gap-3 border border-slate-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full py-4 px-4 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 rounded-2xl font-black text-sm tracking-wide transition-all shadow-lg hover:shadow-xl hover:shadow-blue-500/20 flex items-center justify-center gap-3 border border-slate-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group active:scale-98"
             >
               {isLoading || isAuthenticating ? (
                 <>
@@ -189,20 +228,22 @@ export const SignInGate: React.FC = () => {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                     />
                   </svg>
-                  <span className="text-slate-900 group-hover:text-black font-bold">
-                    Sign in with Google
+                  <span className="text-slate-900 group-hover:text-black font-extrabold text-sm sm:text-base">
+                    {isReturningUserMode
+                      ? 'Sign In with Google'
+                      : 'Start 14-Day Free Trial (Sign Up with Google)'}
                   </span>
                 </>
               )}
             </button>
 
             {/* In-app Browser / Redirect Alternative */}
-            <div className="pt-2 text-center">
+            <div className="text-center pt-1">
               {!showAlternative ? (
                 <button
                   type="button"
                   onClick={() => setShowAlternative(true)}
-                  className="text-xs text-slate-400 hover:text-blue-400 transition-colors font-medium cursor-pointer"
+                  className="text-[11px] text-slate-400 hover:text-blue-400 transition-colors font-medium cursor-pointer"
                 >
                   Trouble with popup window? Use direct redirect &darr;
                 </button>
@@ -223,11 +264,46 @@ export const SignInGate: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Mode Switcher & Secondary Links */}
+            <div className="pt-3 border-t border-slate-800/80 flex flex-col gap-2.5 text-center text-xs">
+              <button
+                type="button"
+                onClick={() => setIsReturningUserMode(!isReturningUserMode)}
+                className="text-blue-400 hover:text-blue-300 font-bold transition-colors cursor-pointer"
+              >
+                {isReturningUserMode
+                  ? '← New officer? Activate 14-Day Free Trial'
+                  : 'Already have an active account or subscription? Sign In'}
+              </button>
+
+              <div className="flex items-center justify-center gap-3 text-[11px] text-slate-400 pt-1 flex-wrap">
+                {onOpenPricingModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenPricingModal}
+                    className="text-slate-300 hover:text-white underline cursor-pointer"
+                  >
+                    View Membership Pricing ($30 / $15)
+                  </button>
+                )}
+                {onOpenPricingModal && onOpenCodeModal && <span>•</span>}
+                {onOpenCodeModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenCodeModal}
+                    className="text-amber-400 hover:text-amber-300 font-mono font-bold cursor-pointer"
+                  >
+                    Have an Agency Code?
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 pt-5 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-center gap-1.5 font-mono">
+          <div className="mt-5 pt-4 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-center gap-1.5 font-mono">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-            <span>Secure 256-Bit Cloud Sync • Patrol Ready Performance</span>
+            <span>256-Bit Cloud Sync • No Card Required for 14-Day Trial</span>
           </div>
         </div>
 

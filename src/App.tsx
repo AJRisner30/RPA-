@@ -334,14 +334,39 @@ export default function App() {
     }
   };
 
+  const handleActivateFreeTrial = async () => {
+    await startFreeTrial(14);
+    if (user) {
+      const athlete = getCurrentAthlete();
+      await saveAthleteToFirestore(athlete, user.uid);
+    }
+  };
+
   // 1. Initial page boot: display branded loading splash while auth state is resolving
   if (loading) {
     return <LoadingSplash />;
   }
 
-  // 2. Strict Authentication Gate: Require everyone to sign in before being able to use the app
+  // 2. Strict Authentication Gate: Direct all visitors to the Activate Free Trial & Sign Up screen
   if (!user) {
-    return <SignInGate />;
+    return (
+      <>
+        <SignInGate 
+          onOpenPricingModal={() => setIsPricingModalOpen(true)}
+          onOpenCodeModal={() => setIsCodeModalOpen(true)}
+        />
+        <PricingTiersModal
+          isOpen={isPricingModalOpen}
+          onClose={() => setIsPricingModalOpen(false)}
+          onPaymentSuccess={() => setIsPricingModalOpen(false)}
+        />
+        <ActivateTrialCodeModal
+          isOpen={isCodeModalOpen}
+          onClose={() => setIsCodeModalOpen(false)}
+          onCodeActivated={() => setIsCodeModalOpen(false)}
+        />
+      </>
+    );
   }
 
   const readiness = calculateReadinessScore(currentAthlete, logs);
@@ -520,7 +545,7 @@ export default function App() {
                   <div className="shrink-0 sm:text-right">
                     <button
                       type="button"
-                      onClick={() => startFreeTrial(14)}
+                      onClick={handleActivateFreeTrial}
                       className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-blue-600 via-blue-500 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/40 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                     >
                       <span>Start 14-Day Free Trial</span>
@@ -646,9 +671,7 @@ export default function App() {
       {/* Plan Selection Onboarding Gate: Prompts everyone upon sign in to pick a free trial or subscription */}
       <PlanSelectionModal
         isOpen={!isMasterExempt && !hasSelectedPlan && !loading}
-        onStartTrial={async () => {
-          await startFreeTrial(14);
-        }}
+        onStartTrial={handleActivateFreeTrial}
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onOpenCodeModal={() => setIsCodeModalOpen(true)}
       />

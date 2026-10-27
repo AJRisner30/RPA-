@@ -166,6 +166,9 @@ export function subscribeToUserAthlete(
             weightHistory: data.weightHistory || [],
             recoveryHistory: data.recoveryHistory || [],
             lastRecoveryCheckIn: data.lastRecoveryCheckIn || undefined,
+            subscription: data.subscription || undefined,
+            trialActivation: data.trialActivation || undefined,
+            trialState: data.trialState || undefined,
           });
         } else {
           onAthlete(null);
@@ -217,6 +220,15 @@ export async function saveAthleteToFirestore(
     }
     if (athlete.lastRecoveryCheckIn) {
       cleanAthlete.lastRecoveryCheckIn = athlete.lastRecoveryCheckIn;
+    }
+    if (athlete.subscription) {
+      cleanAthlete.subscription = athlete.subscription;
+    }
+    if (athlete.trialActivation) {
+      cleanAthlete.trialActivation = athlete.trialActivation;
+    }
+    if (athlete.trialState) {
+      cleanAthlete.trialState = athlete.trialState;
     }
 
     const sanitizedAthlete = sanitizeForFirestore(cleanAthlete);

@@ -49,11 +49,15 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
 }) => {
   const [isMoreSheetOpen, setIsMoreSheetOpen] = useState(false);
   const { user, signOutUser } = useFirebase();
-  const { tier } = useUserTier();
+  const { tier, hasActiveAccess, isTrialExpired, isExempt } = useUserTier();
   const { tap, doubleTap } = useAndroidHaptics();
 
   const handleTabClick = (tabId: TabType) => {
     tap();
+    if (!hasActiveAccess && !isExempt) {
+      if (onOpenPricingModal) onOpenPricingModal();
+      return;
+    }
     onSelectTab(tabId);
     setIsMoreSheetOpen(false);
   };
