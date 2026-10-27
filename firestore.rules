@@ -146,6 +146,7 @@ service cloud.firestore {
         data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
         data.category is string && data.category.size() <= 60 &&
         data.exercises is list && data.exercises.size() <= 50 &&
+        (!('schedule' in data) || data.schedule is list) &&
         (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 200)) &&
         (!('frequency' in data) || (data.frequency is string && data.frequency.size() <= 80)) &&
         (!('estimatedDurationMinutes' in data) || (data.estimatedDurationMinutes is number && data.estimatedDurationMinutes >= 0 && data.estimatedDurationMinutes <= 360)) &&

@@ -68,6 +68,7 @@
         "estimatedDurationMinutes": { "type": "number", "description": "Estimated workout duration" },
         "description": { "type": "string", "maxLength": 2000, "description": "Program overview and instructions" },
         "exercises": { "type": "array", "description": "List of template exercises" },
+        "schedule": { "type": "array", "description": "Day-by-day training schedule objects" },
         "createdAt": { "type": "string", "description": "Creation timestamp" },
         "updatedAt": { "type": "string", "description": "Last update timestamp" }
       },

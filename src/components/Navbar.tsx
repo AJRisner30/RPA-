@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
-  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck, Smartphone
+  Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck, Smartphone, Sparkles
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { AthleteProfile, isCoachSession } from '../utils/athleteAuth';
@@ -20,6 +20,7 @@ interface NavbarProps {
   onOpenQuestionnaire?: () => void;
   onOpenPricingModal?: () => void;
   onOpenAndroidAppModal?: () => void;
+  onOpenAIGenerator?: () => void;
   readinessScore?: number;
   readinessTier?: string;
   hasOfficerProgram?: boolean;
@@ -33,6 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenQuestionnaire,
   onOpenPricingModal,
   onOpenAndroidAppModal,
+  onOpenAIGenerator,
   readinessScore,
   readinessTier,
   hasOfficerProgram = false,
@@ -179,6 +181,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Award className="w-3 h-3 text-blue-400 shrink-0" />
                 <span className="hidden sm:inline">Program Matcher</span>
+              </button>
+            )}
+
+            {/* AI Workout Architect Action */}
+            {onOpenAIGenerator && (
+              <button
+                type="button"
+                onClick={onOpenAIGenerator}
+                className="flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-gradient-to-r from-blue-900/80 to-indigo-950/80 hover:from-blue-800 hover:to-indigo-900 text-blue-200 hover:text-white border border-blue-400/50 hover:border-blue-300 rounded-lg text-[11px] font-bold transition-all shadow-sm cursor-pointer shrink-0"
+                title="Personalized AI Workout Architect (Powered by Gemini 3.8 Flash)"
+              >
+                <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300 animate-pulse shrink-0" />
+                <span className="hidden sm:inline">AI Architect</span>
               </button>
             )}
 

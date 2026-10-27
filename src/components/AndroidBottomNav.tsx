@@ -31,6 +31,7 @@ interface AndroidBottomNavProps {
   onOpenAthleteModal: () => void;
   onOpenPricingModal?: () => void;
   onOpenAndroidAppModal?: () => void;
+  onOpenAIGenerator?: () => void;
   readinessScore?: number;
   hasOfficerProgram?: boolean;
 }
@@ -42,6 +43,7 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
   onOpenAthleteModal,
   onOpenPricingModal,
   onOpenAndroidAppModal,
+  onOpenAIGenerator,
   readinessScore,
   hasOfficerProgram = false,
 }) => {
@@ -320,6 +322,29 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
 
             {/* Quick Actions List */}
             <div className="py-3 space-y-2 overflow-y-auto">
+              {/* AI Workout Architect */}
+              {onOpenAIGenerator && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeSheet();
+                    onOpenAIGenerator();
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-xl border border-blue-500/50 bg-gradient-to-r from-blue-950/60 to-indigo-950/60 text-left transition-all cursor-pointer shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
+                      <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black uppercase tracking-wider text-white">AI Workout Architect</div>
+                      <div className="text-[11px] text-blue-300">Generate personalized plan with Gemini AI</div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-blue-400" />
+                </button>
+              )}
+
               {/* Workout History */}
               <button
                 type="button"

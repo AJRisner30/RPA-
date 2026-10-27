@@ -44,13 +44,16 @@ import {
 import { PatrolReadyCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PWAInstallButton } from './components/PWAInstallButton';
+import { AIWorkoutGeneratorModal } from './components/AIWorkoutGeneratorModal';
 import { useFirebase } from './context/FirebaseContext';
 import { 
   subscribeToUserWorkoutLogs, 
   subscribeToUserAthlete, 
   subscribeToOfficerProgram,
+  subscribeToUserCustomPrograms,
   saveWorkoutLogToFirestore,
-  saveAthleteToFirestore
+  saveAthleteToFirestore,
+  saveCustomProgramToFirestore
 } from './utils/firebaseSync';
 
 export default function App() {
@@ -75,6 +78,10 @@ export default function App() {
   const [isCodeModalOpen, setIsCodeModalOpen] = useState<boolean>(false);
   const [confirmedSquareTier, setConfirmedSquareTier] = useState<'standard' | 'pro' | 'enterprise'>('pro');
   const [squareSubRecord, setSquareSubRecord] = useState<SubscriptionRecord | null>(null);
+
+  // AI Workout Architect Generator modal & active custom AI program
+  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState<boolean>(false);
+  const [activeCustomAIProgram, setActiveCustomAIProgram] = useState<WorkoutProgram | null>(null);
 
   const { 
     tier, 
@@ -103,6 +110,7 @@ export default function App() {
   // Android Back Button handler: close open modals or return to workouts
   const hasOpenModal = 
     activeLiveProgram !== null || 
+    isAIGeneratorOpen ||
     isAthleteModalOpen || 
     isQuestionnaireOpen || 
     isPricingModalOpen || 
@@ -113,6 +121,8 @@ export default function App() {
   const handleCloseTopModal = () => {
     if (activeLiveProgram !== null) {
       setActiveLiveProgram(null);
+    } else if (isAIGeneratorOpen) {
+      setIsAIGeneratorOpen(false);
     } else if (isCodeModalOpen) {
       setIsCodeModalOpen(false);
     } else if (isSquareSuccessModalOpen) {
@@ -236,10 +246,18 @@ export default function App() {
       setHasOfficerProgram(!!prog);
     });
 
+    // 4. Subscribe to user custom AI programs
+    const unsubscribeCustomProgs = subscribeToUserCustomPrograms(user.uid, (cloudProgs) => {
+      if (cloudProgs && cloudProgs.length > 0) {
+        setActiveCustomAIProgram((prev) => prev || cloudProgs[0]);
+      }
+    });
+
     return () => {
       unsubscribeLogs();
       unsubscribeAthlete();
       unsubscribeOfficerProg();
+      unsubscribeCustomProgs();
     };
   }, [user]);
 
@@ -343,6 +361,7 @@ export default function App() {
         onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
+        onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
         readinessScore={readiness.overallScore}
         readinessTier={readiness.tier}
         hasOfficerProgram={hasOfficerProgram}
@@ -547,6 +566,9 @@ export default function App() {
                 onSelectProgram={(key) => setActiveProgramKey(key)}
                 onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
                 onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
+                onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
+                activeCustomProgram={activeCustomAIProgram}
+                onClearCustomProgram={() => setActiveCustomAIProgram(null)}
                 readinessScore={readiness.overallScore}
                 readinessTier={readiness.tier}
               />
@@ -752,8 +774,33 @@ export default function App() {
         onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
+        onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
         readinessScore={readiness.overallScore}
         hasOfficerProgram={hasOfficerProgram}
+      />
+
+      {/* AI Tactical Workout Plan Architect Modal */}
+      <AIWorkoutGeneratorModal
+        isOpen={isAIGeneratorOpen}
+        onClose={() => setIsAIGeneratorOpen(false)}
+        onActivateProgram={(program) => {
+          setActiveCustomAIProgram(program);
+          setActiveProgramKey('custom_ai');
+          setActiveTab('workouts');
+        }}
+        onStartWorkout={(program) => {
+          setActiveCustomAIProgram(program);
+          setActiveProgramKey('custom_ai');
+          setActiveTab('workouts');
+          handleStartWorkout(program);
+        }}
+        onSaveToCloud={async (program) => {
+          if (user) {
+            await saveCustomProgramToFirestore(program, user.uid);
+          }
+        }}
+        currentAthlete={currentAthlete}
+        userEmail={user?.email || ''}
       />
 
       {/* Android Native App Packaging & Installation Modal */}

@@ -9,7 +9,7 @@ import {
   Unsubscribe 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { AthleteProfile, WorkoutSessionLog, OfficerAssignedProgram } from '../types';
+import { AthleteProfile, WorkoutSessionLog, OfficerAssignedProgram, WorkoutProgram } from '../types';
 
 /**
  * Recursively strips undefined values from an object or array.
@@ -424,5 +424,92 @@ export async function deleteOfficerProgramFromFirestore(programId: string): Prom
     handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
+
+/**
+ * Persists a user's custom or AI-generated workout program to Firestore
+ */
+export async function saveCustomProgramToFirestore(
+  program: WorkoutProgram,
+  userId: string
+): Promise<void> {
+  const path = `customPrograms/${program.id}`;
+  try {
+    const cleanProgram = {
+      id: program.id,
+      userId,
+      title: program.title.slice(0, 120),
+      subtitle: (program.subtitle || '').slice(0, 200),
+      category: program.category || 'Hybrid',
+      frequency: (program.frequency || '4 Days / Week').slice(0, 80),
+      estimatedDurationMinutes: Math.max(0, Math.min(360, program.estimatedDurationMinutes || 55)),
+      description: (program.description || '').slice(0, 2000),
+      exercises: (program.exercises || []).slice(0, 50),
+      schedule: program.schedule || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const sanitized = sanitizeForFirestore(cleanProgram);
+    await setDoc(doc(db, 'customPrograms', program.id), sanitized);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Subscribes to custom programs created by or saved for the authenticated user
+ */
+export function subscribeToUserCustomPrograms(
+  userId: string,
+  onPrograms: (programs: WorkoutProgram[]) => void
+): Unsubscribe {
+  const path = 'customPrograms';
+  try {
+    const q = query(
+      collection(db, path),
+      where('userId', '==', userId)
+    );
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const list: WorkoutProgram[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            title: data.title,
+            subtitle: data.subtitle || '',
+            category: data.category || 'Hybrid',
+            frequency: data.frequency || '4 Days / Week',
+            estimatedDurationMinutes: data.estimatedDurationMinutes || 55,
+            description: data.description || '',
+            exercises: data.exercises || [],
+            schedule: data.schedule || [],
+          });
+        });
+        onPrograms(list);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, path);
+      }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+  }
+}
+
+/**
+ * Deletes a custom program from Firestore
+ */
+export async function deleteCustomProgramFromFirestore(programId: string): Promise<void> {
+  const path = `customPrograms/${programId}`;
+  try {
+    await deleteDoc(doc(db, 'customPrograms', programId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 
 
