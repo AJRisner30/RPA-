@@ -19,7 +19,6 @@ export const SignInGate: React.FC<SignInGateProps> = ({
 }) => {
   const { 
     signInWithGoogle, 
-    signInWithGoogleRedirect, 
     isAuthenticating, 
     authError, 
     clearAuthError,
@@ -38,17 +37,6 @@ export const SignInGate: React.FC<SignInGateProps> = ({
     } catch (err) {
       console.warn('[SignInGate] Popup sign-in error:', err);
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRedirectSignIn = async () => {
-    setIsLoading(true);
-    clearAuthError();
-    try {
-      await signInWithGoogleRedirect();
-    } catch (err) {
-      console.warn('[SignInGate] Redirect sign-in error:', err);
       setIsLoading(false);
     }
   };
@@ -237,7 +225,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
               )}
             </button>
 
-            {/* In-app Browser / Redirect Alternative */}
+            {/* Mobile App & WebView Support Guidance */}
             <div className="text-center pt-1">
               {!showAlternative ? (
                 <button
@@ -245,21 +233,24 @@ export const SignInGate: React.FC<SignInGateProps> = ({
                   onClick={() => setShowAlternative(true)}
                   className="text-[11px] text-slate-400 hover:text-blue-400 transition-colors font-medium cursor-pointer"
                 >
-                  Trouble with popup window? Use direct redirect &darr;
+                  Signing in via mobile app or WebView? &darr;
                 </button>
               ) : (
                 <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-left space-y-2 animate-in fade-in duration-150">
                   <p className="text-[11px] text-slate-300 leading-snug">
-                    If your mobile device or browser blocks popup windows, sign in via full redirect:
+                    Inside the Android app, Google Sign-In uses a direct popup. If your app wrapper doesn't open the Google dialog, open in your device browser:
                   </p>
                   <button
                     type="button"
-                    onClick={handleRedirectSignIn}
-                    disabled={isLoading || isAuthenticating}
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.open(window.location.href, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
                     className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-blue-300 rounded-lg text-xs font-bold border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <LogIn className="w-3.5 h-3.5" />
-                    <span>Sign in with Full-Page Redirect</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open in Chrome / Browser</span>
                   </button>
                 </div>
               )}

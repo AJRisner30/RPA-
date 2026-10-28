@@ -46,7 +46,6 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     authError, 
     clearAuthError, 
     signInWithGoogle, 
-    signInWithGoogleRedirect, 
     signOutUser 
   } = useFirebase();
   const isCoach = Boolean(
@@ -224,17 +223,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     }
   };
 
-  const handleGoogleRedirectSignIn = async () => {
-    setIsSigningInGoogle(true);
-    clearAuthError();
-    try {
-      await signInWithGoogleRedirect();
-    } catch (err) {
-      console.warn('[Firebase] Redirect sign-in note:', err);
-    } finally {
-      setIsSigningInGoogle(false);
-    }
-  };
+
 
   const handleGoogleSignOut = async () => {
     clearAuthError();
@@ -523,10 +512,10 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={handleGoogleRedirectSignIn}
+                      onClick={handleGoogleSignIn}
                       className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl font-bold text-xs cursor-pointer flex items-center gap-1"
                     >
-                      <span>Try Redirect Sign-In</span>
+                      <span>Retry Google Sign-In</span>
                     </button>
                   </div>
                 </div>
@@ -575,10 +564,10 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={handleGoogleRedirectSignIn}
+                      onClick={handleGoogleSignIn}
                       className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl font-bold text-xs cursor-pointer"
                     >
-                      <span>Try Redirect Flow</span>
+                      <span>Retry Sign-In</span>
                     </button>
                   </div>
                 </div>

@@ -3,16 +3,39 @@ import {
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
-  signInWithRedirect, 
-  getRedirectResult, 
-  signOut 
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
-const app = initializeApp(firebaseConfig);
+// Resolve custom authDomain for Android WebView / WebsiteToApp wrapper
+const customAuthDomain = 'patrolreadyperformance.store';
+const defaultAuthDomain = firebaseConfig.authDomain || 'teak-router-m53bd.firebaseapp.com';
+const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+const resolvedAuthDomain = (currentHostname.includes('patrolreadyperformance.store') || !defaultAuthDomain)
+  ? customAuthDomain
+  : defaultAuthDomain;
+
+const app = initializeApp({
+  ...firebaseConfig,
+  authDomain: resolvedAuthDomain,
+});
+
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
 export const auth = getAuth(app);
+
+// Configure auth persistence to browserLocalPersistence (localStorage / IndexedDB)
+// This eliminates the "missing initial state" error caused by sessionStorage wipes in Android WebViews
+try {
+  setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.warn('[Firebase] Warning setting browserLocalPersistence:', err);
+  });
+} catch (err) {
+  console.warn('[Firebase] Error configuring persistence:', err);
+}
 
 // Use browser device language for Google Auth screens
 try {
@@ -78,4 +101,13 @@ export async function testFirestoreConnection(): Promise<boolean> {
   return true;
 }
 
-export { signInWithPopup, signInWithRedirect, getRedirectResult, signOut };
+// Safe compatibility export for legacy callers
+export const getRedirectResult = async () => null;
+export const signInWithRedirect = signInWithPopup;
+
+export { 
+  signInWithPopup, 
+  signOut, 
+  setPersistence, 
+  browserLocalPersistence 
+};

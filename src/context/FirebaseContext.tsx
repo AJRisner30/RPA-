@@ -4,8 +4,6 @@ import {
   auth, 
   googleProvider, 
   signInWithPopup, 
-  signInWithRedirect, 
-  getRedirectResult, 
   signOut, 
   testFirestoreConnection 
 } from '../firebase';
@@ -88,23 +86,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // 2. Check for redirect sign-in completion on load
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          setUser(result.user);
-          setIsCloudConnected(true);
-          setAuthError(null);
-        }
-      })
-      .catch((err) => {
-        console.warn('[Firebase] Redirect sign-in result note:', err);
-        if (err?.code && err.code !== 'auth/null-user') {
-          setAuthError(parseAuthError(err));
-        }
-      });
-
-    // 3. Auth state listener
+    // 2. Auth state listener (tracks user session from browserLocalPersistence / localStorage)
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -141,17 +123,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const handleSignInWithGoogleRedirect = async (): Promise<void> => {
-    setIsAuthenticating(true);
-    setAuthError(null);
-    try {
-      await signInWithRedirect(auth, googleProvider);
-    } catch (err: any) {
-      console.error('[Firebase] Sign in with Redirect error:', err);
-      const parsed = parseAuthError(err);
-      setAuthError(parsed);
-      setIsAuthenticating(false);
-      throw err;
-    }
+    // In Android WebView / WebsiteToApp wrapper, redirect sign-in throws missing-initial-state.
+    // Forward directly to signInWithPopup to maintain state integrity.
+    await handleSignInWithGoogle();
   };
 
   const handleSignOut = async () => {
