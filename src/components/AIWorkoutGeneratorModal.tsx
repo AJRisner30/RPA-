@@ -4,10 +4,15 @@ import {
   Target, Clock, Calendar, CheckCircle2, AlertCircle, 
   ArrowRight, RotateCcw, Copy, Check, Play, Save, 
   Zap, Heart, Award, SlidersHorizontal, ChevronRight,
-  Info, Loader2, Dumbbell as WeightIcon
+  Info, Loader2, Dumbbell as WeightIcon, Key
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile } from '../types';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
+import { 
+  generateWorkoutPlanClient, 
+  getEffectiveGeminiApiKey, 
+  GeneratedWorkoutPlan 
+} from '../utils/aiWorkoutService';
 
 interface AIWorkoutGeneratorModalProps {
   isOpen: boolean;
@@ -47,17 +52,31 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   const [sessionDurationMinutes, setSessionDurationMinutes] = useState<number>(60);
   const [notes, setNotes] = useState<string>('');
 
+  // API Key state for Netlify / standalone client deployment
+  const [customApiKey, setCustomApiKey] = useState<string>(() => {
+    try {
+      return localStorage.getItem('rpa_custom_gemini_api_key') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
+  const [keySaveMessage, setKeySaveMessage] = useState<string | null>(null);
+
   // UI state
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationStep, setGenerationStep] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
-  const [generatedPlan, setGeneratedPlan] = useState<any | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedWorkoutPlan | null>(null);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   if (!isOpen) return null;
+
+  const effectiveKey = getEffectiveGeminiApiKey(customApiKey);
+  const hasLiveApiKey = Boolean(effectiveKey && effectiveKey.length > 5);
 
   const goalOptions = [
     { id: 'Tactical Conditioning & Pursuit Speed', label: 'Tactical Conditioning & Pursuit', desc: 'Duty readiness, explosive sprint velocity, and combat chassis resilience.' },
@@ -111,43 +130,47 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     }
   };
 
+  const handleSaveApiKey = () => {
+    try {
+      if (customApiKey.trim()) {
+        localStorage.setItem('rpa_custom_gemini_api_key', customApiKey.trim());
+        setKeySaveMessage('API key saved to browser local storage!');
+      } else {
+        localStorage.removeItem('rpa_custom_gemini_api_key');
+        setKeySaveMessage('Custom API key removed. Using environment defaults.');
+      }
+      setTimeout(() => setKeySaveMessage(null), 3000);
+    } catch (e) {
+      console.warn('Failed to save API key to local storage', e);
+    }
+  };
+
   const handleGenerate = async () => {
     setIsGenerating(true);
     setError(null);
     setGenerationStep(1);
 
-    const stepTimer1 = setTimeout(() => setGenerationStep(2), 1200);
-    const stepTimer2 = setTimeout(() => setGenerationStep(3), 2600);
+    const stepTimer1 = setTimeout(() => setGenerationStep(2), 700);
+    const stepTimer2 = setTimeout(() => setGenerationStep(3), 1400);
 
     try {
-      const response = await fetch('/api/gemini/generate-workout-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          goals: selectedGoals,
-          fitnessLevel,
-          frequency,
-          scheduleDuration,
-          equipment,
-          sessionDurationMinutes,
-          notes,
-          userEmail,
-        }),
+      const plan = await generateWorkoutPlanClient({
+        goals: selectedGoals,
+        fitnessLevel,
+        frequency,
+        scheduleDuration,
+        equipment,
+        sessionDurationMinutes,
+        notes,
+        userEmail,
+        customApiKey: customApiKey.trim() || undefined,
       });
 
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        throw new Error(errJson.error || `Server responded with status ${response.status}`);
-      }
-
-      const resData = await response.json();
-      if (!resData.data) {
+      if (!plan || !plan.schedule || plan.schedule.length === 0) {
         throw new Error('Failed to retrieve structured plan data from AI engine.');
       }
 
-      setGeneratedPlan(resData.data);
+      setGeneratedPlan(plan);
       setActiveDayIndex(0);
       setIsSaved(false);
     } catch (err: any) {
@@ -306,14 +329,23 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 uppercase tracking-wider">
-                  Gemini 3.8 Flash • AI Engine
+                  Gemini 3.8 Flash • Client SDK
                 </span>
-                <span className="text-slate-500 hidden sm:inline">•</span>
-                <span className="text-xs text-slate-400 font-mono hidden sm:inline">
-                  Adaptive Double Progression
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded border transition cursor-pointer flex items-center gap-1 ${
+                    hasLiveApiKey 
+                      ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60' 
+                      : 'bg-amber-950/60 text-amber-300 border-amber-500/40 hover:bg-amber-900/60'
+                  }`}
+                  title="Configure Gemini API Key for Netlify or custom deployment"
+                >
+                  <Key className="w-2.5 h-2.5" />
+                  <span>{hasLiveApiKey ? 'API Key Connected' : 'Netlify API Key Setup'}</span>
+                </button>
               </div>
               <h2 className="text-lg sm:text-2xl font-black uppercase text-white font-athletic tracking-wide">
                 Personalized AI Workout Architect
@@ -333,6 +365,53 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
         {/* Body Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+          {/* NETLIFY / CUSTOM API KEY CONFIGURATION PANEL */}
+          {showApiKeyInput && (
+            <div className="p-4 rounded-2xl bg-[#0d1627] border-2 border-blue-500/40 shadow-xl space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-black uppercase font-athletic text-blue-300">
+                  <Key className="w-4 h-4 text-amber-400" />
+                  <span>Gemini Client-Side API Key Configuration (Netlify / Static Hosting)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowApiKeyInput(false)}
+                  className="text-slate-400 hover:text-white text-xs font-mono"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                This app runs completely static on Netlify with <strong>zero server 404 dependencies</strong>. You can configure your key via Netlify environment variables (<code className="text-amber-300 font-mono">VITE_GEMINI_API_KEY</code>) or paste it directly below to save it in this browser.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="password"
+                  value={customApiKey}
+                  onChange={(e) => setCustomApiKey(e.target.value)}
+                  placeholder="Paste AI Studio / Gemini API Key (e.g. AIzaSy...)"
+                  className="flex-1 px-3 py-2 rounded-xl bg-[#070b13] border border-slate-700 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveApiKey}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase rounded-xl transition cursor-pointer whitespace-nowrap"
+                >
+                  Save Key
+                </button>
+              </div>
+
+              {keySaveMessage && (
+                <div className="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{keySaveMessage}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {error && (
             <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/50 text-red-200 flex items-start gap-3 text-xs animate-in fade-in">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
@@ -407,6 +486,14 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono flex items-center gap-1">
                         <Clock className="w-3 h-3 text-slate-400" />
                         {generatedPlan.estimatedDurationMinutes || sessionDurationMinutes} mins/session
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border ${
+                        generatedPlan.source === 'gemini-3.8-flash'
+                          ? 'bg-blue-950/70 text-blue-300 border-blue-500/40'
+                          : 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40'
+                      }`}>
+                        <Sparkles className="w-3 h-3" />
+                        {generatedPlan.source === 'gemini-3.8-flash' ? 'Gemini 3.8 Flash' : 'Calibrated Engine'}
                       </span>
                     </div>
 
