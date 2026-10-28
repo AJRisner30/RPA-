@@ -3,6 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <script>
+      // Gracefully intercept benign dev proxy WebSocket closed errors
+      window.addEventListener('error', function(e) {
+        if (e && e.message && (e.message.indexOf('WebSocket') !== -1 || e.message.indexOf('closed without opened') !== -1)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e && e.reason && typeof e.reason.message === 'string' && (e.reason.message.indexOf('WebSocket') !== -1 || e.reason.message.indexOf('closed without opened') !== -1)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+    </script>
     <title>Patrol Ready Performance | Tactical fitness for the Frontline</title>
     <meta name="description" content="Patrol Ready Performance — Tactical fitness for the Frontline. Elite law enforcement physical training, duty readiness, combat chassis durability, foot pursuit speed, and tactical load carriage." />
     <meta property="og:title" content="Patrol Ready Performance | Tactical fitness for the Frontline" />

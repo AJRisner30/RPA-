@@ -10,18 +10,13 @@ import {
 import { getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
-// Resolve custom authDomain for Android WebView / WebsiteToApp wrapper
-const customAuthDomain = 'patrolreadyperformance.store';
+// Default Firebase project authDomain (.firebaseapp.com)
+// Netlify does not host /__/auth/handler, so authDomain must use the default Firebase project URL
 const defaultAuthDomain = firebaseConfig.authDomain || 'teak-router-m53bd.firebaseapp.com';
-const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
-
-const resolvedAuthDomain = (currentHostname.includes('patrolreadyperformance.store') || !defaultAuthDomain)
-  ? customAuthDomain
-  : defaultAuthDomain;
 
 const app = initializeApp({
   ...firebaseConfig,
-  authDomain: resolvedAuthDomain,
+  authDomain: defaultAuthDomain,
 });
 
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
