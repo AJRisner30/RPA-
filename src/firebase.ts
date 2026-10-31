@@ -1,8 +1,13 @@
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updatePassword,
+  updateProfile,
+  linkWithCredential,
+  EmailAuthProvider,
   signOut,
   setPersistence,
   browserLocalPersistence
@@ -23,7 +28,6 @@ export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); /* CRIT
 export const auth = getAuth(app);
 
 // Configure auth persistence to browserLocalPersistence (localStorage / IndexedDB)
-// This eliminates the "missing initial state" error caused by sessionStorage wipes in Android WebViews
 try {
   setPersistence(auth, browserLocalPersistence).catch((err) => {
     console.warn('[Firebase] Warning setting browserLocalPersistence:', err);
@@ -31,16 +35,6 @@ try {
 } catch (err) {
   console.warn('[Firebase] Error configuring persistence:', err);
 }
-
-// Use browser device language for Google Auth screens
-try {
-  auth.useDeviceLanguage();
-} catch {}
-
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account',
-});
 
 export enum OperationType {
   CREATE = 'create',
@@ -96,12 +90,14 @@ export async function testFirestoreConnection(): Promise<boolean> {
   return true;
 }
 
-// Safe compatibility export for legacy callers
-export const getRedirectResult = async () => null;
-export const signInWithRedirect = signInWithPopup;
-
 export { 
-  signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updatePassword,
+  updateProfile,
+  linkWithCredential,
+  EmailAuthProvider,
   signOut, 
   setPersistence, 
   browserLocalPersistence 

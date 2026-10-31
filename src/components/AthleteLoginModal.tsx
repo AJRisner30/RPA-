@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   X, User, ShieldCheck, Dumbbell, Award, Plus, LogIn, 
   Check, ChevronRight, Lock, Mail, Activity, Sparkles, Download, ArrowRight,
-  Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw, Copy, ExternalLink
+  Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw, Copy, ExternalLink, KeyRound
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog } from '../types';
 import { ReadinessScoreCard } from './ReadinessScoreCard';
@@ -42,10 +42,12 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     user, 
     isCloudConnected, 
     isAuthenticating, 
-    isIframe, 
     authError, 
     clearAuthError, 
-    signInWithGoogle, 
+    signInWithEmail,
+    signUpWithEmail,
+    sendPasswordSetupEmail,
+    setUserPassword,
     signOutUser 
   } = useFirebase();
   const isCoach = Boolean(
@@ -53,8 +55,22 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     isCoachSession()
   );
 
-  const [isSigningInGoogle, setIsSigningInGoogle] = useState(false);
-  const [copiedDomain, setCopiedDomain] = useState(false);
+  // Cloud Sync & Auth States
+  const [showCloudAuth, setShowCloudAuth] = useState(false);
+  const [cloudAuthMode, setCloudAuthMode] = useState<'signin' | 'signup' | 'reset'>('signin');
+  const [cloudEmail, setCloudEmail] = useState('');
+  const [cloudPassword, setCloudPassword] = useState('');
+  const [cloudName, setCloudName] = useState('');
+  const [cloudError, setCloudError] = useState<string | null>(null);
+  const [cloudSuccessMsg, setCloudSuccessMsg] = useState<string | null>(null);
+
+  // Set/Update Password for authenticated user
+  const [showSetPasswordForm, setShowSetPasswordForm] = useState(false);
+  const [newPasswordVal, setNewPasswordVal] = useState('');
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+  const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
   const [athletes, setAthletes] = useState<AthleteProfile[]>(() => getSelectableAthletes(isCoach));
   const [currentAthlete, setCurrentAthleteState] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [viewMode, setViewMode] = useState<'switch' | 'register' | 'login' | 'profile'>(() => isCoach ? 'switch' : 'profile');
@@ -169,38 +185,19 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     }
   };
 
-  const handleCopyDomain = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        navigator.clipboard.writeText(window.location.hostname);
-        setCopiedDomain(true);
-        setTimeout(() => setCopiedDomain(false), 2500);
-      } catch {
-        setCopiedDomain(true);
-        setTimeout(() => setCopiedDomain(false), 2500);
-      }
-    }
-  };
-
-  const handleOpenStandalone = () => {
-    if (typeof window !== 'undefined') {
-      window.open(window.location.href, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsSigningInGoogle(true);
+  const handleCloudSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCloudError(null);
+    setCloudSuccessMsg(null);
     clearAuthError();
     try {
-      const googleUser = await signInWithGoogle();
-      if (googleUser) {
-        const name = googleUser.displayName || 'Google Athlete';
-        const email = googleUser.email || '';
-
+      const signedInUser = await signInWithEmail(cloudEmail.trim(), cloudPassword);
+      if (signedInUser) {
+        const email = signedInUser.email || cloudEmail.trim();
         let athlete = athletes.find((a) => (a.email || '').toLowerCase() === email.toLowerCase());
         if (!athlete) {
           athlete = registerAthlete({
-            name,
+            name: signedInUser.displayName || email.split('@')[0],
             email,
             experienceLevel: 'Intermediate',
             primaryGoal: 'Hybrid Athlete',
@@ -210,24 +207,93 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
         setAthletes(getSelectableAthletes());
         setCurrentAthleteState(athlete);
         onAthleteChanged(athlete);
-
-        // Sync with Firestore
-        saveAthleteToFirestore(athlete, googleUser.uid).catch((err) => {
-          console.warn('[Firebase] Athlete profile sync note:', err);
-        });
+        saveAthleteToFirestore(athlete, signedInUser.uid).catch(() => {});
+        setShowCloudAuth(false);
+        setCloudPassword('');
       }
-    } catch (err) {
-      console.warn('[Firebase] Sign-in note:', err);
-    } finally {
-      setIsSigningInGoogle(false);
+    } catch (err: any) {
+      setCloudError(authError?.message || 'Failed to sign in. Please check your credentials or set a password.');
     }
   };
 
+  const handleCloudSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCloudError(null);
+    setCloudSuccessMsg(null);
+    clearAuthError();
+    if (cloudPassword.length < 6) {
+      setCloudError('Password must be at least 6 characters long.');
+      return;
+    }
+    try {
+      const signedUpUser = await signUpWithEmail(cloudEmail.trim(), cloudPassword, cloudName.trim() || undefined);
+      if (signedUpUser) {
+        const email = signedUpUser.email || cloudEmail.trim();
+        const athlete = registerAthlete({
+          name: cloudName.trim() || email.split('@')[0],
+          email,
+          experienceLevel: 'Intermediate',
+          primaryGoal: 'Hybrid Athlete',
+          weightLbs: 185,
+        });
+        setAthletes(getSelectableAthletes());
+        setCurrentAthleteState(athlete);
+        onAthleteChanged(athlete);
+        saveAthleteToFirestore(athlete, signedUpUser.uid).catch(() => {});
+        setShowCloudAuth(false);
+        setCloudPassword('');
+      }
+    } catch (err: any) {
+      setCloudError(authError?.message || 'Registration failed. If you already have an account, please Sign In or Set Password.');
+    }
+  };
 
+  const handleCloudPasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCloudError(null);
+    setCloudSuccessMsg(null);
+    clearAuthError();
+    if (!cloudEmail.trim() || !cloudEmail.includes('@')) {
+      setCloudError('Please enter a valid email address.');
+      return;
+    }
+    try {
+      await sendPasswordSetupEmail(cloudEmail.trim());
+      setCloudSuccessMsg(`Password setup email sent to ${cloudEmail.trim()}! Please check your inbox (and spam) to set your password.`);
+    } catch (err: any) {
+      setCloudError(authError?.message || 'Could not send password setup email.');
+    }
+  };
 
-  const handleGoogleSignOut = async () => {
+  const handleUpdateUserPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMsg(null);
+    if (newPasswordVal.length < 6) {
+      setPasswordMsg({ type: 'error', text: 'Password must be at least 6 characters long.' });
+      return;
+    }
+    if (newPasswordVal !== newPasswordConfirm) {
+      setPasswordMsg({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+    setIsUpdatingPassword(true);
+    try {
+      await setUserPassword(newPasswordVal);
+      setPasswordMsg({ type: 'success', text: 'Password set successfully! You can now log in using this password and your email.' });
+      setNewPasswordVal('');
+      setNewPasswordConfirm('');
+      setTimeout(() => setShowSetPasswordForm(false), 3500);
+    } catch (err: any) {
+      setPasswordMsg({ type: 'error', text: err?.message || 'Failed to update password.' });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleSignOut = async () => {
     clearAuthError();
     await signOutUser();
+    setShowSetPasswordForm(false);
   };
 
   const exportAthleteData = () => {
@@ -322,258 +388,281 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
           {/* Firebase Cloud Sync Card */}
-          <div className="bg-gradient-to-r from-[#0f172a] to-[#131d36] border border-blue-500/30 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-            <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                user ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-              }`}>
-                <Cloud className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-white text-xs sm:text-sm">
-                    {user ? 'Firebase Cloud Sync Active' : 'Firebase Cloud Backup & Sync'}
-                  </span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                    user ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                  }`}>
-                    {user ? 'Synced' : isCloudConnected ? 'Cloud Ready' : 'Local'}
-                  </span>
+          <div className="bg-gradient-to-r from-[#0f172a] to-[#131d36] border border-blue-500/30 rounded-2xl p-3.5 sm:p-4 shadow-md space-y-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  user ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                }`}>
+                  <Cloud className="w-5 h-5" />
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  {user ? (
-                    <span>Signed in as <strong className="text-slate-200">{user.email}</strong>. Workouts & biometrics auto-persist to Firestore.</span>
-                  ) : (
-                    <span>Sign in with Google to automatically backup and sync your workout logs across devices in real-time.</span>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              {user ? (
-                <button
-                  type="button"
-                  onClick={handleGoogleSignOut}
-                  className="w-full sm:w-auto px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Disconnect</span>
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={isSigningInGoogle || isAuthenticating}
-                    className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-950/40 cursor-pointer disabled:opacity-50 border border-blue-400/40"
-                  >
-                    {isSigningInGoogle || isAuthenticating ? (
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white text-xs sm:text-sm">
+                      {user ? 'Firebase Cloud Sync Active' : 'Firebase Cloud Backup & Sync'}
+                    </span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                      user ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                    }`}>
+                      {user ? 'Synced' : isCloudConnected ? 'Cloud Ready' : 'Local'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {user ? (
+                      <span>Signed in as <strong className="text-slate-200">{user.email}</strong>. Workouts &amp; biometrics auto-persist to Firestore.</span>
                     ) : (
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                      </svg>
+                      <span>Sign in with Email &amp; Password to backup and sync your workout logs across devices in real-time.</span>
                     )}
-                    <span>{isSigningInGoogle || isAuthenticating ? 'Signing In...' : 'Sign in with Google'}</span>
-                  </button>
+                  </p>
+                </div>
+              </div>
 
-                  {isIframe && (
+              <div className="shrink-0 w-full sm:w-auto flex flex-wrap items-center gap-2">
+                {user ? (
+                  <>
                     <button
                       type="button"
-                      onClick={handleOpenStandalone}
-                      className="px-2.5 py-1.5 bg-[#0f172a] hover:bg-slate-800 text-slate-300 hover:text-blue-300 border border-slate-700/80 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                      title="Open application in standalone tab for unrestricted authentication"
+                      onClick={() => setShowSetPasswordForm(!showSetPasswordForm)}
+                      className="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 hover:text-white border border-blue-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
-                      <span>Full Tab</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <KeyRound className="w-3.5 h-3.5" />
+                      <span>{showSetPasswordForm ? 'Close Password Form' : 'Set / Update Password'}</span>
                     </button>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Iframe Helper Tip */}
-          {isIframe && !user && !authError && (
-            <div className="bg-blue-950/30 border border-blue-500/25 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-[11px] text-slate-300">
-              <span className="flex items-center gap-1.5">
-                <span className="text-blue-400">💡</span>
-                <span>Running in preview frame. If Google sign-in is blocked by browser security:</span>
-              </span>
-              <button
-                type="button"
-                onClick={handleOpenStandalone}
-                className="text-blue-400 hover:text-blue-300 font-bold underline flex items-center gap-1 shrink-0 cursor-pointer"
-              >
-                <span>Launch in Full Tab</span>
-                <ExternalLink className="w-3 h-3" />
-              </button>
-            </div>
-          )}
-
-          {/* Dedicated Diagnostic & Troubleshooting Panel when Auth Error Occurs */}
-          {authError && (
-            <div className="bg-red-950/40 border border-red-500/50 rounded-2xl p-4 text-xs space-y-2.5 animate-in fade-in duration-200">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 text-red-300 font-bold">
-                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-                  <span>
-                    {authError.isDomainError
-                      ? 'Firebase Domain Authorization Needed'
-                      : authError.isPopupBlocked
-                      ? 'Browser Sign-In Popup Blocked'
-                      : authError.isOperationDisabled
-                      ? 'Google Sign-In Provider Disabled'
-                      : authError.isCancelled
-                      ? 'Google Sign-In Window Closed'
-                      : 'Google Authentication Error'}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={clearAuthError}
-                  className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
-                  title="Dismiss error message"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Disconnect</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCloudAuth(!showCloudAuth);
+                      setCloudError(null);
+                      setCloudSuccessMsg(null);
+                    }}
+                    className="w-full sm:w-auto px-3.5 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-950/40 cursor-pointer border border-blue-400/40"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>{showCloudAuth ? 'Hide Sign In' : 'Sign In / Connect Account'}</span>
+                  </button>
+                )}
               </div>
+            </div>
 
-              {/* DOMAIN AUTHORIZATION GUIDANCE */}
-              {authError.isDomainError && (
-                <div className="space-y-2 text-zinc-300">
-                  <p className="leading-relaxed">
-                    Authentication requires opening the application in a full browser tab.
-                  </p>
-                  {isCoach ? (
-                    <>
-                      <div className="p-2.5 bg-black/50 border border-zinc-800 rounded-xl space-y-1.5">
-                        <div className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">
-                          App Domain To Authorize (Admin Only):
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <code className="text-blue-300 font-mono text-xs font-bold break-all">
-                            {typeof window !== 'undefined' ? window.location.hostname : 'run.app'}
-                          </code>
-                          <button
-                            type="button"
-                            onClick={handleCopyDomain}
-                            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 border border-slate-700 cursor-pointer shrink-0"
-                          >
-                            {copiedDomain ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
-                            <span>{copiedDomain ? 'Copied!' : 'Copy'}</span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={handleOpenStandalone}
-                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-lg text-[11px] flex items-center gap-1.5 cursor-pointer shadow-md transition-all border border-blue-400/40"
-                        >
-                          <span>Open in Standalone Tab</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="pt-1">
+            {/* Set Password Form for Currently Logged-in User */}
+            {user && showSetPasswordForm && (
+              <form onSubmit={handleUpdateUserPassword} className="p-3 bg-[#0a0f1d] border border-blue-500/30 rounded-xl space-y-2.5 animate-in fade-in duration-150">
+                <div className="flex items-center gap-2 text-blue-300 font-bold text-xs">
+                  <KeyRound className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Set / Update Account Password</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Did you previously sign in using Google? Setting a password allows you to log in with your email address (<strong className="text-white">{user.email}</strong>) and password on any device.
+                </p>
+
+                {passwordMsg && (
+                  <div className={`p-2.5 rounded-lg text-xs font-semibold ${
+                    passwordMsg.type === 'success' 
+                      ? 'bg-emerald-950/60 border border-emerald-500/50 text-emerald-300' 
+                      : 'bg-red-950/60 border border-red-500/50 text-red-300'
+                  }`}>
+                    {passwordMsg.text}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="password"
+                    placeholder="New password (min 6 chars)"
+                    value={newPasswordVal}
+                    onChange={(e) => setNewPasswordVal(e.target.value)}
+                    className="bg-[#060b14] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-blue-500"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={newPasswordConfirm}
+                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    className="bg-[#060b14] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowSetPasswordForm(false)}
+                    className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdatingPassword}
+                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-lg cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {isUpdatingPassword ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                    <span>Save Password</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Inline Cloud Auth Form when not logged in */}
+            {!user && showCloudAuth && (
+              <div className="p-3 bg-[#0a0f1d] border border-slate-800 rounded-xl space-y-3 animate-in fade-in duration-150">
+                <div className="flex items-center gap-1.5 p-1 bg-black/40 rounded-lg border border-slate-800 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => { setCloudAuthMode('signin'); setCloudError(null); }}
+                    className={`flex-1 py-1.5 rounded-md text-center transition-all cursor-pointer ${
+                      cloudAuthMode === 'signin' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCloudAuthMode('signup'); setCloudError(null); }}
+                    className={`flex-1 py-1.5 rounded-md text-center transition-all cursor-pointer ${
+                      cloudAuthMode === 'signup' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCloudAuthMode('reset'); setCloudError(null); }}
+                    className={`flex-1 py-1.5 rounded-md text-center transition-all cursor-pointer ${
+                      cloudAuthMode === 'reset' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Set Password
+                  </button>
+                </div>
+
+                {cloudError && (
+                  <div className="p-2.5 bg-red-950/60 border border-red-500/50 rounded-lg text-red-300 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>{cloudError}</span>
+                  </div>
+                )}
+
+                {cloudSuccessMsg && (
+                  <div className="p-2.5 bg-emerald-950/60 border border-emerald-500/50 rounded-lg text-emerald-300 text-xs flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{cloudSuccessMsg}</span>
+                  </div>
+                )}
+
+                {cloudAuthMode === 'signin' && (
+                  <form onSubmit={handleCloudSignIn} className="space-y-2.5">
+                    <input
+                      type="email"
+                      required
+                      placeholder="Email address"
+                      value={cloudEmail}
+                      onChange={(e) => setCloudEmail(e.target.value)}
+                      className="w-full bg-[#060b14] border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <input
+                      type="password"
+                      required
+                      placeholder="Password"
+                      value={cloudPassword}
+                      onChange={(e) => setCloudPassword(e.target.value)}
+                      className="w-full bg-[#060b14] border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <div className="flex items-center justify-between pt-1">
                       <button
                         type="button"
-                        onClick={handleOpenStandalone}
-                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-all border border-blue-400/40"
+                        onClick={() => setCloudAuthMode('reset')}
+                        className="text-[11px] text-blue-400 hover:text-blue-300 underline font-semibold cursor-pointer"
                       >
-                        <span>Open in Full Browser Tab to Sign In</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
+                        Previously used Google? Set password &rarr;
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isAuthenticating}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-lg cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {isAuthenticating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <LogIn className="w-3.5 h-3.5" />}
+                        <span>Sign In</span>
                       </button>
                     </div>
-                  )}
-                </div>
-              )}
+                  </form>
+                )}
 
-              {/* POPUP BLOCKED GUIDANCE */}
-              {authError.isPopupBlocked && (
-                <div className="space-y-2 text-slate-300">
-                  <p className="leading-relaxed">
-                    Your web browser or the embedded development frame prevented the Google login window from opening.
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleOpenStandalone}
-                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md border border-blue-400/40"
-                    >
-                      <span>Open in Full Browser Tab to Sign In</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleGoogleSignIn}
-                      className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl font-bold text-xs cursor-pointer flex items-center gap-1"
-                    >
-                      <span>Retry Google Sign-In</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+                {cloudAuthMode === 'signup' && (
+                  <form onSubmit={handleCloudSignUp} className="space-y-2.5">
+                    <input
+                      type="text"
+                      placeholder="Full Name (optional)"
+                      value={cloudName}
+                      onChange={(e) => setCloudName(e.target.value)}
+                      className="w-full bg-[#060b14] border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <input
+                      type="email"
+                      required
+                      placeholder="Email address"
+                      value={cloudEmail}
+                      onChange={(e) => setCloudEmail(e.target.value)}
+                      className="w-full bg-[#060b14] border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <input
+                      type="password"
+                      required
+                      placeholder="Password (minimum 6 characters)"
+                      value={cloudPassword}
+                      onChange={(e) => setCloudPassword(e.target.value)}
+                      className="w-full bg-[#060b14] border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <div className="flex items-center justify-end pt-1">
+                      <button
+                        type="submit"
+                        disabled={isAuthenticating}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-lg cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {isAuthenticating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                        <span>Create Account</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
 
-              {/* OPERATION DISABLED GUIDANCE */}
-              {authError.isOperationDisabled && (
-                <div className="space-y-2 text-slate-300">
-                  <p className="leading-relaxed">
-                    Google Sign-In is temporarily updating. Please use your email login or click below to open in a full window.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleOpenStandalone}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs cursor-pointer border border-blue-400/40 shadow-sm"
-                  >
-                    <span>Open in Full Browser Tab to Complete Sign-In</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-
-              {/* CANCELLED */}
-              {authError.isCancelled && (
-                <div className="text-zinc-300">
-                  <p className="leading-relaxed">
-                    The sign-in window was closed before completion. Click <strong>Sign in with Google</strong> above to try again.
-                  </p>
-                </div>
-              )}
-
-              {/* OTHER / GENERIC ERRORS */}
-              {!authError.isDomainError && !authError.isPopupBlocked && !authError.isOperationDisabled && !authError.isCancelled && (
-                <div className="space-y-2 text-zinc-300">
-                  <div className="font-mono text-[11px] text-red-200 bg-black/40 p-2 rounded-lg border border-red-900/50 break-all">
-                    [{authError.code}] {authError.message}
-                  </div>
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleOpenStandalone}
-                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>Try in Standalone Tab</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleGoogleSignIn}
-                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl font-bold text-xs cursor-pointer"
-                    >
-                      <span>Retry Sign-In</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+                {cloudAuthMode === 'reset' && (
+                  <form onSubmit={handleCloudPasswordReset} className="space-y-2.5">
+                    <p className="text-[11px] text-slate-400">
+                      Enter the email address you previously used with Google Sign-In or your account. We will send a link so you can set your password:
+                    </p>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Enter previous Google sign-in email"
+                      value={cloudEmail}
+                      onChange={(e) => setCloudEmail(e.target.value)}
+                      className="w-full bg-[#060b14] border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
+                    />
+                    <div className="flex items-center justify-end pt-1">
+                      <button
+                        type="submit"
+                        disabled={isAuthenticating}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black rounded-lg cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {isAuthenticating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                        <span>Send Password Setup Link</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* VIEW: SWITCH ATHLETE */}
           {viewMode === 'switch' && (

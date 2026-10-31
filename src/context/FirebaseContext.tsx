@@ -2,8 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { 
   auth, 
-  googleProvider, 
-  signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updatePassword,
+  updateProfile,
+  linkWithCredential,
+  EmailAuthProvider,
   signOut, 
   testFirestoreConnection 
 } from '../firebase';
@@ -11,11 +16,11 @@ import {
 export interface AuthErrorInfo {
   code: string;
   message: string;
-  domain?: string;
-  isDomainError?: boolean;
-  isPopupBlocked?: boolean;
-  isOperationDisabled?: boolean;
-  isCancelled?: boolean;
+  isAccountExists?: boolean;
+  isInvalidCredential?: boolean;
+  isWeakPassword?: boolean;
+  isInvalidEmail?: boolean;
+  isUserNotFound?: boolean;
 }
 
 interface FirebaseContextType {
@@ -23,27 +28,47 @@ interface FirebaseContextType {
   loading: boolean;
   isAuthenticating: boolean;
   isCloudConnected: boolean;
-  isIframe: boolean;
   authError: AuthErrorInfo | null;
   clearAuthError: () => void;
-  signInWithGoogle: () => Promise<User | null>;
-  signInWithGoogleRedirect: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<User | null>;
+  signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<User | null>;
+  sendPasswordSetupEmail: (email: string) => Promise<void>;
+  setUserPassword: (newPassword: string) => Promise<void>;
   signOutUser: () => Promise<void>;
 }
 
 export function parseAuthError(err: any): AuthErrorInfo {
   const code = err?.code || 'auth/unknown-error';
-  const message = err?.message || 'Authentication failed. Please try again.';
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  let message = err?.message || 'Authentication failed. Please check your credentials and try again.';
+
+  const isAccountExists = code === 'auth/email-already-in-use';
+  const isInvalidCredential = code === 'auth/wrong-password' || code === 'auth/invalid-credential';
+  const isUserNotFound = code === 'auth/user-not-found';
+  const isWeakPassword = code === 'auth/weak-password';
+  const isInvalidEmail = code === 'auth/invalid-email';
+
+  if (isAccountExists) {
+    message = 'An account already exists with this email (e.g. from previous Google sign in). Please use "Set / Reset Password" to set a password for this email.';
+  } else if (isInvalidCredential) {
+    message = 'Incorrect password or account credentials. If you previously signed in with Google, you must set a password first using the "Set Password" tab.';
+  } else if (isUserNotFound) {
+    message = 'No account found with this email. If this is your first time, please create an account.';
+  } else if (isWeakPassword) {
+    message = 'Password must be at least 6 characters long.';
+  } else if (isInvalidEmail) {
+    message = 'Please enter a valid email address.';
+  } else if (code === 'auth/too-many-requests') {
+    message = 'Access temporarily restricted due to multiple failed login attempts. Please reset your password or wait a few minutes.';
+  }
 
   return {
     code,
     message,
-    domain: hostname,
-    isDomainError: code === 'auth/unauthorized-domain' || message.includes('unauthorized domain') || message.includes('authorized domain'),
-    isPopupBlocked: code === 'auth/popup-blocked' || (message.toLowerCase().includes('popup') && message.toLowerCase().includes('blocked')),
-    isOperationDisabled: code === 'auth/operation-not-allowed',
-    isCancelled: code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request',
+    isAccountExists,
+    isInvalidCredential,
+    isWeakPassword,
+    isInvalidEmail,
+    isUserNotFound,
   };
 }
 
@@ -52,11 +77,12 @@ const FirebaseContext = createContext<FirebaseContextType>({
   loading: true,
   isAuthenticating: false,
   isCloudConnected: false,
-  isIframe: false,
   authError: null,
   clearAuthError: () => {},
-  signInWithGoogle: async () => null,
-  signInWithGoogleRedirect: async () => {},
+  signInWithEmail: async () => null,
+  signUpWithEmail: async () => null,
+  sendPasswordSetupEmail: async () => {},
+  setUserPassword: async () => {},
   signOutUser: async () => {},
 });
 
@@ -66,16 +92,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [isCloudConnected, setIsCloudConnected] = useState<boolean>(false);
   const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
-  const [isIframe, setIsIframe] = useState<boolean>(false);
 
   useEffect(() => {
-    // Detect iframe environment
-    try {
-      setIsIframe(window.self !== window.top);
-    } catch {
-      setIsIframe(true);
-    }
-
     // 1. Check Firestore database connection test on initial boot
     testFirestoreConnection().then((connected) => {
       setIsCloudConnected(connected);
@@ -103,17 +121,18 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
-  const handleSignInWithGoogle = async (): Promise<User | null> => {
+  // Sign In with Email & Password
+  const handleSignInWithEmail = async (email: string, password: string): Promise<User | null> => {
     setIsAuthenticating(true);
     setAuthError(null);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
+      const cleanEmail = email.trim();
+      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      setUser(userCredential.user);
       setIsCloudConnected(true);
-      setAuthError(null);
-      return result.user;
+      return userCredential.user;
     } catch (err: any) {
-      console.error('[Firebase] Sign in with Google error:', err);
+      console.warn('[Firebase] Email sign-in error:', err);
       const parsed = parseAuthError(err);
       setAuthError(parsed);
       throw err;
@@ -122,10 +141,84 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const handleSignInWithGoogleRedirect = async (): Promise<void> => {
-    // In Android WebView / WebsiteToApp wrapper, redirect sign-in throws missing-initial-state.
-    // Forward directly to signInWithPopup to maintain state integrity.
-    await handleSignInWithGoogle();
+  // Sign Up / Create Account with Email & Password
+  const handleSignUpWithEmail = async (
+    email: string, 
+    password: string, 
+    displayName?: string
+  ): Promise<User | null> => {
+    setIsAuthenticating(true);
+    setAuthError(null);
+    try {
+      const cleanEmail = email.trim();
+      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      if (displayName && userCredential.user) {
+        try {
+          await updateProfile(userCredential.user, { displayName });
+        } catch (profileErr) {
+          console.warn('[Firebase] Profile display name set error:', profileErr);
+        }
+      }
+      setUser(userCredential.user);
+      setIsCloudConnected(true);
+      return userCredential.user;
+    } catch (err: any) {
+      console.warn('[Firebase] Email sign-up error:', err);
+      const parsed = parseAuthError(err);
+      setAuthError(parsed);
+      throw err;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  // Send Password Setup / Reset Email
+  // Works for both password resets AND allowing previous Google Sign-In users to set their initial password!
+  const handleSendPasswordSetupEmail = async (email: string): Promise<void> => {
+    setIsAuthenticating(true);
+    setAuthError(null);
+    try {
+      const cleanEmail = email.trim();
+      await sendPasswordResetEmail(auth, cleanEmail);
+    } catch (err: any) {
+      console.warn('[Firebase] Password reset email error:', err);
+      const parsed = parseAuthError(err);
+      setAuthError(parsed);
+      throw err;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  // Set / Update Password directly on current user
+  // Allows users currently logged in (including previous Google users) to set their password immediately
+  const handleSetUserPassword = async (newPassword: string): Promise<void> => {
+    if (!auth.currentUser) {
+      throw new Error('No user is currently authenticated.');
+    }
+    setIsAuthenticating(true);
+    setAuthError(null);
+    try {
+      const currentUser = auth.currentUser;
+      try {
+        await updatePassword(currentUser, newPassword);
+      } catch (err: any) {
+        // If password provider wasn't linked yet (e.g. Google-only user), link password credential
+        if (currentUser.email) {
+          const cred = EmailAuthProvider.credential(currentUser.email, newPassword);
+          await linkWithCredential(currentUser, cred);
+        } else {
+          throw err;
+        }
+      }
+    } catch (err: any) {
+      console.warn('[Firebase] Set user password error:', err);
+      const parsed = parseAuthError(err);
+      setAuthError(parsed);
+      throw err;
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -149,11 +242,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         loading,
         isAuthenticating,
         isCloudConnected,
-        isIframe,
         authError,
         clearAuthError,
-        signInWithGoogle: handleSignInWithGoogle,
-        signInWithGoogleRedirect: handleSignInWithGoogleRedirect,
+        signInWithEmail: handleSignInWithEmail,
+        signUpWithEmail: handleSignUpWithEmail,
+        sendPasswordSetupEmail: handleSendPasswordSetupEmail,
+        setUserPassword: handleSetUserPassword,
         signOutUser: handleSignOut,
       }}
     >

@@ -1,7 +1,8 @@
 import express from 'express';
 import http from 'http';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type, Modality, LiveServerMessage } from '@google/genai';
+import { WebSocketServer, WebSocket } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -15,6 +16,8 @@ interface WorkoutGenerationRequest {
   scheduleDuration: 'weekly' | 'monthly';
   equipment: string[];
   sessionDurationMinutes?: number;
+  injuries?: string[];
+  injuryNotes?: string;
   notes?: string;
   userEmail?: string;
 }
@@ -25,6 +28,16 @@ function generateFallbackWorkoutPlan(params: WorkoutGenerationRequest) {
   const isHypertrophy = params.goals?.some(g => g.toLowerCase().includes('hypertrophy') || g.toLowerCase().includes('muscle'));
   const isStrength = params.goals?.some(g => g.toLowerCase().includes('strength') || g.toLowerCase().includes('power'));
   const isEndurance = params.goals?.some(g => g.toLowerCase().includes('endurance') || g.toLowerCase().includes('loss'));
+
+  const injuryRaw = [
+    ...(params.injuries || []),
+    params.injuryNotes || '',
+    params.notes || '',
+  ].join(' ');
+  const injuryLower = injuryRaw.toLowerCase();
+  const hasHipInjury = /hip|labrum|fai|impingement|groin|acetabul/i.test(injuryLower);
+  const hasBackInjury = /back|lumbar|disc|herniat|sciatica|spine/i.test(injuryLower);
+  const hasShoulderInjury = /shoulder|rotator|cuff|ac joint/i.test(injuryLower);
 
   const category = isStrength ? 'Strength' : isHypertrophy ? 'Hypertrophy' : isEndurance ? 'Athletic Conditioning' : 'Hybrid';
   const durationDays = params.scheduleDuration === 'monthly' ? 28 : 7;
@@ -90,9 +103,52 @@ function generateFallbackWorkoutPlan(params: WorkoutGenerationRequest) {
     },
     {
       day: 2,
-      focus: 'Day 2: Lower Body Kinetic Power & Posterior Chain',
+      focus: hasHipInjury
+        ? 'Day 2: Lower Body Power & Hip-Sparing Kinetic Chain (Labrum Protected)'
+        : 'Day 2: Lower Body Kinetic Power & Posterior Chain',
       isRestDay: false,
-      exercises: [
+      exercises: hasHipInjury ? [
+        {
+          id: 'ex-ai-6',
+          name: 'Box Squat to Parallel (Hip Labrum & Joint Protection)',
+          muscleGroup: 'Quads' as const,
+          defaultSets: 4,
+          targetReps: '8-10 reps',
+          restPeriodSeconds: 90,
+          targetRpe: 7,
+          notes: 'CLINICAL LABRUM PROTOCOL: Box height set to 90° or slightly above. Keep shins vertical and sit back into hips. Eliminates femoral head impingement against acetabular labrum. Never dive below parallel.',
+        },
+        {
+          id: 'ex-ai-7',
+          name: 'High-Handle Trap Bar RDL (Restricted Hip Hinge Depth)',
+          muscleGroup: 'Hamstrings & Glutes' as const,
+          defaultSets: 4,
+          targetReps: '8-10 reps',
+          restPeriodSeconds: 90,
+          targetRpe: 7,
+          notes: 'Hinge back with soft knees only to mid-shin level. Stop before any pinch or tension at anterior hip socket.',
+        },
+        {
+          id: 'ex-ai-8',
+          name: 'Banded Spanish Squats or Terminal Knee Extensions (TKE)',
+          muscleGroup: 'Quads' as const,
+          defaultSets: 3,
+          targetReps: '12-15 reps',
+          restPeriodSeconds: 60,
+          targetRpe: 7,
+          notes: 'Heavy band behind knees forces vertical tibia. Delivers intense quad hypertrophy with zero hip joint irritation.',
+        },
+        {
+          id: 'ex-ai-8b',
+          name: 'Barbell or Dumbbell Hip Thrusts (Neutral Pelvis)',
+          muscleGroup: 'Hamstrings & Glutes' as const,
+          defaultSets: 3,
+          targetReps: '10-12 reps',
+          restPeriodSeconds: 75,
+          targetRpe: 8,
+          notes: 'Drive through heels. Squeeze glutes at top lockout with neutral pelvis. Does not enter deep hip flexion, keeping labrum safe.',
+        },
+      ] : [
         {
           id: 'ex-ai-6',
           name: 'Barbell Back Squat or Trap Bar Deadlift',
@@ -310,21 +366,34 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
-  // Initialize Gemini client strictly using @google/genai SDK
-  const apiKey = process.env.GEMINI_API_KEY;
-  let ai: GoogleGenAI | null = null;
-  if (apiKey) {
+  // Shared Gemini client management with reactive API key lookup
+  let cachedAi: GoogleGenAI | null = null;
+  let lastApiKey = '';
+
+  function getGeminiClient(): GoogleGenAI | null {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key || key.trim().length === 0) {
+      cachedAi = null;
+      lastApiKey = '';
+      return null;
+    }
+    if (cachedAi && lastApiKey === key) {
+      return cachedAi;
+    }
     try {
-      ai = new GoogleGenAI({
-        apiKey,
+      cachedAi = new GoogleGenAI({
+        apiKey: key,
         httpOptions: {
           headers: {
             'User-Agent': 'aistudio-build',
           },
         },
       });
+      lastApiKey = key;
+      return cachedAi;
     } catch (err) {
       console.warn('[Server] Error initializing GoogleGenAI:', err);
+      return null;
     }
   }
 
@@ -347,9 +416,11 @@ async function startServer() {
       });
     }
 
-    // If Gemini client is not initialized or API key is absent, return the fallback plan
+    const ai = getGeminiClient();
+
+    // If Gemini client is not initialized or API key is absent, return the calibrated fallback plan
     if (!ai) {
-      console.log('[Server] No GEMINI_API_KEY found. Serving high-fidelity personalized fallback plan.');
+      console.log('[Server] No GEMINI_API_KEY configured. Serving high-fidelity personalized fallback plan.');
       const fallback = generateFallbackWorkoutPlan(params);
       return res.json({
         success: true,
@@ -362,6 +433,34 @@ async function startServer() {
       const scheduleDaysTarget = params.scheduleDuration === 'monthly' ? 28 : 7;
       const daysPerWeek = parseInt(params.frequency, 10) || 4;
 
+      const injuriesList = [
+        ...(params.injuries || []),
+        params.injuryNotes || '',
+        params.notes || '',
+      ].filter((s) => s && s.trim().length > 0);
+      const injuryReported = injuriesList.join('; ');
+
+      const injuryDirectives = injuryReported ? `
+================================================================================
+CRITICAL MEDICAL SAFETY & INJURY ADAPTATION DIRECTIVE (ZERO-TOLERANCE MANDATE):
+The athlete has reported the following injury/condition: "${injuryReported}".
+YOU ARE STRICTLY FORBIDDEN FROM PRESCRIBING ANY EXERCISES THAT AGGRAVATE THIS CONDITION.
+1. HIP LABRUM TEAR / FAI / HIP IMPINGEMENT:
+   - STRICTLY FORBIDDEN: Barbell Back Squats (heavy, deep, or standard), Front Squats past 90°, 45-degree leg press, deep walking lunges, Bulgarian split squats with deep hip flexion.
+   - MANDATORY SUBSTITUTES: Box Squats to parallel or above 90° (vertical shins), Belt Squats, Spanish Squats, High-Handle Trap Bar RDLs (restricted hinge depth), Glute Bridges/Hip Thrusts with neutral pelvis, Backward Sled Drags/Pushes.
+2. LOWER BACK / LUMBAR DISC / SCIATICA:
+   - FORBIDDEN: Heavy axial barbell squats, conventional deadlifts from floor, standing good mornings.
+   - SUBSTITUTES: Belt squats, Chest-supported rows, High-handle trap bar deadlifts, McGill Big 3.
+3. SHOULDER / ROTATOR CUFF:
+   - FORBIDDEN: Behind-the-neck presses, military presses with flared elbows, deep dips, wide bench.
+   - SUBSTITUTES: Neutral-grip DB floor presses, landmine presses, face pulls.
+4. KNEE / PATELLAR / MENISCUS:
+   - FORBIDDEN: Explosive jump squats, lunges with forward knee tracking over toes under load.
+   - SUBSTITUTES: Backward sled drags, box squats with vertical shins, hamstring curls.
+Include clinical modification cues in each exercise's 'notes' field.
+================================================================================
+` : '';
+
       const systemPrompt = `You are the Head Tactical Strength & Conditioning Coach at Patrol Ready Performance, specializing in elite physical preparation, law enforcement readiness, hybrid athlete periodization, and science-backed progressive overload.
 Create a comprehensive, custom-tailored workout schedule matching the athlete's exact specifications:
 - Fitness Goals: ${params.goals.join(', ')}
@@ -370,7 +469,9 @@ Create a comprehensive, custom-tailored workout schedule matching the athlete's 
 - Schedule Type: ${params.scheduleDuration === 'monthly' ? '4-Week Monthly Periodized Block (Day 1 through Day 28)' : '7-Day Rotation Schedule (Day 1 through Day 7)'}
 - Available Equipment: ${params.equipment.join(', ')}
 - Target Session Duration: ${params.sessionDurationMinutes || 55} minutes
+- Reported Injuries / Medical Limitations: ${injuryReported || 'None reported'}
 - Special Notes / Constraints: ${params.notes || 'None'}
+${injuryDirectives}
 
 RULES:
 1. Every day MUST have a day number (Day 1, Day 2, etc.), a focus description, isRestDay boolean, and an array of exercises (empty if isRestDay).
@@ -482,7 +583,125 @@ RULES:
     }
   });
 
+  // POST /api/gemini/stream (Server-Sent Events streaming)
+  app.post('/api/gemini/stream', async (req, res) => {
+    const { prompt, systemInstruction } = req.body || {};
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing prompt parameter.' });
+    }
+
+    const ai = getGeminiClient();
+    if (!ai) {
+      return res.status(503).json({ error: 'Gemini API key is not configured.' });
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+      const stream = await ai.models.generateContentStream({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+        config: systemInstruction ? { systemInstruction } : undefined,
+      });
+
+      for await (const chunk of stream) {
+        if (chunk.text) {
+          res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+        }
+      }
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      res.end();
+    } catch (err: any) {
+      console.error('[Server] Gemini streaming failed:', err);
+      res.write(`data: ${JSON.stringify({ error: err?.message || 'Streaming failed' })}\n\n`);
+      res.end();
+    }
+  });
+
   const server = http.createServer(app);
+
+  // WebSocket Server for Gemini Live API real-time bidirectional audio/video
+  const wss = new WebSocketServer({ noServer: true });
+
+  server.on('upgrade', (request, socket, head) => {
+    const host = request.headers.host || 'localhost:3000';
+    const pathname = request.url ? new URL(request.url, `http://${host}`).pathname : '';
+    if (pathname === '/api/gemini/live' || pathname === '/live') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    }
+  });
+
+  wss.on('connection', async (clientWs: WebSocket) => {
+    console.log('[Server] Gemini Live WebSocket client connected');
+    const ai = getGeminiClient();
+    if (!ai) {
+      clientWs.send(JSON.stringify({ error: 'Gemini API not configured on server' }));
+      clientWs.close();
+      return;
+    }
+
+    try {
+      const session = await ai.live.connect({
+        model: 'gemini-3.8-live',
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
+          },
+          systemInstruction: 'You are the Head Tactical Strength & Conditioning Coach at Patrol Ready Performance, coaching frontline officers and tactical athletes with clear, encouraging, science-backed guidance.',
+        },
+        callbacks: {
+          onmessage: (message: LiveServerMessage) => {
+            for (const part of message.serverContent?.modelTurn?.parts ?? []) {
+              if (part.inlineData?.data) {
+                clientWs.send(JSON.stringify({ audio: part.inlineData.data }));
+              }
+            }
+            if (message.serverContent?.interrupted) {
+              clientWs.send(JSON.stringify({ interrupted: true }));
+            }
+          },
+          onclose: () => {
+            if (clientWs.readyState === WebSocket.OPEN) {
+              clientWs.close();
+            }
+          },
+        },
+      });
+
+      clientWs.on('message', (data: any) => {
+        try {
+          const msg = JSON.parse(data.toString());
+          if (msg.audio) {
+            session.sendRealtimeInput({
+              audio: { data: msg.audio, mimeType: 'audio/pcm;rate=16000' },
+            });
+          } else if (msg.text) {
+            session.sendClientContent({
+              turns: [{ role: 'user', parts: [{ text: msg.text }] }],
+              turnComplete: true,
+            });
+          }
+        } catch (e) {
+          console.warn('[Server] Live WS message parsing error:', e);
+        }
+      });
+
+      clientWs.on('close', () => {
+        try {
+          session.close();
+        } catch {}
+      });
+    } catch (err: any) {
+      console.error('[Server] Gemini Live API connection failed:', err);
+      clientWs.send(JSON.stringify({ error: err?.message || 'Failed to initialize Gemini Live session' }));
+      clientWs.close();
+    }
+  });
 
   // Mount Vite middlewares in development or serve static files in production
   if (process.env.NODE_ENV === 'production') {
