@@ -28,11 +28,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email == 'risneraryan@gmail.com' ||
-        request.auth.token.email == 'risnerathletics@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      return isSignedIn() && request.auth.token.email == 'risneraryan@gmail.com';
     }
 
     // RBAC Tier Helper: verifies Pro access with active subscription or unexpired trial
@@ -71,20 +67,21 @@ service cloud.firestore {
         data.email is string && data.email.size() <= 150 &&
         data.experienceLevel in ['Beginner', 'Intermediate', 'Advanced', 'Elite'] &&
         data.primaryGoal in ['Hybrid Athlete', 'Strength & Power', 'Hypertrophy', 'Tactical & Rucking', 'Tactical Conditioning & Pursuit', 'Endurance & Running'] &&
-        (!('weightLbs' in data) || (data.weightLbs is number && data.weightLbs >= 0 && data.weightLbs <= 1000)) &&
-        (!('restingHr' in data) || (data.restingHr is number && data.restingHr >= 20 && data.restingHr <= 250)) &&
-        (!('maxHr' in data) || (data.maxHr is number && data.maxHr >= 50 && data.maxHr <= 260)) &&
-        (!('avatarColor' in data) || (data.avatarColor is string && data.avatarColor.size() <= 80)) &&
-        (!('joinedDate' in data) || (data.joinedDate is string && data.joinedDate.size() <= 40)) &&
-        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
-        (!('questionnaire' in data) || data.questionnaire is map) &&
-        (!('weightHistory' in data) || data.weightHistory is list) &&
-        (!('recoveryHistory' in data) || data.recoveryHistory is list) &&
-        (!('lastRecoveryCheckIn' in data) || data.lastRecoveryCheckIn is map) &&
-        (!('subscription' in data) || data.subscription is map) &&
-        (!('trialActivation' in data) || data.trialActivation is map) &&
-        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
-        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+        (!('weightLbs' in data) || data.weightLbs == null || (data.weightLbs is number && data.weightLbs >= 0 && data.weightLbs <= 1000)) &&
+        (!('restingHr' in data) || data.restingHr == null || (data.restingHr is number && data.restingHr >= 20 && data.restingHr <= 250)) &&
+        (!('maxHr' in data) || data.maxHr == null || (data.maxHr is number && data.maxHr >= 50 && data.maxHr <= 260)) &&
+        (!('avatarColor' in data) || data.avatarColor == null || (data.avatarColor is string && data.avatarColor.size() <= 80)) &&
+        (!('joinedDate' in data) || data.joinedDate == null || (data.joinedDate is string && data.joinedDate.size() <= 60)) &&
+        (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 3000)) &&
+        (!('questionnaire' in data) || data.questionnaire == null || data.questionnaire is map) &&
+        (!('weightHistory' in data) || data.weightHistory == null || data.weightHistory is list) &&
+        (!('recoveryHistory' in data) || data.recoveryHistory == null || data.recoveryHistory is list) &&
+        (!('lastRecoveryCheckIn' in data) || data.lastRecoveryCheckIn == null || data.lastRecoveryCheckIn is map) &&
+        (!('subscription' in data) || data.subscription == null || data.subscription is map) &&
+        (!('trialActivation' in data) || data.trialActivation == null || data.trialActivation is map) &&
+        (!('trialState' in data) || data.trialState == null || data.trialState is map) &&
+        (!('createdAt' in data) || data.createdAt == null || (data.createdAt is string && data.createdAt.size() <= 100)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is string && data.updatedAt.size() <= 100));
     }
 
     match /athletes/{athleteId} {
@@ -93,9 +90,7 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidId(athleteId) && isValidAthlete(incoming());
       allow update: if isSignedIn() && isValidId(athleteId) &&
         isValidAthlete(incoming()) &&
-        incoming().userId == existing().userId &&
-        incoming().id == existing().id &&
-        (existing().userId == request.auth.uid || isAdmin());
+        (!('userId' in existing()) || existing().userId == request.auth.uid || isAdmin());
       allow delete: if isSignedIn() && isValidId(athleteId) &&
         (existing().userId == request.auth.uid || isAdmin());
     }
@@ -107,31 +102,39 @@ service cloud.firestore {
       return data.keys().hasAll(['id', 'userId', 'workoutTitle', 'date', 'durationMinutes', 'totalVolumeLbs', 'totalSetsCompleted']) &&
         data.id is string && isValidId(data.id) &&
         data.userId is string && data.userId == request.auth.uid &&
-        data.workoutTitle is string && data.workoutTitle.size() > 0 && data.workoutTitle.size() <= 150 &&
-        data.date is string && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
-        data.durationMinutes is number && data.durationMinutes >= 0 && data.durationMinutes <= 1440 &&
-        data.totalVolumeLbs is number && data.totalVolumeLbs >= 0 && data.totalVolumeLbs <= 2000000 &&
-        data.totalSetsCompleted is number && data.totalSetsCompleted >= 0 && data.totalSetsCompleted <= 300 &&
-        (!('athleteId' in data) || (data.athleteId is string && data.athleteId.size() <= 128)) &&
-        (!('programId' in data) || (data.programId is string && data.programId.size() <= 128)) &&
-        (!('startTime' in data) || (data.startTime is string && data.startTime.size() <= 50)) &&
-        (!('endTime' in data) || (data.endTime is string && data.endTime.size() <= 50)) &&
-        (!('rating' in data) || (data.rating is number && data.rating >= 1 && data.rating <= 5)) &&
-        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
-        (!('exercises' in data) || (data.exercises is list && data.exercises.size() <= 50)) &&
-        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
-        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+        data.workoutTitle is string && data.workoutTitle.size() > 0 && data.workoutTitle.size() <= 200 &&
+        data.date is string && data.date.size() >= 8 && data.date.size() <= 50 &&
+        data.durationMinutes is number && data.durationMinutes >= 0 && data.durationMinutes <= 10000 &&
+        data.totalVolumeLbs is number && data.totalVolumeLbs >= 0 && data.totalVolumeLbs <= 5000000 &&
+        data.totalSetsCompleted is number && data.totalSetsCompleted >= 0 && data.totalSetsCompleted <= 1000 &&
+        (!('athleteId' in data) || data.athleteId == null || (data.athleteId is string && data.athleteId.size() <= 128)) &&
+        (!('athleteName' in data) || data.athleteName == null || (data.athleteName is string && data.athleteName.size() <= 150)) &&
+        (!('userEmail' in data) || data.userEmail == null || (data.userEmail is string && data.userEmail.size() <= 150)) &&
+        (!('isCoachLog' in data) || data.isCoachLog == null || (data.isCoachLog is bool)) &&
+        (!('programId' in data) || data.programId == null || (data.programId is string && data.programId.size() <= 128)) &&
+        (!('startTime' in data) || data.startTime == null || (data.startTime is string && data.startTime.size() <= 100)) &&
+        (!('endTime' in data) || data.endTime == null || (data.endTime is string && data.endTime.size() <= 100)) &&
+        (!('rating' in data) || data.rating == null || (data.rating is number && data.rating >= 0 && data.rating <= 10)) &&
+        (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 5000)) &&
+        (!('exercises' in data) || data.exercises == null || (data.exercises is list && data.exercises.size() <= 100)) &&
+        (!('createdAt' in data) || data.createdAt == null || (data.createdAt is string && data.createdAt.size() <= 100)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is string && data.updatedAt.size() <= 100));
+    }
+
+    function isCoachWorkoutLog(data) {
+      return ('isCoachLog' in data && data.isCoachLog == true) ||
+        ('userEmail' in data && data.userEmail == 'risneraryan@gmail.com') ||
+        ('athleteId' in data && data.athleteId == 'athlete-aj-risner');
     }
 
     match /workoutLogs/{logId} {
-      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Coach Aryan Risner's workout logs are open for every other user to inspect and train along with
+      allow get: if isCoachWorkoutLog(resource.data) || (isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin()));
+      allow list: if isCoachWorkoutLog(resource.data) || (isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin()));
       allow create: if isSignedIn() && isValidId(logId) && isValidWorkoutLog(incoming());
       allow update: if isSignedIn() && isValidId(logId) &&
         isValidWorkoutLog(incoming()) &&
-        incoming().userId == existing().userId &&
-        incoming().id == existing().id &&
-        (existing().userId == request.auth.uid || isAdmin());
+        (incoming().userId == request.auth.uid || existing().userId == request.auth.uid || isAdmin());
       allow delete: if isSignedIn() && isValidId(logId) &&
         (existing().userId == request.auth.uid || isAdmin());
     }
@@ -143,16 +146,16 @@ service cloud.firestore {
       return data.keys().hasAll(['id', 'userId', 'title', 'category', 'exercises']) &&
         data.id is string && isValidId(data.id) &&
         data.userId is string && data.userId == request.auth.uid &&
-        data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
-        data.category is string && data.category.size() <= 60 &&
-        data.exercises is list && data.exercises.size() <= 50 &&
-        (!('schedule' in data) || data.schedule is list) &&
-        (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 200)) &&
-        (!('frequency' in data) || (data.frequency is string && data.frequency.size() <= 80)) &&
-        (!('estimatedDurationMinutes' in data) || (data.estimatedDurationMinutes is number && data.estimatedDurationMinutes >= 0 && data.estimatedDurationMinutes <= 360)) &&
-        (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
-        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
-        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+        data.title is string && data.title.size() > 0 && data.title.size() <= 150 &&
+        data.category is string && data.category.size() <= 80 &&
+        data.exercises is list && data.exercises.size() <= 100 &&
+        (!('schedule' in data) || data.schedule == null || data.schedule is list) &&
+        (!('subtitle' in data) || data.subtitle == null || (data.subtitle is string && data.subtitle.size() <= 300)) &&
+        (!('frequency' in data) || data.frequency == null || (data.frequency is string && data.frequency.size() <= 100)) &&
+        (!('estimatedDurationMinutes' in data) || data.estimatedDurationMinutes == null || (data.estimatedDurationMinutes is number && data.estimatedDurationMinutes >= 0 && data.estimatedDurationMinutes <= 1000)) &&
+        (!('description' in data) || data.description == null || (data.description is string && data.description.size() <= 5000)) &&
+        (!('createdAt' in data) || data.createdAt == null || (data.createdAt is string && data.createdAt.size() <= 100)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is string && data.updatedAt.size() <= 100));
     }
 
     match /customPrograms/{programId} {
@@ -161,9 +164,7 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidId(programId) && isValidCustomProgram(incoming());
       allow update: if isSignedIn() && isValidId(programId) &&
         isValidCustomProgram(incoming()) &&
-        incoming().userId == existing().userId &&
-        incoming().id == existing().id &&
-        (existing().userId == request.auth.uid || isAdmin());
+        (!('userId' in existing()) || existing().userId == request.auth.uid || isAdmin());
       allow delete: if isSignedIn() && isValidId(programId) &&
         (existing().userId == request.auth.uid || isAdmin());
     }
@@ -175,20 +176,20 @@ service cloud.firestore {
       return data.keys().hasAll(['id', 'userId', 'date', 'distanceMiles', 'weightLbs', 'durationMinutes']) &&
         data.id is string && isValidId(data.id) &&
         data.userId is string && data.userId == request.auth.uid &&
-        data.date is string && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
-        data.distanceMiles is number && data.distanceMiles >= 0 && data.distanceMiles <= 100 &&
-        data.weightLbs is number && data.weightLbs >= 0 && data.weightLbs <= 300 &&
-        data.durationMinutes is number && data.durationMinutes >= 0 && data.durationMinutes <= 1440 &&
-        (!('title' in data) || (data.title is string && data.title.size() <= 150)) &&
-        (!('athleteId' in data) || (data.athleteId is string && data.athleteId.size() <= 128)) &&
-        (!('paceMinPerMile' in data) || (data.paceMinPerMile is number && data.paceMinPerMile >= 0 && data.paceMinPerMile <= 120)) &&
-        (!('workloadIndex' in data) || (data.workloadIndex is number && data.workloadIndex >= 0 && data.workloadIndex <= 30000)) &&
-        (!('terrain' in data) || (data.terrain is string && data.terrain.size() <= 60)) &&
-        (!('heartRateAvg' in data) || (data.heartRateAvg is number && data.heartRateAvg >= 30 && data.heartRateAvg <= 250)) &&
-        (!('rpe' in data) || (data.rpe is number && data.rpe >= 1 && data.rpe <= 10)) &&
-        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
-        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
-        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+        data.date is string && data.date.size() >= 8 && data.date.size() <= 50 &&
+        data.distanceMiles is number && data.distanceMiles >= 0 && data.distanceMiles <= 500 &&
+        data.weightLbs is number && data.weightLbs >= 0 && data.weightLbs <= 500 &&
+        data.durationMinutes is number && data.durationMinutes >= 0 && data.durationMinutes <= 5000 &&
+        (!('title' in data) || data.title == null || (data.title is string && data.title.size() <= 200)) &&
+        (!('athleteId' in data) || data.athleteId == null || (data.athleteId is string && data.athleteId.size() <= 128)) &&
+        (!('paceMinPerMile' in data) || data.paceMinPerMile == null || (data.paceMinPerMile is number && data.paceMinPerMile >= 0 && data.paceMinPerMile <= 300)) &&
+        (!('workloadIndex' in data) || data.workloadIndex == null || (data.workloadIndex is number && data.workloadIndex >= 0 && data.workloadIndex <= 100000)) &&
+        (!('terrain' in data) || data.terrain == null || (data.terrain is string && data.terrain.size() <= 100)) &&
+        (!('heartRateAvg' in data) || data.heartRateAvg == null || (data.heartRateAvg is number && data.heartRateAvg >= 20 && data.heartRateAvg <= 300)) &&
+        (!('rpe' in data) || data.rpe == null || (data.rpe is number && data.rpe >= 0 && data.rpe <= 10)) &&
+        (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 3000)) &&
+        (!('createdAt' in data) || data.createdAt == null || (data.createdAt is string && data.createdAt.size() <= 100)) &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is string && data.updatedAt.size() <= 100));
     }
 
     match /ruckLogs/{ruckId} {
@@ -197,9 +198,7 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidId(ruckId) && isValidRuckLog(incoming());
       allow update: if isSignedIn() && isValidId(ruckId) &&
         isValidRuckLog(incoming()) &&
-        incoming().userId == existing().userId &&
-        incoming().id == existing().id &&
-        (existing().userId == request.auth.uid || isAdmin());
+        (!('userId' in existing()) || existing().userId == request.auth.uid || isAdmin());
       allow delete: if isSignedIn() && isValidId(ruckId) &&
         (existing().userId == request.auth.uid || isAdmin());
     }

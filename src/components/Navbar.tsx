@@ -43,8 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { tier, hasActiveAccess, isTrialActive, isTrialExpired, isExempt } = useUserTier();
 
   const isCoach = Boolean(
-    (user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com') ||
-    isCoachSession()
+    user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
   );
 
   const tabs: Array<{ id: TabType; label: string; icon: any; highlight?: boolean }> = [

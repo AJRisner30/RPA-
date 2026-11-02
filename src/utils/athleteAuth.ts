@@ -1,4 +1,5 @@
 import { AthleteProfile, WorkoutSessionLog } from '../types';
+import { auth } from '../firebase';
 
 export type { AthleteProfile };
 
@@ -56,7 +57,7 @@ export function getAthleteTrialState(athleteId: string, email?: string): {
   trialEndMs: number;
   hasSelectedPlan: boolean;
   tier: 'pro' | 'standard';
-  status: 'trialing' | 'active_subscriber' | 'expired';
+  status: 'trialing' | 'active_subscriber' | 'expired' | 'unpaid';
 } | null {
   if (typeof window === 'undefined') return null;
   if (email && isMasterExemptAccount(email)) {
@@ -96,17 +97,30 @@ export function startAthleteFreeTrial(athleteId: string, days = 14, email?: stri
   trialEndMs: number;
   hasSelectedPlan: boolean;
   tier: 'pro';
-  status: 'trialing';
+  status: 'trialing' | 'unpaid';
 } {
-  const startedAtMs = Date.now();
-  const trialEndMs = startedAtMs + days * 24 * 60 * 60 * 1000;
+  const existing = getAthleteTrialState(athleteId, email);
+  let startedAtMs: number;
+  let trialEndMs: number;
+
+  if (existing && existing.trialEndMs) {
+    // Preserve the user's authentic activation timestamp! NEVER reset the 14 days!
+    startedAtMs = existing.startedAtMs || (existing.trialEndMs - days * 24 * 60 * 60 * 1000);
+    trialEndMs = existing.trialEndMs;
+  } else {
+    startedAtMs = Date.now();
+    trialEndMs = startedAtMs + days * 24 * 60 * 60 * 1000;
+  }
+
+  const isExpired = Date.now() >= trialEndMs;
   const trialState = {
     startedAtMs,
     trialEndMs,
     hasSelectedPlan: true,
     tier: 'pro' as const,
-    status: 'trialing' as const,
+    status: (isExpired ? 'unpaid' : 'trialing') as 'trialing' | 'unpaid',
   };
+
   try {
     if (typeof window !== 'undefined') {
       if (email && email.trim()) {
@@ -121,6 +135,16 @@ export function startAthleteFreeTrial(athleteId: string, days = 14, email?: stri
       updateAthleteProfile(athlete.id, {
         ...athlete,
         trialState,
+        trialActivation: {
+          code: 'FREE_TRIAL',
+          activatedAt: new Date(trialState.startedAtMs).toISOString(),
+          startedAtMs: trialState.startedAtMs,
+          trialEndMs: trialState.trialEndMs,
+          daysGranted: days,
+          hasSelectedPlan: true,
+          tier: 'pro',
+          status: trialState.status,
+        },
       });
     }
     window.dispatchEvent(new CustomEvent('trial_state_changed', { detail: trialState }));
@@ -129,12 +153,15 @@ export function startAthleteFreeTrial(athleteId: string, days = 14, email?: stri
 }
 
 /**
- * Checks if the current session is explicitly authenticated as Coach AJ
+ * Checks if the current session is explicitly authenticated as Coach AJ (strictly risneraryan@gmail.com)
  */
 export function isCoachSession(): boolean {
   if (typeof window === 'undefined') return false;
   try {
-    return sessionStorage.getItem(COACH_AUTH_SESSION_KEY) === 'true';
+    const isCoachFlag = sessionStorage.getItem(COACH_AUTH_SESSION_KEY) === 'true';
+    if (!isCoachFlag) return false;
+    const currentEmail = auth.currentUser?.email?.trim().toLowerCase();
+    return currentEmail === MASTER_EXEMPT_EMAIL.toLowerCase();
   } catch {
     return false;
   }
@@ -318,13 +345,17 @@ export function registerAthlete(params: {
 export function loginAthlete(emailOrName: string, pin?: string): AthleteProfile | null {
   const query = emailOrName.trim().toLowerCase();
 
-  // Explicit Coach Login via credentials & PIN
+  // Explicit Coach Login: ONLY permitted if the authenticated Firebase account is risneraryan@gmail.com
   if (
     query === 'risneraryan@gmail.com' ||
     query === 'aryan risner' ||
     query === 'coach aj' ||
     query === 'aj risner'
   ) {
+    const currentEmail = auth.currentUser?.email?.trim().toLowerCase();
+    if (currentEmail !== MASTER_EXEMPT_EMAIL.toLowerCase()) {
+      return null;
+    }
     if (COACH_PROFILE.pin && pin && pin !== COACH_PROFILE.pin) {
       return null;
     }

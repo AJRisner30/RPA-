@@ -36,10 +36,9 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
 }) => {
   const { user } = useFirebase();
 
-  // Determine if viewer is Coach AJ / Administrator (Aryan Risner is strictly the sole exempt account)
+  // Determine if viewer is Coach AJ / Administrator (strictly risneraryan@gmail.com)
   const isCoachOrAdmin = Boolean(
-    (user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com') ||
-    isCoachSession()
+    user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
   );
 
   // State for the logged-in officer's individual assigned program

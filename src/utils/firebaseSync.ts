@@ -8,8 +8,9 @@ import {
   onSnapshot, 
   Unsubscribe 
 } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, auth, handleFirestoreError, OperationType } from '../firebase';
 import { AthleteProfile, WorkoutSessionLog, OfficerAssignedProgram, WorkoutProgram } from '../types';
+import { COACH_AJ_DEFAULT_LOGS } from '../data/coachLogsData';
 
 /**
  * Recursively strips undefined values from an object or array.
@@ -89,37 +90,158 @@ export function subscribeToUserWorkoutLogs(
 }
 
 /**
- * Persists a workout session log to Firestore
+ * Persists a workout session log to Firestore with Coach AJ verification stamping
  */
 export async function saveWorkoutLogToFirestore(
   log: WorkoutSessionLog,
-  userId: string
+  userId: string,
+  userEmail?: string
 ): Promise<void> {
-  const path = `workoutLogs/${log.id}`;
+  const cleanId = (log.id && typeof log.id === 'string' && log.id.trim().length > 0)
+    ? log.id.trim()
+    : `log-${Date.now()}`;
+  const path = `workoutLogs/${cleanId}`;
+
   try {
+    const currentAuthEmail = (auth.currentUser?.email || userEmail || '').trim().toLowerCase();
+    const isCoachUser = Boolean(currentAuthEmail === 'risneraryan@gmail.com');
+
+    // Date normalization: Ensure strict YYYY-MM-DD format
+    const rawDate = typeof log.date === 'string' && log.date.trim().length > 0
+      ? log.date.trim()
+      : new Date().toISOString().split('T')[0];
+    const normalizedDate = rawDate.includes('T')
+      ? rawDate.split('T')[0]
+      : (rawDate.match(/^\d{4}-\d{2}-\d{2}$/) ? rawDate : new Date().toISOString().split('T')[0]);
+
+    const workoutTitle = (typeof log.workoutTitle === 'string' && log.workoutTitle.trim().length > 0
+      ? log.workoutTitle.trim()
+      : 'Duty Workout Session'
+    ).slice(0, 150);
+
     const cleanLog = {
-      id: log.id,
+      id: cleanId,
       userId,
-      athleteId: log.athleteId || userId,
-      programId: log.programId || '',
-      workoutTitle: log.workoutTitle.slice(0, 150),
-      date: log.date,
-      startTime: (log.startTime || '').slice(0, 50),
-      endTime: (log.endTime || '').slice(0, 50),
-      durationMinutes: Math.max(0, Math.min(1440, log.durationMinutes || 0)),
-      totalVolumeLbs: Math.max(0, Math.min(2000000, log.totalVolumeLbs || 0)),
-      totalSetsCompleted: Math.max(0, Math.min(300, log.totalSetsCompleted || 0)),
-      rating: log.rating ? Math.max(1, Math.min(5, log.rating)) : 5,
-      notes: (log.notes || '').slice(0, 1000),
-      exercises: log.exercises || [],
-      createdAt: new Date().toISOString(),
+      athleteId: isCoachUser
+        ? 'athlete-aj-risner'
+        : ((typeof log.athleteId === 'string' && log.athleteId.trim().length > 0 && log.athleteId !== 'athlete-aj-risner')
+            ? log.athleteId.trim().slice(0, 128)
+            : userId),
+      athleteName: isCoachUser
+        ? 'Aryan "AJ" Risner'
+        : ((typeof log.athleteName === 'string' && log.athleteName.trim().length > 0 && log.athleteName !== 'Aryan "AJ" Risner')
+            ? log.athleteName.trim().slice(0, 100)
+            : 'Tactical Athlete'),
+      userEmail: isCoachUser
+        ? 'risneraryan@gmail.com'
+        : (currentAuthEmail || (typeof log.userEmail === 'string' && log.userEmail.toLowerCase() !== 'risneraryan@gmail.com' ? log.userEmail : '')),
+      isCoachLog: isCoachUser,
+      programId: typeof log.programId === 'string' ? log.programId.slice(0, 128) : '',
+      workoutTitle,
+      date: normalizedDate,
+      startTime: typeof log.startTime === 'string' ? log.startTime.slice(0, 50) : '',
+      endTime: typeof log.endTime === 'string' ? log.endTime.slice(0, 50) : '',
+      durationMinutes: Math.max(0, Math.min(1440, Math.round(Number(log.durationMinutes) || 0))),
+      totalVolumeLbs: Math.max(0, Math.min(2000000, Math.round(Number(log.totalVolumeLbs) || 0))),
+      totalSetsCompleted: Math.max(0, Math.min(300, Math.round(Number(log.totalSetsCompleted) || 0))),
+      rating: typeof log.rating === 'number' && !isNaN(log.rating)
+        ? Math.max(1, Math.min(5, Math.round(log.rating)))
+        : 5,
+      notes: typeof log.notes === 'string' ? log.notes.slice(0, 1000) : '',
+      exercises: Array.isArray(log.exercises) ? log.exercises.slice(0, 50) : [],
+      createdAt: (log as any).createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     const sanitizedLog = sanitizeForFirestore(cleanLog);
-    await setDoc(doc(db, 'workoutLogs', log.id), sanitizedLog);
+    await setDoc(doc(db, 'workoutLogs', cleanId), sanitizedLog);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Subscribes in real-time to all workout logs performed by Coach AJ Risner (risneraryan@gmail.com).
+ * Open to every user so everyone can inspect, review, and train along with Coach AJ's verified protocols.
+ */
+export function subscribeToCoachWorkoutLogs(
+  onLogs: (logs: WorkoutSessionLog[]) => void
+): Unsubscribe {
+  const path = 'workoutLogs';
+  try {
+    const q = query(
+      collection(db, path),
+      where('isCoachLog', '==', true)
+    );
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const logs: WorkoutSessionLog[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          // Filter out legacy mock logs: only authentic workouts completed by Coach AJ are shown
+          if (docSnap.id.startsWith('coach-log-') || data.workoutTitle === 'Coach AJ Duty Workout') {
+            return;
+          }
+          // Only show workouts where userEmail is verified risneraryan@gmail.com
+          const logEmail = (data.userEmail || '').trim().toLowerCase();
+          if (logEmail !== 'risneraryan@gmail.com') {
+            return;
+          }
+
+          logs.push({
+            id: docSnap.id,
+            userId: data.userId,
+            athleteId: data.athleteId || 'athlete-aj-risner',
+            athleteName: data.athleteName || 'Aryan "AJ" Risner',
+            userEmail: 'risneraryan@gmail.com',
+            isCoachLog: true,
+            programId: data.programId,
+            workoutTitle: data.workoutTitle || 'Coach AJ Duty Session',
+            date: data.date,
+            startTime: data.startTime || '',
+            endTime: data.endTime || '',
+            durationMinutes: data.durationMinutes || 0,
+            totalVolumeLbs: data.totalVolumeLbs || 0,
+            totalSetsCompleted: data.totalSetsCompleted || 0,
+            rating: data.rating,
+            notes: data.notes || '',
+            exercises: data.exercises || [],
+          } as WorkoutSessionLog);
+        });
+
+        // Sort descending by date and startTime
+        logs.sort((a, b) => (b.date + (b.startTime || '')).localeCompare(a.date + (a.startTime || '')));
+        onLogs(logs);
+      },
+      (error) => {
+        console.warn('[Firebase] Coach workout logs subscription notice:', error);
+        onLogs([]);
+      }
+    );
+  } catch (error) {
+    console.warn('[Firebase] Error creating coach workout logs subscription:', error);
+    onLogs([]);
+    return () => {};
+  }
+}
+
+/**
+ * Removes legacy fictitious mock coach logs from Firestore
+ */
+export async function cleanUpLegacyMockCoachLogs(): Promise<void> {
+  const legacyIds = [
+    'coach-log-combat-chassis-lower',
+    'coach-log-vest-conditioning',
+    'coach-log-tactical-press-arms',
+  ];
+  for (const id of legacyIds) {
+    try {
+      await deleteDoc(doc(db, 'workoutLogs', id));
+    } catch {
+      // document may not exist
+    }
   }
 }
 
@@ -232,7 +354,27 @@ export async function saveAthleteToFirestore(
     }
 
     const sanitizedAthlete = sanitizeForFirestore(cleanAthlete);
-    await setDoc(doc(db, 'athletes', userId), sanitizedAthlete);
+    await setDoc(doc(db, 'athletes', userId), sanitizedAthlete, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Saves or updates trial activation record in Firestore with merge protection
+ */
+export async function saveTrialActivationToFirestore(
+  userId: string,
+  trialActivation: any
+): Promise<void> {
+  const path = `athletes/${userId}`;
+  try {
+    const cleanTrial = sanitizeForFirestore(trialActivation);
+    await setDoc(doc(db, 'athletes', userId), {
+      trialActivation: cleanTrial,
+      trialState: cleanTrial,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }

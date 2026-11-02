@@ -1,15 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { onIdTokenChanged, User, IdTokenResult } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { 
   getCurrentAthlete, 
   updateAthleteProfile, 
   isMasterExemptAccount, 
   getAthleteTrialState, 
-  startAthleteFreeTrial 
+  startAthleteFreeTrial,
+  TRIAL_STORAGE_PREFIX
 } from '../utils/athleteAuth';
 import { activateAthleteSubscription } from '../utils/squarePayments';
 import { activateTrialCode } from '../utils/trialCodes';
+import { saveTrialActivationToFirestore } from '../utils/firebaseSync';
 
 export type UserTier = 'standard' | 'pro' | 'enterprise';
 export type UserAccountStatus = 'trialing' | 'active_subscriber' | 'past_due' | 'canceled' | 'unpaid' | 'not_selected';
@@ -115,32 +118,101 @@ export function useUserTier(): UserTierState {
         effectiveStatusRaw = 'active_subscriber';
       }
 
-      // 3. Persistent 14-day Free Trial Check (Strict Per-User Check)
-      const trialRecord = getAthleteTrialState(currentUser.uid || athlete?.id || 'officer', userEmail);
+      // 3. Persistent 14-day Free Trial Check (Strict Per-User Firestore Cloud Persistence)
       let resolvedTrialEndMs: number | null = null;
       let planChosen = false;
 
       if (effectiveStatusRaw === 'active_subscriber') {
         planChosen = true;
-      } else if (trialRecord && trialRecord.hasSelectedPlan) {
-        planChosen = true;
-        resolvedTrialEndMs = trialRecord.trialEndMs;
-        effectiveTierRaw = trialRecord.tier || 'pro';
-        effectiveStatusRaw = Date.now() < trialRecord.trialEndMs ? 'trialing' : 'unpaid';
-      } else if (athlete?.trialActivation && athlete.trialActivation.trialEndMs && (athlete.id !== 'athlete-default' || (athlete.email && athlete.email.toLowerCase() === userEmail.toLowerCase()))) {
-        planChosen = true;
-        resolvedTrialEndMs = athlete.trialActivation.trialEndMs;
-        effectiveTierRaw = athlete.trialActivation.tier || 'pro';
-        effectiveStatusRaw = Date.now() < athlete.trialActivation.trialEndMs ? 'trialing' : 'unpaid';
-      } else if (userClaims.trialEnd) {
-        const rawEnd = userClaims.trialEnd as number;
-        resolvedTrialEndMs = rawEnd < 10000000000 ? rawEnd * 1000 : rawEnd;
-        planChosen = true;
-        effectiveStatusRaw = Date.now() < resolvedTrialEndMs ? 'trialing' : 'unpaid';
+      } else {
+        // Query Firestore athlete document for cloud-persisted trial
+        let cloudDocData: any = null;
+        try {
+          const athleteDocSnap = await getDoc(doc(db, 'athletes', currentUser.uid));
+          if (athleteDocSnap.exists()) {
+            cloudDocData = athleteDocSnap.data();
+          }
+        } catch (docErr) {
+          console.warn('[useUserTier] Firestore athlete fetch note:', docErr);
+        }
+
+        if (cloudDocData?.subscription && cloudDocData.subscription.status === 'active_subscriber') {
+          effectiveTierRaw = cloudDocData.subscription.tier || 'pro';
+          effectiveStatusRaw = 'active_subscriber';
+          planChosen = true;
+        } else {
+          const cloudTrial = cloudDocData?.trialActivation || cloudDocData?.trialState;
+          if (cloudTrial && typeof cloudTrial.trialEndMs === 'number') {
+            // Authentic trial record found in cloud Firestore!
+            resolvedTrialEndMs = cloudTrial.trialEndMs;
+            effectiveTierRaw = cloudTrial.tier || 'pro';
+            const isExpired = Date.now() >= resolvedTrialEndMs;
+            effectiveStatusRaw = isExpired ? 'unpaid' : (cloudTrial.status === 'unpaid' ? 'unpaid' : 'trialing');
+            planChosen = true;
+
+            // Mirror to localStorage for this specific user account
+            try {
+              if (userEmail) {
+                localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${userEmail.toLowerCase()}`, JSON.stringify(cloudTrial));
+              }
+              localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${currentUser.uid}`, JSON.stringify(cloudTrial));
+            } catch {}
+          } else {
+            // Fallback: check local storage for existing trial for this user
+            const localTrial = getAthleteTrialState(currentUser.uid || athlete?.id || 'officer', userEmail);
+            if (localTrial && localTrial.hasSelectedPlan && typeof localTrial.trialEndMs === 'number') {
+              resolvedTrialEndMs = localTrial.trialEndMs;
+              effectiveTierRaw = localTrial.tier || 'pro';
+              const isExpired = Date.now() >= resolvedTrialEndMs;
+              effectiveStatusRaw = isExpired ? 'unpaid' : ((localTrial.status as any) === 'unpaid' ? 'unpaid' : 'trialing');
+              planChosen = true;
+
+              // Backfill cloud Firestore so it is permanently remembered in Firestore
+              saveTrialActivationToFirestore(currentUser.uid, localTrial).catch(() => {});
+            } else if (athlete?.trialActivation && athlete.trialActivation.trialEndMs && (athlete.id !== 'athlete-default' || (athlete.email && athlete.email.toLowerCase() === userEmail.toLowerCase()))) {
+              resolvedTrialEndMs = athlete.trialActivation.trialEndMs;
+              effectiveTierRaw = athlete.trialActivation.tier || 'pro';
+              const isExpired = Date.now() >= resolvedTrialEndMs;
+              effectiveStatusRaw = isExpired ? 'unpaid' : ((athlete.trialActivation.status as any) === 'unpaid' ? 'unpaid' : 'trialing');
+              planChosen = true;
+
+              saveTrialActivationToFirestore(currentUser.uid, athlete.trialActivation).catch(() => {});
+            } else if (userClaims.trialEnd) {
+              const rawEnd = userClaims.trialEnd as number;
+              resolvedTrialEndMs = rawEnd < 10000000000 ? rawEnd * 1000 : rawEnd;
+              planChosen = true;
+              const isExpired = Date.now() >= resolvedTrialEndMs;
+              effectiveStatusRaw = isExpired ? 'unpaid' : 'trialing';
+            } else {
+              // Brand new user first time ever logging in: provision authentic 14-day trial once
+              const startedAtMs = Date.now();
+              resolvedTrialEndMs = startedAtMs + 14 * 24 * 60 * 60 * 1000;
+              effectiveTierRaw = 'pro';
+              effectiveStatusRaw = 'trialing';
+              planChosen = true;
+              const freshTrial = {
+                startedAtMs,
+                trialEndMs: resolvedTrialEndMs,
+                hasSelectedPlan: true,
+                tier: 'pro' as const,
+                status: 'trialing' as const,
+              };
+
+              // Persist permanently to Firestore & localStorage
+              saveTrialActivationToFirestore(currentUser.uid, freshTrial).catch(() => {});
+              try {
+                if (userEmail) {
+                  localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${userEmail.toLowerCase()}`, JSON.stringify(freshTrial));
+                }
+                localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${currentUser.uid}`, JSON.stringify(freshTrial));
+              } catch {}
+            }
+          }
+        }
       }
 
-      // Simulated overrides for QA/testing (only applied if targeted to this user or untargeted within session)
-      if (simulatedOverride) {
+      // Simulated overrides for testing (STRICTLY restricted to Coach AJ / risneraryan@gmail.com)
+      if (simulatedOverride && isMasterExemptAccount(userEmail)) {
         const targetEmail = simulatedOverride.targetEmail;
         const matchesUser = !targetEmail || (userEmail && targetEmail.toLowerCase() === userEmail.toLowerCase());
         if (matchesUser) {
@@ -185,8 +257,25 @@ export function useUserTier(): UserTierState {
   }, [simulatedOverride]);
 
   useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+    let unsubscribeDoc: (() => void) | null = null;
+
+    const unsubscribeAuth = onIdTokenChanged(auth, async (currentUser) => {
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+        unsubscribeDoc = null;
+      }
+
       await evaluateClaims(currentUser, false);
+
+      if (currentUser?.uid && !isMasterExemptAccount(currentUser.email)) {
+        try {
+          unsubscribeDoc = onSnapshot(doc(db, 'athletes', currentUser.uid), () => {
+            evaluateClaims(auth.currentUser, false);
+          }, (err) => {
+            console.warn('[useUserTier] Athlete doc subscription note:', err);
+          });
+        } catch {}
+      }
     });
 
     const handleTrialChanged = () => {
@@ -195,7 +284,10 @@ export function useUserTier(): UserTierState {
     window.addEventListener('trial_state_changed', handleTrialChanged);
 
     return () => {
-      unsubscribe();
+      unsubscribeAuth();
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+      }
       window.removeEventListener('trial_state_changed', handleTrialChanged);
     };
   }, [evaluateClaims]);
@@ -250,22 +342,66 @@ export function useUserTier(): UserTierState {
     const athlete = getCurrentAthlete();
     const userEmail = auth.currentUser?.email || athlete?.email || '';
     const athleteId = auth.currentUser?.uid || athlete?.id || 'default-officer';
-    const newRecord = startAthleteFreeTrial(athleteId, days, userEmail);
-    
-    // Also store simulated override to ensure immediate reactivity
-    setSimulatedOverride({
-      tier: 'pro',
-      status: 'trialing',
-      trialEndMs: newRecord.trialEndMs,
-      trialEndOffsetDays: days,
+
+    // Verify if Firestore already has an authentic trial activation for this user!
+    let existingStartedAtMs: number | null = null;
+    let existingTrialEndMs: number | null = null;
+    if (auth.currentUser?.uid) {
+      try {
+        const snap = await getDoc(doc(db, 'athletes', auth.currentUser.uid));
+        if (snap.exists()) {
+          const t = snap.data().trialActivation || snap.data().trialState;
+          if (t && typeof t.trialEndMs === 'number') {
+            existingStartedAtMs = t.startedAtMs;
+            existingTrialEndMs = t.trialEndMs;
+          }
+        }
+      } catch {}
+    }
+
+    if (!existingTrialEndMs) {
+      const local = getAthleteTrialState(athleteId, userEmail);
+      if (local && typeof local.trialEndMs === 'number') {
+        existingStartedAtMs = local.startedAtMs;
+        existingTrialEndMs = local.trialEndMs;
+      }
+    }
+
+    const startedAtMs = existingStartedAtMs || Date.now();
+    const trialEndMs = existingTrialEndMs || (startedAtMs + days * 24 * 60 * 60 * 1000);
+    const isExpired = Date.now() >= trialEndMs;
+
+    const trialRecord = {
+      startedAtMs,
+      trialEndMs,
       hasSelectedPlan: true,
-      targetEmail: userEmail,
-    });
+      tier: 'pro' as const,
+      status: (isExpired ? 'unpaid' : 'trialing') as 'trialing' | 'unpaid',
+    };
+
+    try {
+      if (typeof window !== 'undefined') {
+        if (userEmail) {
+          localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${userEmail.toLowerCase()}`, JSON.stringify(trialRecord));
+        }
+        if (athleteId && athleteId !== 'athlete-default') {
+          localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${athleteId}`, JSON.stringify(trialRecord));
+        }
+      }
+      if (auth.currentUser?.uid) {
+        await saveTrialActivationToFirestore(auth.currentUser.uid, trialRecord);
+      }
+      window.dispatchEvent(new CustomEvent('trial_state_changed', { detail: trialRecord }));
+    } catch {}
+
     await evaluateClaims(auth.currentUser, true);
-  }, [evaluateClaims, setSimulatedOverride]);
+  }, [evaluateClaims]);
 
   const simulateTrialDaysRemaining = useCallback((days: number) => {
     const userEmail = auth.currentUser?.email || '';
+    if (!isMasterExemptAccount(userEmail)) {
+      return;
+    }
     if (days <= 0) {
       setSimulatedOverride({
         tier: 'pro',

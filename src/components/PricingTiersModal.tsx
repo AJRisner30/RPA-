@@ -17,6 +17,7 @@ import {
 } from '../utils/squarePayments';
 import { SquareConfig } from '../types';
 import { DEFAULT_TRIAL_CODES, normalizeTrialCode } from '../utils/trialCodes';
+import { useFirebase } from '../context/FirebaseContext';
 
 interface PricingTiersModalProps {
   isOpen: boolean;
@@ -31,6 +32,11 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
   onClose,
   onPaymentSuccess
 }) => {
+  const { user } = useFirebase();
+  const isAdmin = Boolean(
+    user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
+  );
+
   const { 
     tier, 
     trialDaysRemaining, 
@@ -154,13 +160,19 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
                   {isActiveSubscriber ? 'Active Subscriber' : isTrialActive ? `Trial (${trialDaysRemaining}d left)` : 'Trial Expired'}
                 </span>
 
-                <span className={`px-2 py-0.5 rounded text-[9px] font-mono uppercase font-bold border ${
-                  squareConfig.environment === 'production'
-                    ? 'bg-emerald-950 text-emerald-300 border-emerald-600/50'
-                    : 'bg-amber-950 text-amber-300 border-amber-600/50'
-                }`}>
-                  Square {squareConfig.environment === 'production' ? 'Live' : 'Sandbox'}
-                </span>
+                {isAdmin ? (
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-mono uppercase font-bold border ${
+                    squareConfig.environment === 'production'
+                      ? 'bg-emerald-950 text-emerald-300 border-emerald-600/50'
+                      : 'bg-amber-950 text-amber-300 border-amber-600/50'
+                  }`}>
+                    Square {squareConfig.environment === 'production' ? 'Live' : 'Sandbox'}
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded text-[9px] font-mono uppercase font-bold border bg-emerald-950/80 text-emerald-300 border-emerald-600/50">
+                    Square Secure Billing
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-400">
                 14-Day Risk-Free Trial • Secure Square Payment Checkout
@@ -169,15 +181,17 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowSquareHelp(!showSquareHelp)}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono flex items-center gap-1.5 transition cursor-pointer"
-              title="View Square requirements checklist"
-            >
-              <Info className="w-3.5 h-3.5 text-blue-400" />
-              <span className="hidden sm:inline">Square Requirements</span>
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowSquareHelp(!showSquareHelp)}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono flex items-center gap-1.5 transition cursor-pointer"
+                title="View Square requirements checklist (Admin Only)"
+              >
+                <Info className="w-3.5 h-3.5 text-blue-400" />
+                <span className="hidden sm:inline">Square Requirements</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -190,8 +204,8 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
           </div>
         </div>
 
-        {/* Square Setup Requirements Drawer (Togglable) */}
-        {showSquareHelp && (
+        {/* Square Setup Requirements Drawer (Admin Only) */}
+        {showSquareHelp && isAdmin && (
           <div className="p-4 sm:p-5 bg-gradient-to-b from-[#0b1424] to-[#070d18] border-b border-blue-500/30 space-y-3 animate-in slide-in-from-top-2 duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider font-athletic">
@@ -320,15 +334,17 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
                   <span>Square Checkout ($15/mo)</span>
                 </button>
 
-                {/* Instant Sandbox Testing shortcut */}
-                <button
-                  type="button"
-                  disabled={testingSandbox}
-                  onClick={() => handleSimulateSandboxUnlock('standard')}
-                  className="w-full py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-400 hover:text-slate-200 text-[10px] font-mono rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <span>⚡ Instant Sandbox Unlock ($15)</span>
-                </button>
+                {/* Instant Sandbox Testing shortcut - Strictly restricted to Coach Aryan Risner */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    disabled={testingSandbox}
+                    onClick={() => handleSimulateSandboxUnlock('standard')}
+                    className="w-full py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-400 hover:text-slate-200 text-[10px] font-mono rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>⚡ Instant Sandbox Unlock ($15)</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -415,15 +431,17 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
                   <span>Square Checkout ($30/mo)</span>
                 </button>
 
-                {/* Instant Sandbox Testing shortcut */}
-                <button
-                  type="button"
-                  disabled={testingSandbox}
-                  onClick={() => handleSimulateSandboxUnlock('pro')}
-                  className="w-full py-1.5 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 text-[10px] font-mono rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <span>⚡ Instant Sandbox Unlock ($30 Pro)</span>
-                </button>
+                {/* Instant Sandbox Testing shortcut - Strictly restricted to Coach Aryan Risner */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    disabled={testingSandbox}
+                    onClick={() => handleSimulateSandboxUnlock('pro')}
+                    className="w-full py-1.5 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 text-[10px] font-mono rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>⚡ Instant Sandbox Unlock ($30 Pro)</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -531,23 +549,25 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
               </div>
             )}
 
-            {/* Quick Presets */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-slate-400">
-              <span>Popular Codes:</span>
-              {['PATROLREADY', 'DUTY30', 'ACADEMY2026', 'SWATPRO'].map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => {
-                    setTrialCodeInput(code);
-                    setTrialCodeFeedback(null);
-                  }}
-                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-[10px] cursor-pointer"
-                >
-                  {code}
-                </button>
-              ))}
-            </div>
+            {/* Quick Presets - Admin Only */}
+            {isAdmin && (
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-slate-400">
+                <span>Popular Codes:</span>
+                {['PATROLREADY', 'DUTY30', 'ACADEMY2026', 'SWATPRO'].map((code) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => {
+                      setTrialCodeInput(code);
+                      setTrialCodeFeedback(null);
+                    }}
+                    className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-[10px] cursor-pointer"
+                  >
+                    {code}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -558,42 +578,44 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>256-Bit Encrypted Square Checkout • Instant Automated Account Unlock</span>
             </div>
-            {/* Quick Testing Controls */}
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 pt-0.5 flex-wrap">
-              <span>Test Live Trial:</span>
-              <button
-                type="button"
-                onClick={() => simulateTrialDaysRemaining(14)}
-                className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 border border-slate-700 cursor-pointer"
-                title="Simulate fresh 14 days"
-              >
-                14d
-              </button>
-              <button
-                type="button"
-                onClick={() => simulateTrialDaysRemaining(2)}
-                className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 cursor-pointer"
-                title="Simulate 2 days remaining"
-              >
-                2d Left
-              </button>
-              <button
-                type="button"
-                onClick={() => simulateTrialDaysRemaining(0)}
-                className="px-1.5 py-0.5 rounded bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 cursor-pointer"
-                title="Simulate trial ended (lock everything)"
-              >
-                Expired Lockdown
-              </button>
-              <button
-                type="button"
-                onClick={() => setSimulatedOverride(null)}
-                className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 cursor-pointer"
-                title="Clear simulation override"
-              >
-                Reset
-              </button>
-            </div>
+            {/* Quick Testing Controls - Admin Only */}
+            {isAdmin && (
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 pt-0.5 flex-wrap">
+                <span>Test Live Trial:</span>
+                <button
+                  type="button"
+                  onClick={() => simulateTrialDaysRemaining(14)}
+                  className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 border border-slate-700 cursor-pointer"
+                  title="Simulate fresh 14 days"
+                >
+                  14d
+                </button>
+                <button
+                  type="button"
+                  onClick={() => simulateTrialDaysRemaining(2)}
+                  className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 cursor-pointer"
+                  title="Simulate 2 days remaining"
+                >
+                  2d Left
+                </button>
+                <button
+                  type="button"
+                  onClick={() => simulateTrialDaysRemaining(0)}
+                  className="px-1.5 py-0.5 rounded bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 cursor-pointer"
+                  title="Simulate trial ended (lock everything)"
+                >
+                  Expired Lockdown
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSimulatedOverride(null)}
+                  className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 cursor-pointer"
+                  title="Clear simulation override"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
           </div>
 
           <button

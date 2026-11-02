@@ -107,6 +107,9 @@ export interface LiveExerciseSession {
 export interface WorkoutSessionLog {
   id: string;
   athleteId?: string;
+  athleteName?: string;
+  userEmail?: string;
+  isCoachLog?: boolean;
   userId?: string;
   programId?: string;
   workoutTitle: string;
@@ -287,11 +290,14 @@ export interface TrialCodeRecord {
 }
 
 export interface TrialActivationRecord {
-  code: string;
-  activatedAt: string;
+  code?: string;
+  activatedAt?: string;
+  startedAtMs?: number;
   trialEndMs: number;
-  daysGranted: number;
+  daysGranted?: number;
+  hasSelectedPlan?: boolean;
   tier: 'pro' | 'standard';
+  status?: 'trialing' | 'active_subscriber' | 'expired' | 'unpaid';
 }
 
 export interface AthleteProfile {
@@ -318,7 +324,7 @@ export interface AthleteProfile {
     trialEndMs: number;
     hasSelectedPlan: boolean;
     tier: 'pro' | 'standard';
-    status: 'trialing' | 'active_subscriber' | 'expired';
+    status: 'trialing' | 'active_subscriber' | 'expired' | 'unpaid';
   };
 }
 

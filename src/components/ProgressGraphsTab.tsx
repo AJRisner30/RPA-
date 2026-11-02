@@ -12,14 +12,18 @@ import { extractPersonalRecords, calculate1RM } from '../utils/storage';
 import { useFirebase } from '../context/FirebaseContext';
 import { isCoachSession } from '../utils/athleteAuth';
 
+import { COACH_AJ_EMAIL, COACH_AJ_NAME } from '../data/coachLogsData';
+
 interface ProgressGraphsTabProps {
   logs: WorkoutSessionLog[];
+  coachLogs?: WorkoutSessionLog[];
   currentAthlete?: AthleteProfile;
   onNavigateToLogs?: () => void;
 }
 
 export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({ 
   logs,
+  coachLogs = [],
   currentAthlete,
   onNavigateToLogs,
 }) => {
@@ -30,16 +34,26 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
   );
 
   const [athleteFilter, setAthleteFilter] = useState<'current' | 'all'>('current');
+  const [viewSource, setViewSource] = useState<'personal' | 'coach'>('personal');
 
-  // Scope logs to active athlete so each account strictly sees only their own progression
+  const effectiveCoachLogs = useMemo(() => {
+    return (coachLogs || []).filter(
+      (l) => !l.id.startsWith('coach-log-') && l.userEmail?.toLowerCase() === COACH_AJ_EMAIL.toLowerCase()
+    );
+  }, [coachLogs]);
+
+  // Scope logs to active athlete or Coach AJ benchmark
   const activeLogs = useMemo(() => {
+    if (viewSource === 'coach') {
+      return effectiveCoachLogs;
+    }
     if (!currentAthlete || !isCoach || athleteFilter !== 'all') {
       return logs.filter(
         (l) => l.athleteId === currentAthlete?.id || (!l.athleteId && (currentAthlete?.id === 'athlete-default' || currentAthlete?.id === 'athlete-aj-risner'))
       );
     }
     return logs;
-  }, [logs, currentAthlete, athleteFilter, isCoach]);
+  }, [logs, currentAthlete, athleteFilter, isCoach, viewSource, effectiveCoachLogs]);
 
   // Extract all unique exercise names from logs
   const allExercises = useMemo(() => {
@@ -195,8 +209,36 @@ export const ProgressGraphsTab: React.FC<ProgressGraphsTabProps> = ({
               </div>
             </div>
 
+            {/* View Source Toggle: Personal Analytics vs Coach AJ Verified Protocol */}
+            <div className="inline-flex p-1 bg-zinc-950/80 border border-zinc-800 rounded-xl self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setViewSource('personal')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  viewSource === 'personal'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {isCoach ? 'My Logs' : `${currentAthlete?.name?.split(' ')[0] || 'My'} Progress`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewSource('coach')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  viewSource === 'coach'
+                    ? 'bg-amber-500 text-black font-black shadow-sm'
+                    : 'text-amber-400/80 hover:text-amber-300'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Coach AJ Benchmark ({effectiveCoachLogs.length})</span>
+              </button>
+            </div>
+
             {/* Athlete Scope Toggle - strictly restricted to Coach AJ only */}
-            {isCoach && currentAthlete && (
+            {isCoach && currentAthlete && viewSource === 'personal' && (
               <div className="inline-flex p-1 bg-zinc-950/80 border border-zinc-800 rounded-xl self-start sm:self-auto">
                 <button
                   type="button"

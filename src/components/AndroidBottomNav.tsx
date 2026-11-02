@@ -75,8 +75,7 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
   const isMoreTabActive = activeTab === 'logs' || activeTab === 'graphs' || activeTab === 'contact';
 
   const isCoach = Boolean(
-    (user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com') ||
-    isCoachSession()
+    user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
   );
 
   const canViewOfficerPortal = isCoach || hasOfficerProgram;

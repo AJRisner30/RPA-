@@ -93,13 +93,13 @@ export function getAthleteWorkoutLogs(athleteId: string): WorkoutSessionLog[] {
 
 export function saveWorkoutLog(log: WorkoutSessionLog): WorkoutSessionLog[] {
   let taggedLog = { ...log };
-  if (!taggedLog.athleteId) {
-    try {
-      const currentAthlete = getCurrentAthlete();
-      taggedLog.athleteId = currentAthlete.id;
-    } catch {
-      // fallback
-    }
+  const isCoach = Boolean(
+    taggedLog.userEmail && taggedLog.userEmail.trim().toLowerCase() === 'risneraryan@gmail.com'
+  );
+  if (isCoach) {
+    taggedLog.isCoachLog = true;
+    taggedLog.userEmail = 'risneraryan@gmail.com';
+    taggedLog.athleteName = 'Aryan "AJ" Risner';
   }
 
   const currentLogs = getStoredWorkoutLogs();

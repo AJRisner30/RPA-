@@ -51,8 +51,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
     signOutUser 
   } = useFirebase();
   const isCoach = Boolean(
-    (user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com') ||
-    isCoachSession()
+    user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
   );
 
   // Cloud Sync & Auth States
@@ -104,6 +103,10 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
 
   const handleExecuteAthleteClear = (scope: 'current' | 'all') => {
     if (scope === 'all') {
+      if (!isCoach) {
+        setConfirmClearAction('none');
+        return;
+      }
       clearAllWorkoutLogs();
       clearHybridStrengthLogs();
       setClearSuccessMsg('All workout logs cleared successfully across all athletes.');
@@ -1092,13 +1095,15 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                     >
                       Clear {currentAthlete.name.split(' ')[0]}'s Logs
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmClearAction('all')}
-                      className="px-3 py-1.5 bg-blue-950/30 hover:bg-blue-900/60 text-blue-300 border border-blue-700/50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      Clear All Athletes (Fresh Start)
-                    </button>
+                    {isCoach && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmClearAction('all')}
+                        className="px-3 py-1.5 bg-blue-950/30 hover:bg-blue-900/60 text-blue-300 border border-blue-700/50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        Clear All Athletes (Admin Reset)
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="p-3 bg-blue-950/30 border border-blue-700/50 rounded-xl space-y-2">
@@ -1148,13 +1153,23 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                   Export Athlete Logbook (JSON)
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setViewMode('switch')}
-                  className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer text-center border border-blue-400/40 shadow-md shadow-blue-950/30"
-                >
-                  Switch / Change Athlete
-                </button>
+                {isCoach ? (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('switch')}
+                    className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer text-center border border-blue-400/40 shadow-md shadow-blue-950/30"
+                  >
+                    Switch / Change Athlete
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('register')}
+                    className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition-colors cursor-pointer text-center border border-slate-700"
+                  >
+                    Edit Profile
+                  </button>
+                )}
               </div>
             </div>
           )}

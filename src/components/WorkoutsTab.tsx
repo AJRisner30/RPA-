@@ -7,11 +7,12 @@ import {
   SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw,
   LogOut, RefreshCw, BatteryCharging
 } from 'lucide-react';
-import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey } from '../types';
+import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey, WorkoutSessionLog } from '../types';
 import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData, getUniversalPatWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { RequireTier } from './RequireTier';
+import { COACH_AJ_EMAIL, COACH_AJ_NAME } from '../data/coachLogsData';
 
 // Custom Running Shoe SVG icon
 const ShoeIcon = () => (
@@ -47,6 +48,8 @@ interface WorkoutsTabProps {
   onClearCustomProgram?: () => void;
   readinessScore?: number;
   readinessTier?: string;
+  latestCoachLog?: WorkoutSessionLog | null;
+  onNavigateToLogs?: () => void;
 }
 
 export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
@@ -62,6 +65,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   onClearCustomProgram,
   readinessScore,
   readinessTier,
+  latestCoachLog,
+  onNavigateToLogs,
 }) => {
   // Primary program selector: 'apex_protocol' vs 'tactical_hypertrophy' vs 'hybrid_protocol' vs 'hybrid_db' vs 'universal_pat' vs 'custom_ai'
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey | 'custom_ai'>(
@@ -861,6 +866,87 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             <ShieldCheck className="w-4 h-4" />
             <span>Take Ability Questionnaire</span>
           </button>
+        </div>
+      )}
+
+      {/* COACH AJ'S LATEST DUTY WORKOUT SPOTLIGHT CARD - VISIBLE TO EVERY ATHLETE */}
+      {latestCoachLog && (
+        <div className="bg-gradient-to-r from-[#0b172a] via-[#0e1d35] to-[#0b172a] border-2 border-amber-500/40 hover:border-amber-500/60 rounded-2xl p-4 shadow-xl relative overflow-hidden transition-all">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 relative z-10">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 shadow-md">
+                <ShieldCheck className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-black px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-amber-400" />
+                    Coach AJ's Latest Duty Workout
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400 font-bold">
+                    {latestCoachLog.date} • {latestCoachLog.durationMinutes}m • {latestCoachLog.totalVolumeLbs.toLocaleString()} lbs
+                  </span>
+                  <span className="text-slate-600 hidden sm:inline">•</span>
+                  <span className="text-[10px] font-mono text-amber-400/80">
+                    {COACH_AJ_EMAIL}
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-black text-white font-athletic uppercase tracking-wide mt-0.5">
+                  {latestCoachLog.workoutTitle}
+                </h3>
+                <p className="text-xs text-slate-300 line-clamp-1 mt-0.5">
+                  {latestCoachLog.exercises.map((e) => e.exerciseName).join(' • ')}
+                  {latestCoachLog.notes ? ` — "${latestCoachLog.notes}"` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  const program: WorkoutProgram = {
+                    id: `coach-latest-${latestCoachLog.id}`,
+                    title: latestCoachLog.workoutTitle.startsWith("Coach AJ's")
+                      ? latestCoachLog.workoutTitle
+                      : `Coach AJ's: ${latestCoachLog.workoutTitle}`,
+                    subtitle: 'Coach AJ Risner Verified Duty Session',
+                    category: 'Hybrid',
+                    frequency: 'Duty Session',
+                    estimatedDurationMinutes: latestCoachLog.durationMinutes || 60,
+                    description: `Direct from Coach AJ Risner's verified duty session (${latestCoachLog.date}). Total volume: ${latestCoachLog.totalVolumeLbs.toLocaleString()} lbs. Notes: ${latestCoachLog.notes || 'Duty protocol followed.'}`,
+                    exercises: latestCoachLog.exercises.map((ex, idx) => ({
+                      id: `adopted-ex-${idx}-${Date.now()}`,
+                      name: ex.exerciseName,
+                      muscleGroup: ex.muscleGroup,
+                      defaultSets: Math.max(1, ex.sets.length),
+                      targetReps: ex.sets.map((s) => s.reps).filter(Boolean).join('/') || '8-10',
+                      targetRpe: ex.sets[0]?.rpe || 8.5,
+                      weight_lbs: ex.sets[0]?.weightLbs || 45,
+                      restPeriodSeconds: 90,
+                      notes: `Coach AJ Logged: ${ex.sets.map((s) => `${s.weightLbs} lbs × ${s.reps}`).join(', ')}.`
+                    }))
+                  };
+                  onStartWorkout(program);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase text-xs tracking-wider shadow-md shadow-amber-950/40 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              >
+                <Zap className="w-3.5 h-3.5 fill-black" />
+                <span>Run Session</span>
+              </button>
+
+              {onNavigateToLogs && (
+                <button
+                  type="button"
+                  onClick={onNavigateToLogs}
+                  className="px-3 py-2 rounded-xl border border-amber-500/40 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 font-bold text-xs transition cursor-pointer flex items-center gap-1"
+                >
+                  <span>View All &rarr;</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

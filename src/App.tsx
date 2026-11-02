@@ -51,6 +51,8 @@ import {
   subscribeToUserAthlete, 
   subscribeToOfficerProgram,
   subscribeToUserCustomPrograms,
+  subscribeToCoachWorkoutLogs,
+  cleanUpLegacyMockCoachLogs,
   saveWorkoutLogToFirestore,
   saveAthleteToFirestore,
   saveCustomProgramToFirestore
@@ -63,12 +65,13 @@ export default function App() {
   const isMasterExempt = Boolean(
     user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
   );
-  const isCoach = isMasterExempt || isCoachSession();
+  const isCoach = isMasterExempt;
 
   const [hasOfficerProgram, setHasOfficerProgram] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabType>('workouts');
   const [programs, setPrograms] = useState<WorkoutProgram[]>(() => getStoredPrograms());
   const [logs, setLogs] = useState<WorkoutSessionLog[]>(() => getStoredWorkoutLogs());
+  const [coachLogs, setCoachLogs] = useState<WorkoutSessionLog[]>([]);
   const [currentAthlete, setCurrentAthlete] = useState<AthleteProfile>(() => getCurrentAthlete());
   const [isAthleteModalOpen, setIsAthleteModalOpen] = useState<boolean>(false);
   const [isQuestionnaireOpen, setIsQuestionnaireOpen] = useState<boolean>(false);
@@ -213,7 +216,7 @@ export default function App() {
         const localLogs = getStoredWorkoutLogs();
         if (localLogs.length > 0) {
           localLogs.forEach((l) => {
-            saveWorkoutLogToFirestore(l, user.uid).catch(() => {});
+            saveWorkoutLogToFirestore(l, user.uid, user.email || undefined).catch(() => {});
           });
         }
       }
@@ -224,9 +227,28 @@ export default function App() {
       if (cloudAthlete) {
         setCurrentAthlete(cloudAthlete);
         updateAthleteProfile(cloudAthlete.id, cloudAthlete);
+        if (cloudAthlete.trialActivation || cloudAthlete.trialState) {
+          const t = cloudAthlete.trialActivation || cloudAthlete.trialState;
+          try {
+            if (user.email) {
+              localStorage.setItem(`rpa_trial_v2_${user.email.toLowerCase()}`, JSON.stringify(t));
+            }
+            localStorage.setItem(`rpa_trial_v2_${user.uid}`, JSON.stringify(t));
+          } catch {}
+        }
       } else {
         const athleteName = user.displayName || user.email?.split('@')[0] || 'Patrol Officer';
         const athleteEmail = user.email || '';
+        const initialTrial = {
+          code: 'INITIAL_14D',
+          activatedAt: new Date().toISOString(),
+          startedAtMs: Date.now(),
+          trialEndMs: Date.now() + 14 * 24 * 60 * 60 * 1000,
+          daysGranted: 14,
+          hasSelectedPlan: true,
+          tier: 'pro' as const,
+          status: 'trialing' as const,
+        };
         const newAthlete = registerAthlete({
           name: athleteName,
           email: athleteEmail,
@@ -234,6 +256,8 @@ export default function App() {
           primaryGoal: 'Tactical Conditioning & Pursuit',
           weightLbs: 185,
         });
+        newAthlete.trialActivation = initialTrial;
+        newAthlete.trialState = initialTrial;
         setCurrentAthlete(newAthlete);
         saveAthleteToFirestore(newAthlete, user.uid).catch((err) => {
           console.warn('[Firebase] Initial athlete save note:', err);
@@ -253,13 +277,26 @@ export default function App() {
       }
     });
 
+    // 5. Clean up any legacy fictitious mock coach logs from Firestore
+    cleanUpLegacyMockCoachLogs().catch((err) => {
+      console.warn('[Firebase] Legacy coach logs cleanup note:', err);
+    });
+
     return () => {
       unsubscribeLogs();
       unsubscribeAthlete();
       unsubscribeOfficerProg();
       unsubscribeCustomProgs();
     };
-  }, [user]);
+  }, [user, isMasterExempt]);
+
+  // Real-time subscription to Coach AJ's workout logs - every single athlete sees every workout Coach AJ logs!
+  useEffect(() => {
+    const unsubscribeCoach = subscribeToCoachWorkoutLogs((incomingCoachLogs) => {
+      setCoachLogs(incomingCoachLogs);
+    });
+    return () => unsubscribeCoach();
+  }, []);
 
   // Strict Tab Protection: Only Coach AJ or officers with an assigned program can view the officer portal
   useEffect(() => {
@@ -301,12 +338,27 @@ export default function App() {
   };
 
   const handleWorkoutCompleted = (newLog: WorkoutSessionLog) => {
-    setLogs((prev) => [newLog, ...prev]);
+    const isCoachUser = Boolean(
+      (user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com') ||
+      isCoach
+    );
+
+    const stampedLog: WorkoutSessionLog = {
+      ...newLog,
+      isCoachLog: isCoachUser,
+      userEmail: isCoachUser ? 'risneraryan@gmail.com' : (user?.email || undefined),
+      athleteName: isCoachUser ? 'Aryan "AJ" Risner' : (currentAthlete?.name || 'Patrol Athlete'),
+    };
+
+    setLogs((prev) => [stampedLog, ...prev]);
+    if (isCoachUser) {
+      setCoachLogs((prev) => [stampedLog, ...prev.filter((l) => l.id !== stampedLog.id)]);
+    }
     setActiveLiveProgram(null);
     setActiveTab('logs');
 
     if (user) {
-      saveWorkoutLogToFirestore(newLog, user.uid).catch((err) => {
+      saveWorkoutLogToFirestore(stampedLog, user.uid, user.email).catch((err) => {
         console.warn('[Firebase] Background log sync note:', err);
       });
     }
@@ -596,6 +648,8 @@ export default function App() {
                 onClearCustomProgram={() => setActiveCustomAIProgram(null)}
                 readinessScore={readiness.overallScore}
                 readinessTier={readiness.tier}
+                latestCoachLog={coachLogs[0] || null}
+                onNavigateToLogs={() => setActiveTab('logs')}
               />
             )}
 
@@ -618,9 +672,11 @@ export default function App() {
             {activeTab === 'logs' && (
               <WorkoutLogsTab
                 logs={logs}
+                coachLogs={coachLogs}
                 currentAthlete={currentAthlete}
                 onUpdateLogs={setLogs}
                 onOpenLiveWorkout={() => handleStartWorkout(programs[0])}
+                onStartWorkout={handleStartWorkout}
                 onNavigateToGraphs={() => setActiveTab('graphs')}
               />
             )}
@@ -628,6 +684,7 @@ export default function App() {
             {activeTab === 'graphs' && (
               <ProgressGraphsTab 
                 logs={logs} 
+                coachLogs={coachLogs}
                 currentAthlete={currentAthlete}
                 onNavigateToLogs={() => setActiveTab('logs')}
               />

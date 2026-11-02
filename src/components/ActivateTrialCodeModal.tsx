@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useUserTier } from '../hooks/useUserTier';
 import { DEFAULT_TRIAL_CODES, normalizeTrialCode } from '../utils/trialCodes';
+import { useFirebase } from '../context/FirebaseContext';
 
 interface ActivateTrialCodeModalProps {
   isOpen: boolean;
@@ -17,6 +18,10 @@ export const ActivateTrialCodeModal: React.FC<ActivateTrialCodeModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { user } = useFirebase();
+  const isAdmin = Boolean(
+    user?.email && user.email.trim().toLowerCase() === 'risneraryan@gmail.com'
+  );
   const { activateTrialWithCode } = useUserTier();
   const [codeInput, setCodeInput] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -178,36 +183,38 @@ export const ActivateTrialCodeModal: React.FC<ActivateTrialCodeModalProps> = ({
                 </button>
               </form>
 
-              {/* Quick Select Preset Agency Codes */}
-              <div className="pt-2 border-t border-slate-800">
-                <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-2">
-                  Quick Active Trial Codes:
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {DEFAULT_TRIAL_CODES.slice(0, 4).map((c) => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => handleSelectPreset(c.code)}
-                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
-                        codeInput === c.code
-                          ? 'bg-amber-950/50 border-amber-500/80 text-amber-300'
-                          : 'bg-[#0e1726]/60 border-slate-800 hover:border-slate-700 text-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-xs text-white">{c.code}</span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300">
-                          {c.days}d
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                        {c.description}
-                      </p>
-                    </button>
-                  ))}
+              {/* Quick Select Preset Agency Codes - Admin Only */}
+              {isAdmin && (
+                <div className="pt-2 border-t border-slate-800">
+                  <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-2">
+                    Quick Active Trial Codes (Admin View):
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DEFAULT_TRIAL_CODES.slice(0, 4).map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => handleSelectPreset(c.code)}
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                          codeInput === c.code
+                            ? 'bg-amber-950/50 border-amber-500/80 text-amber-300'
+                            : 'bg-[#0e1726]/60 border-slate-800 hover:border-slate-700 text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-xs text-white">{c.code}</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300">
+                            {c.days}d
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                          {c.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Trust & Guarantee note */}
               <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[11px] text-slate-400 flex items-center gap-2 font-mono">
