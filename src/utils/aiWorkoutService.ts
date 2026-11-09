@@ -1,4 +1,10 @@
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup } from '../types';
+import {
+  buildDynamicCalibratedPlan,
+  extractBannedMovements,
+  sanitizeExerciseList,
+  getDistinctCircuitForDay,
+} from './tacticalExerciseEngine';
 
 export interface WorkoutGenerationRequest {
   goals: string[];
@@ -51,7 +57,7 @@ export interface GeneratedWorkoutPlan {
   weeklyProgressionTips: string[];
   nutritionAdvice: string;
   schedule: GeneratedDay[];
-  source?: 'gemini-3.8-flash' | 'tactical-engine';
+  source?: string;
 }
 
 /**
@@ -67,6 +73,10 @@ export function getEffectiveGeminiApiKey(_customKey?: string): string {
  * Session Duration, and Special Constraints.
  */
 export function generateCalibratedWorkoutPlan(params: WorkoutGenerationRequest): GeneratedWorkoutPlan {
+  return buildDynamicCalibratedPlan(params);
+}
+
+function _legacyUnusedWorkoutPlan(params: WorkoutGenerationRequest): GeneratedWorkoutPlan {
   const goalStr = params.goals?.join(', ') || 'Tactical Conditioning & Duty Readiness';
   const isHypertrophy = params.goals?.some(g => g.toLowerCase().includes('hypertrophy') || g.toLowerCase().includes('muscle'));
   const isStrength = params.goals?.some(g => g.toLowerCase().includes('strength') || g.toLowerCase().includes('power'));
@@ -1478,7 +1488,7 @@ export async function generateWorkoutPlanClient(
         return {
           ...result.data,
           schedule: sanitizedSchedule,
-          source: result.source === 'gemini-3.8-flash' ? 'gemini-3.8-flash' : 'tactical-engine',
+          source: result.source || 'tactical-engine',
         };
       }
     } else {
@@ -1928,6 +1938,11 @@ function buildLocalSingleWorkout(params: SingleDayWorkoutRequest): WorkoutProgra
     }
   }
 
+  const bannedRules = extractBannedMovements(
+    [params.customPrompt || '', params.injuryNotes || '', ...(params.injuries || [])].join(' '),
+    params.injuries || []
+  );
+
   // Handle explicit cardio / running preference in local fallback
   if (params.cardioPreference === 'running') {
     const distText = params.runningDistancePreference || '1.5 Miles';
@@ -1945,18 +1960,8 @@ function buildLocalSingleWorkout(params: SingleDayWorkoutRequest): WorkoutProgra
     title += ' + Duty Run';
     category = 'Hybrid';
   } else if (params.cardioPreference === 'cardio_circuits') {
-    const circuitStyle = params.cardioCircuitType || 'Duty Metabolic Circuit';
-    exercises.push({
-      id: `sw-cardio-${Date.now()}`,
-      name: `${circuitStyle} Finisher (4 Rounds)`,
-      muscleGroup: 'Full Body',
-      type: 'circuit',
-      defaultSets: 4,
-      targetReps: '4 rounds (45s work / 15s rest)',
-      restPeriodSeconds: 60,
-      targetRpe: 9,
-      notes: 'Circuit Stations: 1. Kettlebell Swings (45s), 2. Combat Sprawls (45s), 3. Lateral Mountain Climbers (45s), 4. Jump Ropes / High Knees (45s). Continuous rotation with 60s rest after each full round.',
-    });
+    const circuitEx = getDistinctCircuitForDay(0, params.cardioCircuitType, bannedRules);
+    exercises.push(circuitEx as any);
     title += ' + Cardio Circuit';
     category = 'Hybrid';
   } else if (params.cardioPreference === 'hybrid') {
@@ -1971,22 +1976,14 @@ function buildLocalSingleWorkout(params: SingleDayWorkoutRequest): WorkoutProgra
       targetRpe: 9,
       notes: 'Explosive acceleration and anaerobic threshold pacing.',
     });
-    exercises.push({
-      id: `sw-cardio-2-${Date.now()}`,
-      name: `Combat Core & Functional Circuit`,
-      muscleGroup: 'Full Body',
-      type: 'circuit',
-      defaultSets: 3,
-      targetReps: '3 rounds (40s work / 20s rest)',
-      restPeriodSeconds: 45,
-      targetRpe: 8,
-      notes: 'Circuit Stations: 1. Plank Walkouts (40s), 2. Dumbbell Snatches (40s), 3. Sandbag Carries (40s), 4. Hollow Rock Holds (40s). Rest 45s between rounds.',
-    });
+    const circuitEx = getDistinctCircuitForDay(1, params.cardioCircuitType, bannedRules);
+    exercises.push(circuitEx as any);
     title += ' + Hybrid Run & Circuit';
     category = 'Hybrid';
   }
 
   const programId = `ai-single-${Date.now().toString(36)}`;
+  const sanitizedExercises = sanitizeExerciseList(exercises, bannedRules);
 
   return {
     id: programId,
@@ -1997,7 +1994,7 @@ function buildLocalSingleWorkout(params: SingleDayWorkoutRequest): WorkoutProgra
     estimatedDurationMinutes: duration,
     description: `A custom-engineered on-demand single-day session designed around: ${params.workoutType}. Calibrated for ${duration} minutes with equipment: ${(params.equipment || []).join(', ') || 'Standard gear'}. Intensity targeted at ${params.intensity || 'High'}.`,
     recommendedWarmupId,
-    exercises,
+    exercises: sanitizedExercises as any,
   };
 }
 

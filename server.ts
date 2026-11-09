@@ -5,6 +5,14 @@ import { GoogleGenAI, Type, Modality, LiveServerMessage } from '@google/genai';
 import { WebSocketServer, WebSocket } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+import { 
+  buildDynamicCalibratedPlan, 
+  extractBannedMovements, 
+  sanitizePlanAgainstLimitations,
+  getDistinctCircuitForDay,
+  sanitizeExerciseList
+} from './tacticalEngineServer.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,8 +33,12 @@ interface WorkoutGenerationRequest {
   userEmail?: string;
 }
 
-// Fallback high-quality template generator in case API key is missing or quota exceeded
+// Dynamic tactical plan generator in case API key is missing or quota exceeded
 function generateFallbackWorkoutPlan(params: WorkoutGenerationRequest) {
+  return buildDynamicCalibratedPlan(params);
+}
+
+function _legacyUnusedFallback(params: WorkoutGenerationRequest) {
   const goalStr = params.goals?.join(', ') || 'General Conditioning';
   const isHypertrophy = params.goals?.some(g => g.toLowerCase().includes('hypertrophy') || g.toLowerCase().includes('muscle'));
   const isStrength = params.goals?.some(g => g.toLowerCase().includes('strength') || g.toLowerCase().includes('power'));
@@ -873,6 +885,11 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
     }
   }
 
+  const bannedRules = extractBannedMovements(
+    [params.customPrompt || '', params.injuryNotes || '', ...(params.injuries || [])].join(' '),
+    params.injuries || []
+  );
+
   // Handle explicit cardio / running preference
   if (params.cardioPreference === 'running') {
     const distText = params.runningDistancePreference || '1.5 Miles';
@@ -890,18 +907,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
     title += ' + Duty Run';
     category = 'Hybrid';
   } else if (params.cardioPreference === 'cardio_circuits') {
-    const circuitStyle = params.cardioCircuitType || 'Duty Metabolic Circuit';
-    exercises.push({
-      id: `sw-cardio-${Date.now()}`,
-      name: `${circuitStyle} Finisher (4 Rounds)`,
-      muscleGroup: 'Full Body',
-      type: 'circuit',
-      defaultSets: 4,
-      targetReps: '4 rounds (45s work / 15s rest)',
-      restPeriodSeconds: 60,
-      targetRpe: 9,
-      notes: 'Circuit Stations: 1. Kettlebell Swings (45s), 2. Combat Burpees (45s), 3. Speed Mountain Climbers (45s), 4. High Knee Sprints (45s). Continuous flow, 60s rest after each full round.',
-    });
+    const circuitEx = getDistinctCircuitForDay(0, params.cardioCircuitType, bannedRules);
+    exercises.push(circuitEx as any);
     title += ' + Cardio Circuit';
     category = 'Hybrid';
   } else if (params.cardioPreference === 'hybrid') {
@@ -916,22 +923,14 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       targetRpe: 9,
       notes: 'Explosive acceleration and anaerobic lactate tolerance.',
     });
-    exercises.push({
-      id: `sw-cardio-2-${Date.now()}`,
-      name: `Combat Core & Metabolic Finisher`,
-      muscleGroup: 'Full Body',
-      type: 'circuit',
-      defaultSets: 3,
-      targetReps: '3 rounds (40s work / 20s rest)',
-      restPeriodSeconds: 45,
-      targetRpe: 8,
-      notes: 'Circuit Stations: 1. Plank Jacks (40s), 2. Sandbag / Ball Slams (40s), 3. Heavy Farmer Walk Strides (40s), 4. Hollow Body Hold (40s). Rest 45s between rounds.',
-    });
+    const circuitEx = getDistinctCircuitForDay(1, params.cardioCircuitType, bannedRules);
+    exercises.push(circuitEx as any);
     title += ' + Hybrid Cardio & Run';
     category = 'Hybrid';
   }
 
   const programId = `ai-single-${Date.now().toString(36)}`;
+  const sanitizedExercises = sanitizeExerciseList(exercises, bannedRules);
 
   return {
     id: programId,
@@ -942,7 +941,7 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
     estimatedDurationMinutes: duration,
     description: `A custom-engineered on-demand single-day session designed around: ${params.workoutType}. Calibrated for ${duration} minutes with equipment: ${(params.equipment || []).join(', ') || 'Standard gear'}. Intensity targeted at ${params.intensity || 'High'}.`,
     recommendedWarmupId,
-    exercises,
+    exercises: sanitizedExercises,
   };
 }
 
@@ -991,6 +990,15 @@ async function startServer() {
       timestamp: new Date().toISOString(),
     });
   });
+
+  function callWithTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Model request timed out after ${ms}ms`)), ms)
+      ),
+    ]);
+  }
 
   // POST /api/gemini/generate-workout-plan
   app.post('/api/gemini/generate-workout-plan', async (req, res) => {
@@ -1069,6 +1077,37 @@ The athlete requested BOTH running endurance AND cardio circuits.
 Include structured interval/tempo running alongside tactical functional conditioning circuits throughout the training week.
 ================================================================================` : '';
 
+      const bannedRules = extractBannedMovements(
+        [params.notes || '', params.injuryNotes || '', ...(params.injuries || [])].join(' '),
+        params.injuries || []
+      );
+
+      const bannedSection = bannedRules.length > 0 ? `
+================================================================================
+CRITICAL ZERO-TOLERANCE BANNED EXERCISES BLACKLIST:
+The athlete has explicitly declared they CANNOT do the following exercises or have limitations:
+${bannedRules.map(b => `- FORBIDDEN MOVEMENT: "${b.label}" (Banned keyword: ${b.keyword})`).join('\n')}
+YOU ARE STRICTLY FORBIDDEN from including any of these movements or their direct variations.
+If any of these movements appear, the program is considered completely broken and unsafe.
+Instead, use safe, clinical-grade alternatives (e.g. floor press, belt/box squats, landmine press, chest-supported rows).
+================================================================================` : '';
+
+      const circuitVarietyDirective = `
+================================================================================
+CIRCUIT VARIETY REQUIREMENT:
+When programming cardio circuits or metabolic finishers, DO NOT REPEAT THE SAME MOVEMENTS ACROSS SESSIONS!
+Select from diverse tactical circuit archetypes such as:
+1. Tactical Kettlebell Combat Flow: Single-Arm KB Swings, Goblet Squats, Push-up to Renegade Row, KB High Pulls.
+2. Duty Foot Pursuit & Anaerobic Intervals: Shuttle Sprints, Combat Sprawls, Skater Hops, Speed Mountain Climbers.
+3. SWAT Bodyweight Armor Metcon: Hand-Release Push-Ups, Jump Squats, Inverted Rows, Hollow Body Rocks.
+4. Tactical Sandbag Grinder: Ground-to-Shoulder, Bear Hug March, Sandbag Clean, Burpee Over Sandbag.
+5. Dumbbell Metabolic Velocity: Dual DB Thrusters, Suitcase Marches, DB RDL to Shrug, Hex Rows.
+6. Ergometer & Combat Power: Assault Bike / Rower sprints, Slam Balls, Farmer Carries, Knee Tucks.
+7. Combat Core & Anti-Rotation: Pallof Press, Copenhagen Side Plank, Russian Twists, Hanging Tucks.
+8. Physical Ability Test Obstacle Simulator: Cadence Push-ups, Dummy Drag Sled/Heel Walk, Box Step-ups, High-Knee Sprints.
+Each day's circuit MUST be unique with distinct movements, stations, and work/rest intervals.
+================================================================================`;
+
       const systemPrompt = `You are the Head Tactical Strength & Conditioning Coach at Patrol Ready Performance, specializing in elite physical preparation, law enforcement readiness, hybrid athlete periodization, and science-backed progressive overload.
 Create a comprehensive, custom-tailored workout schedule matching the athlete's exact specifications:
 - Fitness Goals: ${params.goals.join(', ')}
@@ -1080,7 +1119,9 @@ Create a comprehensive, custom-tailored workout schedule matching the athlete's 
 - Cardio / Running Preference: ${params.cardioPreference ? `${params.cardioPreference.toUpperCase()} (${params.runningDistancePreference || params.cardioCircuitType || 'Integrated'})` : 'Default'}
 - Reported Injuries / Medical Limitations: ${injuryReported || 'None reported'}
 - Special Notes / Constraints: ${params.notes || 'None'}
+${bannedSection}
 ${cardioDirective}
+${circuitVarietyDirective}
 ${injuryDirectives}
 
 RULES:
@@ -1095,14 +1136,31 @@ RULES:
    - targetRpe: integer between 6 and 9
    - notes: tactical execution cue, pace guidance, and progressive overload trigger
 4. Category MUST be one of: 'Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'. If running or cardio circuits are added, category should prefer 'Hybrid' or 'Athletic Conditioning'.
-5. Include actionable weeklyProgressionTips and nutrition advice tailored to their goal.`;
+5. Include actionable weeklyProgressionTips and nutrition advice tailored to their goal.
+6. VARIETY & SETS/REPS CALIBRATION:
+   - Provide genuine exercise variety across different days. Do NOT repeat identical templates or exercises.
+   - Sets, reps, and rest MUST strictly match the athlete's primary goal:
+     * Max Strength / Heavy Power: 4-5 sets x 3-5 reps (120-180s rest, RPE 8-9)
+     * Muscle Gain / Armor Hypertrophy: 3-4 sets x 8-12 reps (75-90s rest, RPE 8)
+     * Weight Loss / Metabolic Shred: 3-4 sets x 12-15+ reps (45-60s rest, RPE 7-8)
+     * Tactical Hybrid / Durability: 3-4 sets x 6-8 reps + metabolic conditioning finisher
+     * Physical Ability Test (PAT): 3-4 sets x 15-25 reps or timed sets (60s rest)
+     * Beginner: 3 sets x 10-12 reps with fundamental biomechanics
+     * Elite: Undulating periodization, cluster sets, and heavy tactical load carriage`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: systemPrompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
+      let response: any = null;
+      const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3.8-flash'];
+      let lastModelError: any = null;
+
+      for (const modelName of candidateModels) {
+        try {
+          response = await callWithTimeout(
+            ai.models.generateContent({
+              model: modelName,
+              contents: systemPrompt,
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: {
             type: Type.OBJECT,
             properties: {
               title: { type: Type.STRING },
@@ -1167,26 +1225,37 @@ RULES:
             ],
           },
         },
-      });
+      }), 8000);
 
-      const responseText = response.text;
-      if (!responseText) {
-        throw new Error('Gemini API returned an empty response.');
+          const responseText = response.text;
+          if (responseText) {
+            const parsedPlan = JSON.parse(responseText);
+            const sanitizedPlan = sanitizePlanAgainstLimitations(parsedPlan, bannedRules);
+            return res.json({
+              success: true,
+              data: sanitizedPlan,
+              source: modelName,
+            });
+          }
+        } catch (mErr: any) {
+          lastModelError = mErr;
+          console.warn(`[Server] Model ${modelName} failed, trying next:`, mErr?.message || mErr);
+        }
       }
 
-      const parsedPlan = JSON.parse(responseText);
-      return res.json({
-        success: true,
-        data: parsedPlan,
-        source: 'gemini-3.8-flash',
-      });
+      throw lastModelError || new Error('All candidate Gemini models returned empty response or failed.');
     } catch (err: any) {
       console.error('[Server] Gemini generation failed:', err);
       // If error occurs, gracefully fallback so the user always receives a personalized workout plan
       const fallback = generateFallbackWorkoutPlan(params);
+      const bannedRules = extractBannedMovements(
+        [params.notes || '', params.injuryNotes || '', ...(params.injuries || [])].join(' '),
+        params.injuries || []
+      );
+      const sanitizedFallback = sanitizePlanAgainstLimitations(fallback, bannedRules);
       return res.json({
         success: true,
-        data: fallback,
+        data: sanitizedFallback,
         source: 'local_engine_fallback',
         warning: err?.message || 'Gemini service note: delivered calibrated tactical template.',
       });
@@ -1246,6 +1315,20 @@ Include clinical modification cues in each exercise's 'notes' field.
 ================================================================================
 ` : '';
 
+      const bannedRules = extractBannedMovements(
+        [params.customPrompt || '', params.injuryNotes || '', ...(params.injuries || [])].join(' '),
+        params.injuries || []
+      );
+
+      const bannedSection = bannedRules.length > 0 ? `
+================================================================================
+CRITICAL ATHLETE BLACKLIST - ABSOLUTELY FORBIDDEN EXERCISES (ZERO TOLERANCE):
+The athlete has specifically instructed that they CANNOT perform or want EXCLUDED:
+${bannedRules.map((r) => `* STRICTLY BANNED: ${r.label}`).join('\n')}
+YOU MUST NOT INCLUDE ANY EXERCISE IN THE PROGRAM THAT INVOLVES THESE MOVEMENTS.
+Substitute with joint-friendly safe variations!
+================================================================================` : '';
+
       const targetExerciseCount = duration <= 25 ? '3 to 4' : duration <= 45 ? '4 to 6' : '5 to 7';
 
       const singleCardioDirective = params.cardioPreference === 'running' ? `
@@ -1281,6 +1364,7 @@ Athlete Request & Session Parameters:
 - Custom Officer Request: ${params.customPrompt || 'None'}
 ${singleCardioDirective}
 ${injuryDirectives}
+${bannedSection}
 
 RULES:
 1. Build an executable, high-impact, single-day session fitting strictly within ${duration} minutes.
@@ -1291,78 +1375,95 @@ RULES:
 6. Category MUST be one of: 'Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'.
 7. recommendedWarmupId should be one of: 'warmup-apex-sop', 'warmup-upper-primer', 'warmup-lower-prep', 'warmup-universal-tactical', 'warmup-express-primer'.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: systemPrompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              id: { type: Type.STRING },
-              title: { type: Type.STRING },
-              subtitle: { type: Type.STRING },
-              category: {
-                type: Type.STRING,
-                enum: ['Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'],
-              },
-              frequency: { type: Type.STRING },
-              estimatedDurationMinutes: { type: Type.INTEGER },
-              description: { type: Type.STRING },
-              recommendedWarmupId: { type: Type.STRING },
-              exercises: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    id: { type: Type.STRING },
-                    name: { type: Type.STRING },
-                    muscleGroup: {
-                      type: Type.STRING,
-                      enum: ['Chest', 'Back', 'Quads', 'Hamstrings & Glutes', 'Shoulders', 'Arms', 'Core', 'Full Body'],
-                    },
-                    type: { type: Type.STRING },
-                    defaultSets: { type: Type.INTEGER },
-                    targetReps: { type: Type.STRING },
-                    restPeriodSeconds: { type: Type.INTEGER },
-                    targetRpe: { type: Type.INTEGER },
-                    notes: { type: Type.STRING },
+      const candidateModels = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-3.8-flash',
+      ];
+
+      let lastModelError: any = null;
+
+      for (const modelName of candidateModels) {
+        try {
+          const response = await callWithTimeout(
+            ai.models.generateContent({
+              model: modelName,
+              contents: systemPrompt,
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  title: { type: Type.STRING },
+                  subtitle: { type: Type.STRING },
+                  category: {
+                    type: Type.STRING,
+                    enum: ['Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'],
                   },
-                  required: ['id', 'name', 'muscleGroup', 'defaultSets', 'targetReps', 'restPeriodSeconds'],
+                  frequency: { type: Type.STRING },
+                  estimatedDurationMinutes: { type: Type.INTEGER },
+                  description: { type: Type.STRING },
+                  recommendedWarmupId: { type: Type.STRING },
+                  exercises: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        id: { type: Type.STRING },
+                        name: { type: Type.STRING },
+                        muscleGroup: {
+                          type: Type.STRING,
+                          enum: ['Chest', 'Back', 'Quads', 'Hamstrings & Glutes', 'Shoulders', 'Arms', 'Core', 'Full Body'],
+                        },
+                        type: { type: Type.STRING },
+                        defaultSets: { type: Type.INTEGER },
+                        targetReps: { type: Type.STRING },
+                        restPeriodSeconds: { type: Type.INTEGER },
+                        targetRpe: { type: Type.INTEGER },
+                        notes: { type: Type.STRING },
+                      },
+                      required: ['id', 'name', 'muscleGroup', 'defaultSets', 'targetReps', 'restPeriodSeconds'],
+                    },
+                  },
                 },
+                required: [
+                  'id',
+                  'title',
+                  'subtitle',
+                  'category',
+                  'estimatedDurationMinutes',
+                  'description',
+                  'exercises',
+                ],
               },
             },
-            required: [
-              'id',
-              'title',
-              'subtitle',
-              'category',
-              'estimatedDurationMinutes',
-              'description',
-              'exercises',
-            ],
-          },
-        },
-      });
+          }), 8000);
 
-      const responseText = response.text;
-      if (!responseText) {
-        throw new Error('Gemini API returned an empty response.');
+          const responseText = response.text;
+          if (responseText) {
+            const parsedWorkout = JSON.parse(responseText);
+            if (!parsedWorkout.id) {
+              parsedWorkout.id = `ai-single-${Date.now().toString(36)}`;
+            }
+            if (!parsedWorkout.frequency) {
+              parsedWorkout.frequency = 'Single Day Session';
+            }
+            parsedWorkout.exercises = sanitizeExerciseList(parsedWorkout.exercises || [], bannedRules);
+
+            return res.json({
+              success: true,
+              data: parsedWorkout,
+              source: modelName,
+            });
+          }
+        } catch (mErr: any) {
+          lastModelError = mErr;
+          console.warn(`[Server] Single workout model ${modelName} failed, trying next:`, mErr?.message || mErr);
+        }
       }
 
-      const parsedWorkout = JSON.parse(responseText);
-      if (!parsedWorkout.id) {
-        parsedWorkout.id = `ai-single-${Date.now().toString(36)}`;
-      }
-      if (!parsedWorkout.frequency) {
-        parsedWorkout.frequency = 'Single Day Session';
-      }
-
-      return res.json({
-        success: true,
-        data: parsedWorkout,
-        source: 'gemini-3.8-flash',
-      });
+      throw lastModelError || new Error('All candidate Gemini models failed.');
     } catch (err: any) {
       console.error('[Server] Single-day workout Gemini generation failed:', err);
       const fallback = generateFallbackSingleWorkout(params);
@@ -1495,11 +1596,16 @@ RULES:
     }
   });
 
-  // Mount Vite middlewares in development or serve static files in production
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.use((req, res) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+  const distPath = path.resolve(__dirname, 'dist');
+  const isProduction = process.env.NODE_ENV === 'production' || fs.existsSync(distPath);
+
+  if (isProduction) {
+    app.use(express.static(distPath));
+    app.use((req, res, next) => {
+      if (req.method === 'GET' && !req.path.startsWith('/api')) {
+        return res.sendFile(path.resolve(distPath, 'index.html'));
+      }
+      next();
     });
   } else {
     const vite = await createViteServer({
