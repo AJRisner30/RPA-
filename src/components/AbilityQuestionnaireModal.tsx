@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   X, ShieldCheck, Dumbbell, Activity, CheckCircle2, 
-  ArrowRight, ArrowLeft, Sparkles, Award, Zap, 
+  ArrowRight, ArrowLeft, Award, Zap, 
   Flame, Clock, ChevronDown, ChevronUp, RefreshCw, Check
 } from 'lucide-react';
 import { AthleteProfile, ProgramKey, QuestionnaireAnswers } from '../types';
@@ -23,6 +23,7 @@ interface AbilityQuestionnaireModalProps {
   onClose: () => void;
   currentAthlete: AthleteProfile;
   onSaveQuestionnaire: (answers: QuestionnaireAnswers, recommendedProgram: ProgramKey) => void;
+  onOpenAIGenerator?: () => void;
 }
 
 export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps> = ({
@@ -30,6 +31,7 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
   onClose,
   currentAthlete,
   onSaveQuestionnaire,
+  onOpenAIGenerator,
 }) => {
   const existing = currentAthlete.questionnaire;
 
@@ -128,11 +130,14 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
     };
 
     onSaveQuestionnaire(finalAnswers, chosenKey);
-    setAppliedProgramMsg(`Enrolled in ${recommendation.programTitle}!`);
+    setAppliedProgramMsg(chosenKey === 'custom_ai' ? 'Launching AI Workout Architect...' : `Enrolled in ${recommendation.programTitle}!`);
     setTimeout(() => {
       setAppliedProgramMsg(null);
       onClose();
-    }, 1200);
+      if (chosenKey === 'custom_ai') {
+        onOpenAIGenerator?.();
+      }
+    }, 800);
   };
 
   return (
@@ -250,7 +255,7 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
 
                 {preparingForPat === 'yes_upcoming_pat' && (
                   <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 flex items-start gap-2 animate-in fade-in duration-200">
-                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <Award className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                     <div>
                       <strong className="text-white block font-athletic uppercase tracking-wide">
                         Universal PAT Protocol Activated
@@ -620,14 +625,25 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
 
                 {/* Primary Action Button */}
                 <div className="mt-6 pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleApplyProgram()}
-                    className="w-full sm:flex-1 py-3.5 px-5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-athletic font-black uppercase text-sm tracking-wider shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
-                  >
-                    <ShieldCheck className="w-5 h-5" />
-                    <span>Apply &amp; Launch {recommendation.programTitle.split('(')[0].trim()}</span>
-                  </button>
+                  {recommendation.programKey === 'custom_ai' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleApplyProgram()}
+                      className="w-full sm:flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-athletic font-black uppercase text-sm tracking-wider shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
+                    >
+                      <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
+                      <span>Launch Workout Architect &amp; Build Protocol</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleApplyProgram()}
+                      className="w-full sm:flex-1 py-3.5 px-5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-athletic font-black uppercase text-sm tracking-wider shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
+                    >
+                      <ShieldCheck className="w-5 h-5" />
+                      <span>Apply &amp; Launch {recommendation.programTitle.split('(')[0].trim()}</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -643,55 +659,6 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
                   <div className="mt-3 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-2 animate-bounce">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     <span>{appliedProgramMsg}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Compare Other 3 Programs Accordion */}
-              <div className="border border-slate-800 rounded-2xl overflow-hidden bg-[#0a0f1d]">
-                <button
-                  type="button"
-                  onClick={() => setShowOtherPrograms(!showOtherPrograms)}
-                  className="w-full p-3.5 text-left flex items-center justify-between text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <span>Explore &amp; Switch to Other Available Tracks</span>
-                  {showOtherPrograms ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
-
-                {showOtherPrograms && (
-                  <div className="p-3.5 border-t border-slate-800 space-y-2.5 bg-black/40">
-                    <p className="text-[11px] text-slate-400">
-                      You are always in control of your active program. If your training goals shift or you want to review the full catalog:
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        { key: 'universal_pat' as const, name: 'Universal PAT Protocol', weeks: '8 Wks', desc: 'Academy & State POST physical agility test peak' },
-                        { key: 'apex_protocol' as const, name: 'The Apex Protocol', weeks: '26 Wks', desc: '5 mesocycles from base to peak tactical readiness' },
-                        { key: 'tactical_hypertrophy' as const, name: 'Tactical Hypertrophy', weeks: '6 Wks', desc: 'Upper/Lower body armor & pursuit sprints' },
-                        { key: 'hybrid_protocol' as const, name: 'Hybrid Protocol', weeks: '12 Wks', desc: 'Heavy barbell lifts + running progression' },
-                        { key: 'hybrid_db' as const, name: 'Hybrid DB & BW', weeks: '12 Wks', desc: 'Dumbbell volume & calisthenics density' },
-                      ]
-                        .filter((p) => p.key !== recommendation.programKey)
-                        .map((p) => (
-                          <div key={p.key} className="p-3 rounded-xl bg-[#0e1626] border border-slate-800 flex flex-col justify-between gap-2">
-                            <div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-white font-athletic uppercase">{p.name}</span>
-                                <span className="text-[9px] font-mono text-blue-400">{p.weeks}</span>
-                              </div>
-                              <span className="text-[10px] text-slate-400 block mt-0.5">{p.desc}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleApplyProgram(p.key)}
-                              className="w-full py-1.5 rounded-lg bg-blue-950 hover:bg-blue-900 border border-blue-500/40 text-[11px] font-bold text-blue-300 transition-colors cursor-pointer text-center"
-                            >
-                              Enroll in {p.name}
-                            </button>
-                          </div>
-                        ))}
-                    </div>
                   </div>
                 )}
               </div>
@@ -730,7 +697,7 @@ export const AbilityQuestionnaireModal: React.FC<AbilityQuestionnaireModalProps>
                 onClick={handleCalculateRecommendation}
                 className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-black font-athletic uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center gap-2 ml-auto active:scale-[0.98]"
               >
-                <Sparkles className="w-4 h-4 text-white" />
+                <Award className="w-4 h-4 text-white" />
                 <span>Analyze Ability &amp; Recommend Program</span>
               </button>
             )}

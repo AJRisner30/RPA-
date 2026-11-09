@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Upload, User, UserCheck, Dumbbell, Calendar, 
   Plus, Trash2, Edit3, CheckCircle2, AlertCircle, FileText, 
-  Send, Sparkles, ChevronRight, Lock, Eye, RefreshCw, X,
+  Send, ChevronRight, Lock, Eye, RefreshCw, X,
   BadgeAlert, Clock, ArrowRight, ShieldAlert, Award,
   CreditCard, ExternalLink, Link2, Save, Sliders, Info
 } from 'lucide-react';
@@ -15,7 +15,7 @@ import {
   saveOfficerProgramToFirestore,
   deleteOfficerProgramFromFirestore
 } from '../utils/firebaseSync';
-import { isCoachSession } from '../utils/athleteAuth';
+import { isCoachSession, resetAthleteTrial } from '../utils/athleteAuth';
 import { 
   subscribeToSquareConfig, 
   saveSquareConfig, 
@@ -580,6 +580,31 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
                     </button>
                   </div>
 
+                  {/* Reset Test Account Action (Admin tool for risnerathletics@gmail.com) */}
+                  {selectedTargetOfficer.email?.trim().toLowerCase() === 'risnerathletics@gmail.com' && (
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-bold text-amber-300">
+                          Authorized Test Profile Detected
+                        </div>
+                        <p className="text-[11px] text-slate-300">
+                          Reset this test account's 14-day Pro free trial so you can resume live testing without paywalls.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetAthleteTrial('risnerathletics@gmail.com');
+                          setFeedbackMsg({ type: 'success', text: '14-Day Pro Free Trial reset for risnerathletics@gmail.com!' });
+                          setTimeout(() => setFeedbackMsg(null), 3000);
+                        }}
+                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer shrink-0 shadow"
+                      >
+                        Reset 14-Day Trial
+                      </button>
+                    </div>
+                  )}
+
                   {/* Program Status for this officer */}
                   {(() => {
                     const assigned = allAssignedPrograms.find((p) => p.officerUserId === selectedTargetOfficer.id);
@@ -999,7 +1024,7 @@ export const OfficerPortalTab: React.FC<OfficerPortalTabProps> = ({
               {officerProgram.coachNotes && (
                 <div className="p-3.5 rounded-xl bg-[#080e18] border border-blue-500/30 text-xs sm:text-sm text-slate-200 leading-relaxed">
                   <div className="flex items-center gap-1.5 font-bold text-blue-400 mb-1">
-                    <Sparkles className="w-4 h-4" />
+                    <ShieldCheck className="w-4 h-4" />
                     <span>Confidential Coaching &amp; Duty Directives</span>
                   </div>
                   <p className="whitespace-pre-line">{officerProgram.coachNotes}</p>

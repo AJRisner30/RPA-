@@ -13,7 +13,6 @@ import {
   Smartphone, 
   LogOut, 
   Zap,
-  Sparkles,
   ChevronRight
 } from 'lucide-react';
 import { TabType } from './Navbar';
@@ -32,6 +31,7 @@ interface AndroidBottomNavProps {
   onOpenPricingModal?: () => void;
   onOpenAndroidAppModal?: () => void;
   onOpenAIGenerator?: () => void;
+  onOpenSingleDayWorkout?: () => void;
   readinessScore?: number;
   hasOfficerProgram?: boolean;
 }
@@ -44,6 +44,7 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
   onOpenPricingModal,
   onOpenAndroidAppModal,
   onOpenAIGenerator,
+  onOpenSingleDayWorkout,
   readinessScore,
   hasOfficerProgram = false,
 }) => {
@@ -337,14 +338,37 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
-                      <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
+                      <Zap className="w-4 h-4 text-blue-400" />
                     </div>
                     <div>
-                      <div className="text-xs font-black uppercase tracking-wider text-white">AI Workout Architect</div>
-                      <div className="text-[11px] text-blue-300">Generate personalized plan with Gemini AI</div>
+                      <div className="text-xs font-black uppercase tracking-wider text-white">Workout Architect</div>
+                      <div className="text-[11px] text-blue-300">Generate customized tactical training schedule</div>
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-blue-400" />
+                </button>
+              )}
+
+              {/* Single Day AI Workout */}
+              {onOpenSingleDayWorkout && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeSheet();
+                    onOpenSingleDayWorkout();
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-950/60 to-orange-950/60 text-left transition-all cursor-pointer shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300">
+                      <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black uppercase tracking-wider text-white">Single-Day Duty Workout</div>
+                      <div className="text-[11px] text-amber-200">On-demand duty session for today's time &amp; equipment</div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-400" />
                 </button>
               )}
 

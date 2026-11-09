@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   ShieldCheck, Activity, Scale, CheckCircle2, 
   Flame, Moon, AlertTriangle, ChevronRight, Plus, 
-  Sparkles, RefreshCw, X, Heart, BatteryCharging, Zap, Info
+  RefreshCw, X, Heart, BatteryCharging, Zap, Info
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog, RecoveryCheckIn, BodyweightEntry } from '../types';
 import { calculateReadinessScore } from '../utils/readinessEngine';

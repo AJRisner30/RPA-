@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Sparkles, X, Dumbbell, ShieldCheck, Flame, 
+  X, Dumbbell, ShieldCheck, Flame, 
   Target, Clock, Calendar, CheckCircle2, AlertCircle, 
-  ArrowRight, RotateCcw, Copy, Check, Play, Save, 
+  ArrowRight, RotateCcw, Copy, Check, Play, Pause, Save, 
   Zap, Heart, Award, SlidersHorizontal, ChevronRight,
-  Info, Loader2, Dumbbell as WeightIcon
+  Info, Loader2, Timer, Dumbbell as WeightIcon, Activity
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile } from '../types';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
+import { soundManager } from '../utils/audio';
 import { 
   generateWorkoutPlanClient, 
   GeneratedWorkoutPlan 
 } from '../utils/aiWorkoutService';
+
+import { useRestTimer } from '../hooks/useRestTimer';
 
 interface AIWorkoutGeneratorModalProps {
   isOpen: boolean;
@@ -19,6 +22,7 @@ interface AIWorkoutGeneratorModalProps {
   onActivateProgram: (program: WorkoutProgram) => void;
   onStartWorkout: (program: WorkoutProgram) => void;
   onSaveToCloud?: (program: WorkoutProgram) => Promise<void>;
+  onSwitchToSingleDay?: () => void;
   currentAthlete?: AthleteProfile;
   userEmail?: string;
 }
@@ -29,6 +33,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   onActivateProgram,
   onStartWorkout,
   onSaveToCloud,
+  onSwitchToSingleDay,
   currentAthlete,
   userEmail,
 }) => {
@@ -50,6 +55,11 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   ]);
   const [sessionDurationMinutes, setSessionDurationMinutes] = useState<number>(60);
   const [notes, setNotes] = useState<string>('');
+
+  // Running & Cardio Circuit Integration State
+  const [cardioPreference, setCardioPreference] = useState<'none' | 'running' | 'cardio_circuits' | 'hybrid'>('running');
+  const [runningDistancePreference, setRunningDistancePreference] = useState<string>('1.5 Miles (Duty Standard)');
+  const [cardioCircuitType, setCardioCircuitType] = useState<string>('Duty Tactical HIIT & Combat Intervals');
 
   // Injury & Physical Limitation state (auto-populated from athlete profile if available)
   const [selectedInjuries, setSelectedInjuries] = useState<string[]>(() => {
@@ -74,6 +84,57 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   const [copied, setCopied] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Dedicated, wall-clock synchronized rest timer for previewing / testing rest periods in the AI workout builder
+  const {
+    activeTimer: activeBuilderTimer,
+    startTimer: startBuilderTimer,
+    togglePauseResume: toggleBuilderTimer,
+    adjustRemaining: adjustBuilderTimer,
+    stopTimer: stopBuilderTimer,
+    updateTotalDuration: updateBuilderTimerTotal,
+  } = useRestTimer();
+
+  const handleToggleBuilderTimer = (exerciseName: string, defaultSecs: number) => {
+    const cleanName = exerciseName.trim();
+    const rawVal = parseInt(String(defaultSecs || 90), 10);
+    const targetSecs = !isNaN(rawVal) && rawVal > 0 ? rawVal : 90;
+
+    if (activeBuilderTimer && activeBuilderTimer.exerciseName === cleanName) {
+      toggleBuilderTimer(cleanName, targetSecs);
+    } else {
+      startBuilderTimer(cleanName, targetSecs);
+    }
+  };
+
+  const handleAdjustBuilderTimerRemaining = (delta: number) => {
+    adjustBuilderTimer(delta);
+  };
+
+  const handleUpdateExerciseRestPeriod = (dayIdx: number, exIdx: number, newSeconds: number) => {
+    const validSecs = Math.max(15, Math.min(300, newSeconds));
+    if (!generatedPlan || !generatedPlan.schedule) return;
+
+    const updatedSchedule = [...generatedPlan.schedule];
+    const targetDay = { ...updatedSchedule[dayIdx] };
+    const updatedExercises = [...targetDay.exercises];
+    const prevEx = updatedExercises[exIdx];
+    updatedExercises[exIdx] = {
+      ...prevEx,
+      restPeriodSeconds: validSecs,
+    };
+    targetDay.exercises = updatedExercises;
+    updatedSchedule[dayIdx] = targetDay;
+
+    setGeneratedPlan({
+      ...generatedPlan,
+      schedule: updatedSchedule,
+    });
+
+    if (activeBuilderTimer && activeBuilderTimer.exerciseName === prevEx.name) {
+      updateBuilderTimerTotal(validSecs);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -187,6 +248,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
         injuries: selectedInjuries,
         injuryNotes,
         notes,
+        cardioPreference,
+        runningDistancePreference: cardioPreference === 'running' || cardioPreference === 'hybrid' ? runningDistancePreference : undefined,
+        cardioCircuitType: cardioPreference === 'cardio_circuits' || cardioPreference === 'hybrid' ? cardioCircuitType : undefined,
         userEmail,
       });
 
@@ -213,13 +277,16 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     (planData.schedule || []).forEach((day: any) => {
       (day.exercises || []).forEach((ex: any) => {
         if (!rawExercises.some((e) => e.name === ex.name)) {
+          const restVal = parseInt(String(ex.restPeriodSeconds), 10);
+          const cleanRest = (!isNaN(restVal) && restVal > 0) ? restVal : 90;
           rawExercises.push({
             id: ex.id || `ai-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             name: ex.name,
             muscleGroup: ex.muscleGroup || 'Full Body',
+            type: ex.type || (ex.name.toLowerCase().includes('run') || ex.name.toLowerCase().includes('circuit') ? 'cardio' : 'strength'),
             defaultSets: ex.defaultSets || 3,
             targetReps: ex.targetReps || '8-10 reps',
-            restPeriodSeconds: ex.restPeriodSeconds || 90,
+            restPeriodSeconds: cleanRest,
             targetRpe: ex.targetRpe || 8,
             notes: ex.notes || '',
           });
@@ -230,16 +297,21 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     const programSchedule = (planData.schedule || []).map((day: any, idx: number) => ({
       day: day.day || idx + 1,
       focus: day.focus || `Day ${day.day || idx + 1}`,
-      exercises: (day.exercises || []).map((ex: any, exIdx: number) => ({
-        id: ex.id || `ai-day-${day.day || idx + 1}-${exIdx}`,
-        name: ex.name,
-        muscleGroup: ex.muscleGroup || 'Full Body',
-        defaultSets: ex.defaultSets || 3,
-        targetReps: ex.targetReps || '8-10 reps',
-        restPeriodSeconds: ex.restPeriodSeconds || 90,
-        targetRpe: ex.targetRpe || 8,
-        notes: ex.notes || '',
-      })),
+      exercises: (day.exercises || []).map((ex: any, exIdx: number) => {
+        const restVal = parseInt(String(ex.restPeriodSeconds), 10);
+        const cleanRest = (!isNaN(restVal) && restVal > 0) ? restVal : 90;
+        return {
+          id: ex.id || `ai-day-${day.day || idx + 1}-${exIdx}`,
+          name: ex.name,
+          muscleGroup: ex.muscleGroup || 'Full Body',
+          type: ex.type || (ex.name.toLowerCase().includes('run') || ex.name.toLowerCase().includes('circuit') ? 'cardio' : 'strength'),
+          defaultSets: ex.defaultSets || 3,
+          targetReps: ex.targetReps || '8-10 reps',
+          restPeriodSeconds: cleanRest,
+          targetRpe: ex.targetRpe || 8,
+          notes: ex.notes || '',
+        };
+      }),
     }));
 
     const programId = `ai-prog-${Date.now().toString(36)}`;
@@ -350,16 +422,16 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
         <div className="p-4 sm:p-6 bg-[#0c1424] border-b border-slate-800 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-b from-blue-500/20 to-slate-900 rounded-xl border border-blue-400/40 text-blue-400 shadow-md">
-              <Sparkles className="w-5 h-5" />
+              <Zap className="w-5 h-5" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 uppercase tracking-wider">
-                  Gemini 3.8 Flash • Server Engine
+                  Patrol Ready • Tactical Periodization Engine
                 </span>
               </div>
               <h2 className="text-lg sm:text-2xl font-black uppercase text-white font-athletic tracking-wide">
-                Personalized AI Workout Architect
+                Personalized Workout Architect
               </h2>
             </div>
           </div>
@@ -393,7 +465,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
               <div className="relative">
                 <div className="w-20 h-20 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin flex items-center justify-center" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-amber-400 animate-pulse" />
+                  <Zap className="w-8 h-8 text-blue-400 animate-pulse" />
                 </div>
               </div>
 
@@ -452,13 +524,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                         <Clock className="w-3 h-3 text-slate-400" />
                         {generatedPlan.estimatedDurationMinutes || sessionDurationMinutes} mins/session
                       </span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border ${
-                        generatedPlan.source === 'gemini-3.8-flash'
-                          ? 'bg-blue-950/70 text-blue-300 border-blue-500/40'
-                          : 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40'
-                      }`}>
-                        <Sparkles className="w-3 h-3" />
-                        {generatedPlan.source === 'gemini-3.8-flash' ? 'Gemini 3.8 Flash' : 'Calibrated Engine'}
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border bg-blue-950/70 text-blue-300 border-blue-500/40">
+                        <ShieldCheck className="w-3 h-3 text-blue-400" />
+                        Calibrated Duty Protocol
                       </span>
                       {(selectedInjuries.length > 0 || injuryNotes.trim().length > 0 || generatedPlan.title.includes('Adapted') || generatedPlan.title.includes('Protected')) && (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border bg-amber-500/20 text-amber-300 border-amber-500/40">
@@ -691,12 +759,111 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                               </span>
                             </div>
 
-                            {/* Rest Period */}
+                            {/* Rest Period Controls & Timer */}
                             <div className="col-span-3 sm:col-span-2 text-center">
-                              <span className="inline-flex items-center gap-1 text-xs font-mono font-bold text-slate-200 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                                <Clock className="w-3 h-3 text-blue-400" />
-                                {ex.restPeriodSeconds}s
-                              </span>
+                              {activeBuilderTimer && activeBuilderTimer.exerciseName === ex.name ? (
+                                <div className="flex items-center justify-center gap-1 bg-[#0f172a] border border-blue-500/60 shadow-lg rounded-xl p-1 animate-in fade-in duration-200">
+                                  {/* -15s */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAdjustBuilderTimerRemaining(-15)}
+                                    className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                    title="Minus 15s"
+                                  >
+                                    -15
+                                  </button>
+
+                                  {/* Main Toggle / Countdown Display */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleBuilderTimer(ex.name, ex.restPeriodSeconds || 90)}
+                                    className={`flex items-center gap-1 px-2 py-0.5 font-mono text-xs font-black rounded transition-all cursor-pointer ${
+                                      activeBuilderTimer.secondsRemaining === 0
+                                        ? 'bg-emerald-500 text-black animate-pulse'
+                                        : activeBuilderTimer.isRunning
+                                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                                          : 'bg-slate-800 text-blue-300 border border-blue-500/30'
+                                    }`}
+                                  >
+                                    {activeBuilderTimer.secondsRemaining === 0 ? (
+                                      <span className="flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>DONE!</span>
+                                      </span>
+                                    ) : (
+                                      <>
+                                        {activeBuilderTimer.isRunning ? (
+                                          <Pause className="w-3 h-3 fill-current" />
+                                        ) : (
+                                          <Play className="w-3 h-3 fill-current ml-0.5" />
+                                        )}
+                                        <span>{activeBuilderTimer.secondsRemaining}s</span>
+                                      </>
+                                    )}
+                                  </button>
+
+                                  {/* +15s */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAdjustBuilderTimerRemaining(15)}
+                                    className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                    title="Plus 15s"
+                                  >
+                                    +15
+                                  </button>
+
+                                  {/* Dismiss */}
+                                  <button
+                                    type="button"
+                                    onClick={() => stopBuilderTimer()}
+                                    className="p-1 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded transition-colors cursor-pointer ml-0.5"
+                                    title="Dismiss timer"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-center gap-1">
+                                  <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateExerciseRestPeriod(activeDayIndex, exIdx, (parseInt(String(ex.restPeriodSeconds), 10) || 90) - 15)}
+                                      className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                      title="Decrease rest by 15s"
+                                    >
+                                      -15
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleBuilderTimer(ex.name, ex.restPeriodSeconds || 90)}
+                                      className="flex items-center gap-1 px-2 py-0.5 bg-slate-800/80 hover:bg-blue-600 hover:text-white text-blue-300 font-mono text-xs font-bold rounded transition-all cursor-pointer"
+                                      title={`Click to start ${ex.restPeriodSeconds || 90}s rest countdown`}
+                                    >
+                                      <Clock className="w-3 h-3 text-blue-400" />
+                                      <span>{ex.restPeriodSeconds || 90}s</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateExerciseRestPeriod(activeDayIndex, exIdx, (parseInt(String(ex.restPeriodSeconds), 10) || 90) + 15)}
+                                      className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                      title="Increase rest by 15s"
+                                    >
+                                      +15
+                                    </button>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleBuilderTimer(ex.name, ex.restPeriodSeconds || 90)}
+                                    className="p-1.5 bg-slate-900 hover:bg-blue-900/40 text-slate-400 hover:text-blue-400 border border-slate-800 rounded-lg transition-colors cursor-pointer"
+                                    title="Start rest timer now"
+                                  >
+                                    <Timer className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
 
                             {/* RPE & Quick Note */}
@@ -790,6 +957,32 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   </span>
                 </div>
               </div>
+
+              {onSwitchToSingleDay && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-amber-950/40 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <Zap className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-white font-athletic uppercase">
+                        Looking for a quick 1-day workout instead?
+                      </div>
+                      <div className="text-[11px] text-slate-300">
+                        Create an on-demand duty session tailored to today's available time and equipment.
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onSwitchToSingleDay();
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black uppercase font-athletic tracking-wide shrink-0 transition cursor-pointer self-start sm:self-auto shadow"
+                  >
+                    Build Single Day &rarr;
+                  </button>
+                </div>
+              )}
 
               {/* QUESTION 1: FITNESS GOALS */}
               <div className="space-y-2.5">
@@ -1090,6 +1283,117 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                 )}
               </div>
 
+              {/* CARDIO & RUNNING INTEGRATION (USER REQUESTED FEATURE) */}
+              <div className="space-y-3 p-4 rounded-2xl bg-gradient-to-br from-[#0c1626] to-[#070b13] border-2 border-blue-500/40 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-sky-400" />
+                    <span>Cardio &amp; Running Integration</span>
+                  </label>
+                  <span className="text-[10px] font-mono text-sky-300 font-bold px-2 py-0.5 rounded bg-sky-950/70 border border-sky-500/30">
+                    Tactical Stamina
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Choose how you want cardiovascular conditioning structured into your training plan. You can add duty running to every session, high-intensity cardio circuits, or a balanced hybrid rotation.
+                </p>
+
+                {/* Cardio Mode Radio Buttons */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: 'running', label: 'Add Running', desc: 'Aerobic base runs, duty mile benchmarks, or pursuit intervals' },
+                    { id: 'cardio_circuits', label: 'Cardio Circuits', desc: 'High-density metabolic finishers, kettlebell flows & HIIT' },
+                    { id: 'hybrid', label: 'Hybrid Run + Circuits', desc: 'Alternating running days and metabolic conditioning circuits' },
+                    { id: 'none', label: 'No Cardio', desc: 'Strict resistance training and barbell/dumbbell work only' },
+                  ].map((opt) => {
+                    const isSelected = cardioPreference === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setCardioPreference(opt.id as any)}
+                        className={`p-3 rounded-xl text-left border transition cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-blue-950/80 border-blue-400 text-white ring-2 ring-blue-500/50 shadow-md'
+                            : 'bg-[#0a101d] hover:bg-[#10192e] border-slate-800 text-slate-300'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-xs uppercase font-athletic text-white">
+                              {opt.label}
+                            </span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
+                          </div>
+                          <span className="text-[10px] text-slate-400 leading-snug block">
+                            {opt.desc}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Sub-options for Running */}
+                {(cardioPreference === 'running' || cardioPreference === 'hybrid') && (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                    <label className="text-[11px] font-bold text-sky-300 uppercase font-mono block">
+                      Target Running Distance / Style:
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        '1.5 Miles (Duty Standard)',
+                        '2.0 - 3.0 Miles (Aerobic Base)',
+                        'Foot Pursuit Sprints (400m-800m Repeats)',
+                        '5K (3.1 Miles) Stamina',
+                      ].map((dist) => (
+                        <button
+                          key={dist}
+                          type="button"
+                          onClick={() => setRunningDistancePreference(dist)}
+                          className={`p-2 rounded-lg text-[11px] font-bold border text-left transition cursor-pointer ${
+                            runningDistancePreference === dist
+                              ? 'bg-sky-950 text-white border-sky-400 ring-1 ring-sky-400/40'
+                              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          {dist}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sub-options for Cardio Circuits */}
+                {(cardioPreference === 'cardio_circuits' || cardioPreference === 'hybrid') && (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                    <label className="text-[11px] font-bold text-amber-300 uppercase font-mono block">
+                      Preferred Cardio Circuit Style:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {[
+                        'Duty Tactical HIIT & Combat Intervals',
+                        'Kettlebell & Dumbbell Conditioning Flow',
+                        'Assault Bike / Erg & Core Burner',
+                      ].map((circ) => (
+                        <button
+                          key={circ}
+                          type="button"
+                          onClick={() => setCardioCircuitType(circ)}
+                          className={`p-2 rounded-lg text-[11px] font-bold border text-left transition cursor-pointer ${
+                            cardioCircuitType === circ
+                              ? 'bg-amber-950 text-white border-amber-400 ring-1 ring-amber-400/40'
+                              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          {circ}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* OPTIONAL CONSTRAINTS / FOCUS NOTES */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
@@ -1113,12 +1417,12 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   onClick={handleGenerate}
                   className="w-full py-4 bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:to-sky-400 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-blue-600/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 >
-                  <Sparkles className="w-5 h-5 text-amber-300 fill-amber-300 animate-pulse" />
+                  <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
                   <span>Generate Personalized Training Plan</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
                 <div className="mt-2 text-center text-[11px] text-slate-500 font-mono">
-                  Powered by Gemini 3.8 Flash • Generates exercises, set volume, reps, and ATP rest intervals
+                  Patrol Ready Engine • Calibrated volume, double progression, and tactical rest intervals
                 </div>
               </div>
             </div>

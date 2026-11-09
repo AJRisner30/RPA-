@@ -138,7 +138,7 @@ export interface WorkoutSessionLog {
   }[];
 }
 
-export type ProgramKey = 'apex_protocol' | 'tactical_hypertrophy' | 'hybrid_protocol' | 'hybrid_db' | 'universal_pat';
+export type ProgramKey = 'apex_protocol' | 'tactical_hypertrophy' | 'hybrid_protocol' | 'hybrid_db' | 'universal_pat' | 'custom_ai';
 
 export interface QuestionnaireAnswers {
   completedAt: string;
@@ -154,7 +154,8 @@ export interface QuestionnaireAnswers {
     | 'hybrid_strength_running' 
     | 'station_db_minimal' 
     | 'complete_apex_peak'
-    | 'universal_pat_testing';
+    | 'universal_pat_testing'
+    | 'custom_ai_individualized';
   preparingForPat?: 'yes_upcoming_pat' | 'no_general_tactical';
   injuryConstraints?: string;
   recommendedProgramKey: ProgramKey;
@@ -298,6 +299,7 @@ export interface TrialActivationRecord {
   hasSelectedPlan?: boolean;
   tier: 'pro' | 'standard';
   status?: 'trialing' | 'active_subscriber' | 'expired' | 'unpaid';
+  resetVersion?: number;
 }
 
 export interface AthleteProfile {
@@ -319,6 +321,8 @@ export interface AthleteProfile {
   lastRecoveryCheckIn?: RecoveryCheckIn;
   subscription?: SubscriptionRecord;
   trialActivation?: TrialActivationRecord;
+  hasCompletedTour?: boolean;
+  tourCompletedAt?: string;
   trialState?: {
     startedAtMs: number;
     trialEndMs: number;

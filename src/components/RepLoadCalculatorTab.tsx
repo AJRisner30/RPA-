@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  Calculator, Dumbbell, Sparkles, Scale, Percent, 
+  Calculator, Dumbbell, Scale, Percent, 
   ArrowRight, RotateCcw, Info, CheckCircle2, Bookmark, 
   Save, Plus, Trash2, HelpCircle, Layers, ChevronDown, 
   ChevronUp, Target, Award, ShieldCheck, Flame, BarChart3,
@@ -485,7 +485,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             onClick={() => setShowEstimatorModal(true)}
             className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <Calculator className="w-3.5 h-3.5 text-blue-400" />
             <span className="hidden sm:inline">Estimate 1RM From Set</span>
             <span className="sm:hidden">1RM Estimator</span>
           </button>
@@ -809,7 +809,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
             
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <Dumbbell className="w-3.5 h-3.5 text-blue-400" />
                 Prescribed Target Load
               </span>
               <span className="text-[11px] font-mono text-zinc-400">
@@ -1058,7 +1058,7 @@ export const RepLoadCalculatorTab: React.FC<RepLoadCalculatorTabProps> = ({ logs
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-400" />
+                <Calculator className="w-5 h-5 text-blue-400" />
                 <h3 className="text-base sm:text-lg font-black uppercase text-white font-athletic tracking-wide">
                   Estimate 1RM From Completed Set
                 </h3>

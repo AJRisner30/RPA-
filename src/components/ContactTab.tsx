@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Mail, Send, Instagram, ExternalLink, Copy, Check, 
-  ShieldCheck, Award, MessageSquare, Dumbbell, Sparkles, 
+  ShieldCheck, Award, MessageSquare, Dumbbell, 
   Flame, CheckCircle2, User, ArrowRight, Shield
 } from 'lucide-react';
 import { PatrolReadyLogo, IssaCertifiedBadge, PatrolReadyCompanyEmblem } from './BrandingLogos';

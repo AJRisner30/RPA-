@@ -8,7 +8,6 @@ import {
   Copy, 
   Check, 
   ShieldCheck, 
-  Sparkles,
   Zap,
   HardDrive,
   Eye,
@@ -77,7 +76,7 @@ export const AndroidAppModal: React.FC<AndroidAppModalProps> = ({ isOpen, onClos
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-blue-400" />
+                    <Zap className="w-3 h-3 text-blue-400" />
                     WebAPK &amp; TWA Ready
                   </span>
                 )}
@@ -207,7 +206,7 @@ export const AndroidAppModal: React.FC<AndroidAppModalProps> = ({ isOpen, onClos
               {/* Home Screen App Shortcuts Info */}
               <div className="p-4 rounded-xl bg-[#0e1624] border border-slate-800">
                 <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4" />
+                  <Zap className="w-4 h-4" />
                   <span>Android Long-Press App Shortcuts</span>
                 </h4>
                 <p className="text-xs text-slate-300">

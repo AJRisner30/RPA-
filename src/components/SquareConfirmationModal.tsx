@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  ShieldCheck, CheckCircle2, Zap, Sparkles, 
+  ShieldCheck, CheckCircle2, Zap, 
   ArrowRight, CreditCard, Lock, X
 } from 'lucide-react';
 import { SubscriptionRecord } from '../types';
@@ -99,7 +99,7 @@ export const SquareConfirmationModal: React.FC<SquareConfirmationModalProps> = (
           {/* Unlocked Features Summary */}
           <div>
             <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 mb-2.5 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
               <span>Features Automatically Unlocked</span>
             </h3>
             

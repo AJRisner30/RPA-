@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Zap, Lock, CheckCircle2, 
-  Sparkles, X, Check, Clock,
+  Lock, CheckCircle2, 
+  X, Check, Clock,
   Mail, ShieldCheck, CreditCard,
   ExternalLink, Info, Smartphone,
   CheckCircle, ArrowRight, KeyRound,
-  AlertCircle, RefreshCw
+  AlertCircle, RefreshCw, Zap
 } from 'lucide-react';
 import { useUserTier } from '../hooks/useUserTier';
 import { getCurrentAthlete } from '../utils/athleteAuth';
@@ -49,7 +49,10 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
     simulateTrialDaysRemaining,
     setSimulatedOverride,
     isExempt,
+    resetTestAccount,
   } = useUserTier();
+
+  const [resetFeedback, setResetFeedback] = useState<string | null>(null);
 
   const [squareConfig, setSquareConfig] = useState<SquareConfig>(() => getCachedSquareConfig());
   const [showSquareHelp, setShowSquareHelp] = useState<boolean>(false);
@@ -258,7 +261,7 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
           {isTrialActive && (
             <div className="p-4 rounded-2xl bg-blue-950/40 border border-blue-500/40 flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>
                   <strong className="text-white">14-Day Risk-Free Trial Active:</strong> You currently have full access to all Pro features ({trialDaysRemaining} days remaining).
                 </span>
@@ -407,7 +410,7 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
                     }}
                     className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-2"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Zap className="w-3.5 h-3.5" />
                     <span>Start 14-Day Free Trial ($0 Today)</span>
                   </button>
                 )}
@@ -614,6 +617,22 @@ export const PricingTiersModal: React.FC<PricingTiersModalProps> = ({
                 >
                   Reset
                 </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await resetTestAccount('risnerathletics@gmail.com');
+                    setResetFeedback('Reset risnerathletics@gmail.com with fresh 14 days!');
+                    setTimeout(() => setResetFeedback(null), 4000);
+                  }}
+                  className="px-2 py-0.5 rounded bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 font-bold cursor-pointer transition flex items-center gap-1 shadow-sm"
+                  title="Reset 14-day Pro trial for test account risnerathletics@gmail.com"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Reset Test Account (risnerathletics@gmail.com)</span>
+                </button>
+                {resetFeedback && (
+                  <span className="text-emerald-400 font-bold ml-1 animate-pulse">{resetFeedback}</span>
+                )}
               </div>
             )}
           </div>

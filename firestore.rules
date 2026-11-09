@@ -62,7 +62,7 @@ service cloud.firestore {
     function isValidAthlete(data) {
       return data.keys().hasAll(['id', 'userId', 'name', 'email', 'experienceLevel', 'primaryGoal']) &&
         data.id is string && isValidId(data.id) &&
-        data.userId is string && data.userId == request.auth.uid &&
+        data.userId is string && (data.userId == request.auth.uid || isAdmin()) &&
         data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
         data.email is string && data.email.size() <= 150 &&
         data.experienceLevel in ['Beginner', 'Intermediate', 'Advanced', 'Elite'] &&

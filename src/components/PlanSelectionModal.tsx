@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, Zap, Sparkles, CheckCircle2, 
+  ShieldCheck, Zap, CheckCircle2, 
   ArrowRight, KeyRound, Lock, Clock, CreditCard
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
@@ -73,7 +73,7 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
-                    <Sparkles className="w-4 h-4" />
+                    <ShieldCheck className="w-4 h-4" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-black uppercase text-white font-athletic tracking-wide">
                     14-Day Risk-Free Pro Trial

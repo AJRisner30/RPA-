@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { 
   X, User, ShieldCheck, Dumbbell, Award, Plus, LogIn, 
-  Check, ChevronRight, Lock, Mail, Activity, Sparkles, Download, ArrowRight,
-  Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw, Copy, ExternalLink, KeyRound
+  Check, ChevronRight, Lock, Mail, Activity, Download, ArrowRight,
+  Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw, Copy, ExternalLink, KeyRound,
+  Compass, Sparkles
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog } from '../types';
 import { ReadinessScoreCard } from './ReadinessScoreCard';
@@ -30,6 +31,7 @@ interface AthleteLoginModalProps {
   onClose: () => void;
   onAthleteChanged: (athlete: AthleteProfile) => void;
   onOpenQuestionnaire?: () => void;
+  onOpenGuidedTour?: () => void;
 }
 
 export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
@@ -37,6 +39,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
   onClose,
   onAthleteChanged,
   onOpenQuestionnaire,
+  onOpenGuidedTour,
 }) => {
   const { 
     user, 
@@ -667,6 +670,40 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
             )}
           </div>
 
+          {/* Guided Tour & Promotional Showcase Card */}
+          <div className="bg-gradient-to-r from-[#0d1c33] via-[#0f2342] to-[#0d1c33] border border-blue-500/40 rounded-2xl p-3.5 sm:p-4 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-400 shrink-0 shadow">
+                <Compass className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white text-xs sm:text-sm font-athletic uppercase tracking-wider">
+                    Guided App Tour &amp; Feature Showcase
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    Demo Mode
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                  Explore all app capabilities, feature locations, or run promotional demos and screen recordings.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                if (onOpenGuidedTour) onOpenGuidedTour();
+              }}
+              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md shadow-blue-900/40 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95 shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+              <span>Launch App Tour</span>
+            </button>
+          </div>
+
           {/* VIEW: SWITCH ATHLETE */}
           {viewMode === 'switch' && (
             <div className="space-y-3">
@@ -764,7 +801,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
             <form onSubmit={handleRegister} className="space-y-3.5">
               <div className="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800">
                 <div className="flex items-center gap-2 text-blue-400 font-bold uppercase tracking-wider text-[11px] mb-1">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <User className="w-3.5 h-3.5" />
                   Create Your Personal Athlete Account
                 </div>
                 <p className="text-slate-400 text-xs">
@@ -1064,7 +1101,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
                       }}
                       className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-athletic uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-900/40"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Award className="w-3.5 h-3.5" />
                       <span>Take Ability Assessment</span>
                     </button>
                   </div>

@@ -9,7 +9,7 @@ import {
   Copy, 
   Check, 
   ShieldCheck, 
-  Sparkles,
+  Zap,
   Share2,
   PlusSquare,
   Globe
@@ -154,7 +154,7 @@ npx cap open android`;
           {activeTab === 'install' && (
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                <Zap className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs space-y-1">
                   <p className="font-bold text-blue-300 uppercase tracking-wider">
                     Instant Native App Experience

@@ -51,6 +51,62 @@ export function isMasterExemptAccount(email?: string | null): boolean {
 }
 
 export const TRIAL_STORAGE_PREFIX = 'rpa_trial_v2_';
+export const RESETTABLE_TEST_PROFILE_EMAIL = 'risnerathletics@gmail.com';
+
+/**
+ * Resets the 14-day free trial exclusively for the authorized test profile (risnerathletics@gmail.com).
+ * Normal user accounts will NEVER be reset and will remain locked upon expiration.
+ */
+export function resetAthleteTrial(targetEmailOrId = RESETTABLE_TEST_PROFILE_EMAIL, days = 14) {
+  const startedAtMs = Date.now();
+  const trialEndMs = startedAtMs + days * 24 * 60 * 60 * 1000;
+  const trialState = {
+    startedAtMs,
+    trialEndMs,
+    hasSelectedPlan: true,
+    tier: 'pro' as const,
+    status: 'trialing' as const,
+    resetVersion: 2,
+    resetAt: new Date().toISOString(),
+  };
+
+  if (typeof window !== 'undefined') {
+    const norm = targetEmailOrId.trim().toLowerCase();
+    try {
+      localStorage.setItem(`${TRIAL_STORAGE_PREFIX}${norm}`, JSON.stringify(trialState));
+      localStorage.removeItem(`patrol_ready_trial_${norm}`);
+      localStorage.removeItem(`patrol_ready_user_trial_${norm}`);
+    } catch {}
+
+    try {
+      const athletes = getAthletes();
+      for (const a of athletes) {
+        if ((a.email && a.email.trim().toLowerCase() === norm) || a.id === targetEmailOrId) {
+          updateAthleteProfile(a.id, {
+            trialState,
+            trialActivation: {
+              code: 'TEST_RESET',
+              activatedAt: new Date().toISOString(),
+              startedAtMs,
+              trialEndMs,
+              daysGranted: days,
+              hasSelectedPlan: true,
+              tier: 'pro' as const,
+              status: 'trialing' as const,
+              resetVersion: 2,
+            },
+          });
+        }
+      }
+    } catch {}
+
+    try {
+      window.dispatchEvent(new CustomEvent('trial_state_changed', { detail: trialState }));
+    } catch {}
+  }
+
+  return trialState;
+}
 
 export function getAthleteTrialState(athleteId: string, email?: string): {
   startedAtMs: number;
@@ -58,6 +114,7 @@ export function getAthleteTrialState(athleteId: string, email?: string): {
   hasSelectedPlan: boolean;
   tier: 'pro' | 'standard';
   status: 'trialing' | 'active_subscriber' | 'expired' | 'unpaid';
+  resetVersion?: number;
 } | null {
   if (typeof window === 'undefined') return null;
   if (email && isMasterExemptAccount(email)) {
@@ -69,6 +126,23 @@ export function getAthleteTrialState(athleteId: string, email?: string): {
       status: 'active_subscriber',
     };
   }
+
+  // Dedicated test account auto-reset: risnerathletics@gmail.com
+  if (email && email.trim().toLowerCase() === RESETTABLE_TEST_PROFILE_EMAIL) {
+    const emailKey = `${TRIAL_STORAGE_PREFIX}${RESETTABLE_TEST_PROFILE_EMAIL}`;
+    const rawEmail = localStorage.getItem(emailKey);
+    if (rawEmail) {
+      try {
+        const parsed = JSON.parse(rawEmail);
+        if (parsed.resetVersion === 2 && typeof parsed.trialEndMs === 'number' && parsed.trialEndMs > Date.now()) {
+          return parsed;
+        }
+      } catch {}
+    }
+    // Automatically reset and initialize fresh 14 days for test account
+    return resetAthleteTrial(RESETTABLE_TEST_PROFILE_EMAIL, 14);
+  }
+
   try {
     // 1. Strict per-user email lookup
     if (email && email.trim()) {
@@ -99,6 +173,11 @@ export function startAthleteFreeTrial(athleteId: string, days = 14, email?: stri
   tier: 'pro';
   status: 'trialing' | 'unpaid';
 } {
+  const isTestAccount = email && email.trim().toLowerCase() === RESETTABLE_TEST_PROFILE_EMAIL;
+  if (isTestAccount) {
+    return resetAthleteTrial(RESETTABLE_TEST_PROFILE_EMAIL, days);
+  }
+
   const existing = getAthleteTrialState(athleteId, email);
   let startedAtMs: number;
   let trialEndMs: number;

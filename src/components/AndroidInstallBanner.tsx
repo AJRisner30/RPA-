@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Download, X, Sparkles } from 'lucide-react';
+import { Smartphone, Download, X } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useAndroidHaptics } from '../hooks/useAndroidHaptics';
 

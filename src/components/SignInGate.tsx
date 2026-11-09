@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, Dumbbell, Zap, Lock, LogIn, Sparkles, 
+  ShieldCheck, Dumbbell, Zap, Lock, LogIn, TrendingUp, 
   ExternalLink, Mail, Instagram, AlertCircle, RefreshCw,
   Flame, Activity, Compass, Footprints, CheckCircle2, ChevronRight, Shield,
   Eye, EyeOff, UserPlus, KeyRound
@@ -122,6 +122,10 @@ export const SignInGate: React.FC<SignInGateProps> = ({
       const user = await signUpWithEmail(cleanEmail, password, cleanName);
       if (user) {
         syncAthleteAfterAuth(cleanEmail, cleanName, user.uid);
+        try {
+          localStorage.setItem('patrol_ready_show_tour', 'true');
+          localStorage.setItem('patrol_ready_tour_trigger_reason', 'signup');
+        } catch {}
       }
     } catch (err) {
       // If error indicates email already exists, provide guidance
@@ -184,7 +188,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
         <div className="flex items-center gap-2">
           <PWAInstallButton variant="pill" className="text-xs py-1 px-2.5 hidden sm:inline-flex" />
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 border border-amber-500/40 rounded-lg text-xs font-mono text-amber-300 font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
             <span>14-Day Free Trial</span>
           </div>
         </div>
@@ -202,7 +206,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
           </div>
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/15 border border-blue-500/40 rounded-full text-[11px] font-bold text-blue-300 uppercase tracking-widest font-mono mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
             <span>14-Day Risk-Free Trial • $0 Today • No Commitment</span>
           </div>
 
@@ -307,7 +311,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
             <div className="mb-5 p-3.5 bg-gradient-to-r from-blue-950/80 via-[#0a1224] to-indigo-950/60 border border-blue-500/40 rounded-2xl text-left">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-mono font-black uppercase text-amber-400 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                   Full Pro Access Included
                 </span>
                 <span className="text-xs font-mono font-black text-white bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30">
@@ -325,7 +329,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>AI Workout Plan Architect Powered by Gemini</span>
+                  <span>Custom Tactical Workout Plan Architect</span>
                 </div>
               </div>
             </div>
@@ -573,7 +577,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <Zap className="w-4 h-4" />
                     <span>Activate 14-Day Free Trial</span>
                   </>
                 )}
@@ -704,7 +708,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
 
           <div className="p-4 bg-slate-900/70 border border-blue-500/25 rounded-2xl shadow-sm">
             <div className="flex items-center gap-2 text-emerald-400 mb-1.5">
-              <Sparkles className="w-4 h-4" />
+              <TrendingUp className="w-4 h-4" />
               <span className="text-xs font-black uppercase tracking-wider font-athletic">
                 Auto-Overload Engine
               </span>

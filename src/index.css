@@ -58,6 +58,29 @@ h1, h2, h3, .font-athletic {
   background: #3b82f6;
 }
 
+/* Custom horizontal scrollbar for top bars on PC/Desktop */
+.topbar-scroll {
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.45) rgba(8, 14, 24, 0.4);
+}
+.topbar-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.topbar-scroll::-webkit-scrollbar-track {
+  background: rgba(8, 14, 24, 0.4);
+  border-radius: 9999px;
+}
+.topbar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4);
+  border-radius: 9999px;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+.topbar-scroll::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
 /* Subtle Entry Animations & Tab Content Fade-In */
 @keyframes tabContentFadeIn {
   from {

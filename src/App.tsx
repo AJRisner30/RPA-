@@ -3,7 +3,7 @@ import {
   getStoredPrograms, savePrograms, 
   getStoredWorkoutLogs
 } from './utils/storage';
-import { WorkoutProgram, WorkoutSessionLog, ProgramKey, QuestionnaireAnswers } from './types';
+import { WorkoutProgram, WorkoutSessionLog, ProgramKey, QuestionnaireAnswers, SubscriptionRecord } from './types';
 import { Navbar, TabType } from './components/Navbar';
 import { WorkoutsTab } from './components/WorkoutsTab';
 import { OfficerPortalTab } from './components/OfficerPortalTab';
@@ -18,13 +18,12 @@ import { AbilityQuestionnaireModal } from './components/AbilityQuestionnaireModa
 import { PricingTiersModal } from './components/PricingTiersModal';
 import { SquareConfirmationModal } from './components/SquareConfirmationModal';
 import { ActivateTrialCodeModal } from './components/ActivateTrialCodeModal';
-import { SubscriptionRecord } from './types';
 import { TrialBanner } from './components/TrialBanner';
 import { SignInGate } from './components/SignInGate';
 import { LoadingSplash } from './components/LoadingSplash';
+import { GuidedTourModal } from './components/GuidedTourModal';
 import { AndroidBottomNav } from './components/AndroidBottomNav';
 import { AndroidAppModal } from './components/AndroidAppModal';
-import { AndroidInstallBanner } from './components/AndroidInstallBanner';
 import { useAndroidBackButton } from './hooks/useAndroidBackButton';
 import { useAndroidWakeLock } from './hooks/useAndroidWakeLock';
 import { useUserTier } from './hooks/useUserTier';
@@ -39,12 +38,13 @@ import { calculateReadinessScore } from './utils/readinessEngine';
 import { PlanSelectionModal } from './components/PlanSelectionModal';
 import { 
   Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, 
-  Instagram, ExternalLink, Zap, Smartphone, Lock, CreditCard, ArrowRight, Sparkles 
+  Instagram, ExternalLink, Zap, Smartphone, Lock, CreditCard, ArrowRight 
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './components/BrandingLogos';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { AIWorkoutGeneratorModal } from './components/AIWorkoutGeneratorModal';
+import { AISingleDayWorkoutModal } from './components/AISingleDayWorkoutModal';
 import { useFirebase } from './context/FirebaseContext';
 import { 
   subscribeToUserWorkoutLogs, 
@@ -84,7 +84,11 @@ export default function App() {
 
   // AI Workout Architect Generator modal & active custom AI program
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState<boolean>(false);
+  const [isSingleDayModalOpen, setIsSingleDayModalOpen] = useState<boolean>(false);
   const [activeCustomAIProgram, setActiveCustomAIProgram] = useState<WorkoutProgram | null>(null);
+
+  // Guided App Tour & Feature Showcase state
+  const [isGuidedTourOpen, setIsGuidedTourOpen] = useState<boolean>(false);
 
   const { 
     tier, 
@@ -98,6 +102,7 @@ export default function App() {
     isExempt,
     activateSubscription,
     startFreeTrial,
+    resetTestAccount,
   } = useUserTier();
 
   const [activeProgramKey, setActiveProgramKey] = useState<ProgramKey>(() => 
@@ -113,6 +118,8 @@ export default function App() {
   // Android Back Button handler: close open modals or return to workouts
   const hasOpenModal = 
     activeLiveProgram !== null || 
+    isGuidedTourOpen ||
+    isSingleDayModalOpen ||
     isAIGeneratorOpen ||
     isAthleteModalOpen || 
     isQuestionnaireOpen || 
@@ -124,6 +131,10 @@ export default function App() {
   const handleCloseTopModal = () => {
     if (activeLiveProgram !== null) {
       setActiveLiveProgram(null);
+    } else if (isGuidedTourOpen) {
+      setIsGuidedTourOpen(false);
+    } else if (isSingleDayModalOpen) {
+      setIsSingleDayModalOpen(false);
     } else if (isAIGeneratorOpen) {
       setIsAIGeneratorOpen(false);
     } else if (isCodeModalOpen) {
@@ -372,12 +383,18 @@ export default function App() {
         ? 'Hypertrophy'
         : answers.primaryGoalCategory === 'hybrid_strength_running'
         ? 'Hybrid Athlete'
+        : answers.primaryGoalCategory === 'custom_ai_individualized'
+        ? 'Hybrid Athlete'
         : 'Tactical Conditioning & Pursuit',
     };
     setCurrentAthlete(updatedAthlete);
     updateAthleteProfile(updatedAthlete.id, updatedAthlete);
     setActiveProgramKey(recommendedProgram);
     setActiveTab('workouts');
+
+    if (recommendedProgram === 'custom_ai') {
+      setIsAIGeneratorOpen(true);
+    }
 
     if (user) {
       saveAthleteToFirestore(updatedAthlete, user.uid).catch((err) => {
@@ -386,12 +403,33 @@ export default function App() {
     }
   };
 
+  // Guided Tour Auto-Activation upon sign-up or first free trial activation
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const pendingTour = localStorage.getItem('patrol_ready_show_tour');
+      const neverShowTour = localStorage.getItem('patrol_ready_never_show_tour');
+      const tourCompleted = localStorage.getItem('patrol_ready_tour_completed_v1');
+
+      if (neverShowTour === 'true') return;
+
+      if (pendingTour === 'true') {
+        setIsGuidedTourOpen(true);
+        localStorage.removeItem('patrol_ready_show_tour');
+      } else if (!tourCompleted && (hasSelectedPlan || isTrialActive || isMasterExempt)) {
+        setIsGuidedTourOpen(true);
+      }
+    } catch {}
+  }, [user, hasSelectedPlan, isTrialActive, isMasterExempt]);
+
   const handleActivateFreeTrial = async () => {
     await startFreeTrial(14);
     if (user) {
       const athlete = getCurrentAthlete();
       await saveAthleteToFirestore(athlete, user.uid);
     }
+    // Automatically trigger guided tour on free trial activation
+    setIsGuidedTourOpen(true);
   };
 
   // 1. Initial page boot: display branded loading splash while auth state is resolving
@@ -439,14 +477,10 @@ export default function App() {
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
         onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
+        onOpenGuidedTour={() => setIsGuidedTourOpen(true)}
         readinessScore={readiness.overallScore}
         readinessTier={readiness.tier}
         hasOfficerProgram={hasOfficerProgram}
-      />
-
-      {/* Android Native App Install Banner */}
-      <AndroidInstallBanner 
-        onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)} 
       />
 
       {/* Main Content Area (With bottom padding for Android bottom navigation bar on mobile) */}
@@ -529,6 +563,29 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Authorized Test Account Direct Reset Action */}
+              {(user?.email?.trim().toLowerCase() === 'risnerathletics@gmail.com' || currentAthlete.email?.trim().toLowerCase() === 'risnerathletics@gmail.com') && (
+                <div className="mt-6 p-4 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 text-center max-w-md mx-auto space-y-2">
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-mono font-bold text-amber-300 uppercase">
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Authorized Test Account (risnerathletics@gmail.com)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    Your test account was reset. Click below to re-arm your fresh 14-day Pro testing window with 1-click.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await resetTestAccount('risnerathletics@gmail.com');
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Restart 14-Day Free Trial (Test Account)</span>
+                  </button>
+                </div>
+              )}
+
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
                 <button
                   type="button"
@@ -560,7 +617,7 @@ export default function App() {
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/90 border border-blue-500/60 text-blue-200 text-xs font-mono font-black uppercase mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
                 <span>14-Day Free Trial Required • $0 Today</span>
               </div>
 
@@ -644,6 +701,8 @@ export default function App() {
                 onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
                 onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
                 onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
+                onOpenSingleDayWorkout={() => setIsSingleDayModalOpen(true)}
+                onOpenGuidedTour={() => setIsGuidedTourOpen(true)}
                 activeCustomProgram={activeCustomAIProgram}
                 onClearCustomProgram={() => setActiveCustomAIProgram(null)}
                 readinessScore={readiness.overallScore}
@@ -715,6 +774,7 @@ export default function App() {
           setLogs(getStoredWorkoutLogs());
         }}
         onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
+        onOpenGuidedTour={() => setIsGuidedTourOpen(true)}
       />
 
       {/* Physical Ability & Program Matcher Modal */}
@@ -723,6 +783,7 @@ export default function App() {
         onClose={() => setIsQuestionnaireOpen(false)}
         currentAthlete={currentAthlete}
         onSaveQuestionnaire={handleSaveQuestionnaire}
+        onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
       />
 
       {/* Plan Selection Onboarding Gate: Prompts everyone upon sign in to pick a free trial or subscription */}
@@ -855,6 +916,7 @@ export default function App() {
         onOpenPricingModal={() => setIsPricingModalOpen(true)}
         onOpenAndroidAppModal={() => setIsAndroidModalOpen(true)}
         onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
+        onOpenSingleDayWorkout={() => setIsSingleDayModalOpen(true)}
         readinessScore={readiness.overallScore}
         hasOfficerProgram={hasOfficerProgram}
       />
@@ -881,12 +943,45 @@ export default function App() {
         }}
         currentAthlete={currentAthlete}
         userEmail={user?.email || ''}
+        onSwitchToSingleDay={() => setIsSingleDayModalOpen(true)}
+      />
+
+      {/* AI Single Day On-Demand Workout Modal */}
+      <AISingleDayWorkoutModal
+        isOpen={isSingleDayModalOpen}
+        onClose={() => setIsSingleDayModalOpen(false)}
+        onStartWorkout={(program) => {
+          setActiveCustomAIProgram(program);
+          setActiveProgramKey('custom_ai');
+          setActiveTab('workouts');
+          handleStartWorkout(program);
+        }}
+        onSaveToCloud={async (program) => {
+          if (user) {
+            await saveCustomProgramToFirestore(program, user.uid);
+          }
+        }}
+        currentAthlete={currentAthlete}
+        userEmail={user?.email || undefined}
       />
 
       {/* Android Native App Packaging & Installation Modal */}
       <AndroidAppModal
         isOpen={isAndroidModalOpen}
         onClose={() => setIsAndroidModalOpen(false)}
+      />
+
+      {/* Guided App Tour & Feature Showcase Modal (Onboarding & Promotional Demo) */}
+      <GuidedTourModal
+        isOpen={isGuidedTourOpen}
+        onClose={() => setIsGuidedTourOpen(false)}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          if (tab !== 'warmups') setTargetWarmupId(null);
+        }}
+        onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
+        onOpenSingleDayWorkout={() => setIsSingleDayModalOpen(true)}
+        onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
       />
     </div>
   );

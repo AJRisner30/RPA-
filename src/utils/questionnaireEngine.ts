@@ -182,6 +182,13 @@ export const GOAL_OPTIONS = [
     description: 'Zero barbells required. Full progression using progressive dumbbell volume, push-up densities, and interval conditioning.',
     preferredProgram: 'hybrid_db' as ProgramKey,
   },
+  {
+    id: 'custom_ai_individualized' as const,
+    label: 'Custom Individualized Protocol (AI Architect)',
+    badge: '100% Bespoke • AI Tailored',
+    description: 'Have our AI Workout Architect build a completely individualized training protocol tailored to your exact shift hours, equipment access, and specific joint/injury constraints.',
+    preferredProgram: 'custom_ai' as ProgramKey,
+  },
 ];
 
 export interface RecommendationResult {
@@ -220,7 +227,31 @@ export function calculateProgramRecommendation(
     fitnessTier = 'Tactical Elite';
   }
 
-  // 2. Direct PAT Question Trigger takes top priority: If athlete is preparing for an upcoming PAT
+  // 2. Individualized AI Programming Option takes top precedence if explicitly requested
+  if (answers.primaryGoalCategory === 'custom_ai_individualized') {
+    return {
+      programKey: 'custom_ai',
+      programTitle: 'Individualized AI Tactical Protocol',
+      badge: 'AI Architect Bespoke System',
+      durationText: 'Bespoke Custom AI Schedule',
+      weeklySplit: `${answers.weeklyDays} Days Custom Tailored Split`,
+      fitnessTier,
+      startingWeek: 1,
+      startingPhaseTitle: 'Bespoke Phase: Personalized Progression',
+      primaryRationale:
+        'Matched to your preference for 100% individualized tactical programming. Our AI Workout Architect will generate a bespoke schedule taking your baseline capacity, shift rotation, and injury constraints directly into account.',
+      keyActionPoints: [
+        'Custom exercise selections built around your joint limitations.',
+        'Linear progression pacing calibrated to your weekly shift hours.',
+        'Dynamic duty conditioning matched to your operational demands.',
+      ],
+      equipmentNotice: answers.equipmentAccess === 'bodyweight_dumbbells'
+        ? 'Engineered exclusively for dumbbells and bodyweight calisthenics.'
+        : 'Engineered for your full tactical gym access.',
+    };
+  }
+
+  // 3. Direct PAT Question Trigger takes priority: If athlete is preparing for an upcoming PAT
   if (answers.preparingForPat === 'yes_upcoming_pat' || answers.primaryGoalCategory === 'universal_pat_testing') {
     return {
       programKey: 'universal_pat',
@@ -242,7 +273,7 @@ export function calculateProgramRecommendation(
     };
   }
 
-  // 3. Hardware / Equipment constraint
+  // 4. Hardware / Equipment constraint
   if (answers.equipmentAccess === 'bodyweight_dumbbells' || answers.primaryGoalCategory === 'station_db_minimal') {
     return {
       programKey: 'hybrid_db',

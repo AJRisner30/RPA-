@@ -1,18 +1,21 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Play, Pause, X, Dumbbell, Clock, Flame, 
-  Sparkles, ShieldCheck, Zap, ChevronDown, 
+  ShieldCheck, Zap, ChevronDown, 
   ChevronUp, Timer, TrendingUp, Calendar, 
   ChevronLeft, ChevronRight, CheckCircle2,
   SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw,
-  LogOut, RefreshCw, BatteryCharging
+  LogOut, RefreshCw, BatteryCharging, Compass, Sparkles
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey, WorkoutSessionLog } from '../types';
 import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData, getUniversalPatWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
+import { useRestTimer } from '../hooks/useRestTimer';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { RequireTier } from './RequireTier';
 import { COACH_AJ_EMAIL, COACH_AJ_NAME } from '../data/coachLogsData';
+import { isMasterExemptAccount, isCoachSession } from '../utils/athleteAuth';
+import { auth } from '../firebase';
 
 // Custom Running Shoe SVG icon
 const ShoeIcon = () => (
@@ -44,6 +47,8 @@ interface WorkoutsTabProps {
   onOpenQuestionnaire?: () => void;
   onOpenAthleteModal?: () => void;
   onOpenAIGenerator?: () => void;
+  onOpenSingleDayWorkout?: () => void;
+  onOpenGuidedTour?: () => void;
   activeCustomProgram?: WorkoutProgram | null;
   onClearCustomProgram?: () => void;
   readinessScore?: number;
@@ -61,6 +66,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   onOpenQuestionnaire,
   onOpenAthleteModal,
   onOpenAIGenerator,
+  onOpenSingleDayWorkout,
+  onOpenGuidedTour,
   activeCustomProgram,
   onClearCustomProgram,
   readinessScore,
@@ -68,10 +75,25 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   latestCoachLog,
   onNavigateToLogs,
 }) => {
-  // Primary program selector: 'apex_protocol' vs 'tactical_hypertrophy' vs 'hybrid_protocol' vs 'hybrid_db' vs 'universal_pat' vs 'custom_ai'
-  const [selectedProgram, setSelectedProgram] = useState<ProgramKey | 'custom_ai'>(
-    activeProgramKey || (activeCustomProgram ? 'custom_ai' : (currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol'))
+  const isMasterExempt = Boolean(
+    (currentAthlete?.email && isMasterExemptAccount(currentAthlete.email)) ||
+    (auth.currentUser?.email && isMasterExemptAccount(auth.currentUser.email)) ||
+    isCoachSession()
   );
+
+  const hasCompletedQuestionnaire = Boolean(
+    currentAthlete?.questionnaire && currentAthlete.questionnaire.completedAt
+  );
+
+  // Primary program selector: 'apex_protocol' vs 'tactical_hypertrophy' vs 'hybrid_protocol' vs 'hybrid_db' vs 'universal_pat' vs 'custom_ai'
+  const [selectedProgram, setSelectedProgram] = useState<ProgramKey | 'custom_ai'>(() => {
+    if (activeProgramKey) return activeProgramKey;
+    if (activeCustomProgram) return 'custom_ai';
+    if (!isMasterExempt && currentAthlete?.questionnaire?.recommendedProgramKey) {
+      return currentAthlete.questionnaire.recommendedProgramKey;
+    }
+    return currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol';
+  });
 
   useEffect(() => {
     if (activeProgramKey) {
@@ -84,6 +106,12 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       setSelectedProgram('custom_ai');
     }
   }, [activeCustomProgram, activeProgramKey]);
+
+  useEffect(() => {
+    if (!isMasterExempt && currentAthlete?.questionnaire?.recommendedProgramKey) {
+      setSelectedProgram(currentAthlete.questionnaire.recommendedProgramKey);
+    }
+  }, [currentAthlete?.questionnaire?.recommendedProgramKey, isMasterExempt]);
 
   const handleProgramSwitch = (progKey: ProgramKey | 'custom_ai') => {
     setSelectedProgram(progKey);
@@ -115,13 +143,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   const [showOverloadRules, setShowOverloadRules] = useState<boolean>(false);
   const [dayViewMode, setDayViewMode] = useState<number | 'all'>('all');
 
-  // Inline exercise countdown timer state (replaces the floating bottom timer)
-  const [activeExerciseTimer, setActiveExerciseTimer] = useState<{
-    exerciseName: string;
-    secondsRemaining: number;
-    totalSeconds: number;
-    isRunning: boolean;
-  } | null>(null);
+  // Inline exercise countdown timer (synchronized with wall clock via useRestTimer)
+  const {
+    activeTimer: activeExerciseTimer,
+    startTimer: startExerciseTimer,
+    togglePauseResume: toggleActiveExerciseTimer,
+    adjustRemaining: adjustActiveTimerRemaining,
+    stopTimer: stopExerciseTimer,
+    updateTotalDuration: updateActiveTimerTotal,
+  } = useRestTimer();
 
   // User-customizable rest periods per exercise (persisted in localStorage)
   const [exerciseRestTimes, setExerciseRestTimes] = useState<Record<string, number>>(() => {
@@ -132,27 +162,6 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       return {};
     }
   });
-
-  // Countdown ticker for active exercise timer
-  useEffect(() => {
-    if (!activeExerciseTimer || !activeExerciseTimer.isRunning) return;
-
-    const interval = window.setInterval(() => {
-      setActiveExerciseTimer((prev) => {
-        if (!prev || !prev.isRunning) return prev;
-        if (prev.secondsRemaining <= 1) {
-          soundManager.playRestComplete();
-          return { ...prev, secondsRemaining: 0, isRunning: false };
-        }
-        if (prev.secondsRemaining <= 4 && prev.secondsRemaining > 1) {
-          soundManager.playCountdownBeep();
-        }
-        return { ...prev, secondsRemaining: prev.secondsRemaining - 1 };
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [activeExerciseTimer?.isRunning]);
 
   // Current active phase data based on selected program
   const currentPhase = useMemo(() => {
@@ -197,15 +206,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     setExerciseRestTimes(updated);
     localStorage.setItem('rpa_exercise_rest_times', JSON.stringify(updated));
 
-    // If currently timing this exercise, adjust remaining proportionally
+    // If currently timing this exercise, update total/remaining
     if (activeExerciseTimer && activeExerciseTimer.exerciseName === cleanStr) {
-      const diff = validSecs - activeExerciseTimer.totalSeconds;
-      const newRemaining = Math.max(0, activeExerciseTimer.secondsRemaining + diff);
-      setActiveExerciseTimer({
-        ...activeExerciseTimer,
-        totalSeconds: validSecs,
-        secondsRemaining: newRemaining,
-      });
+      updateActiveTimerTotal(validSecs);
     }
   };
 
@@ -214,45 +217,18 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     const targetSecs = defaultSecs ?? getExerciseRest(cleanStr);
 
     if (activeExerciseTimer && activeExerciseTimer.exerciseName === cleanStr) {
-      if (activeExerciseTimer.secondsRemaining === 0) {
-        // Restart timer
-        setActiveExerciseTimer({
-          exerciseName: cleanStr,
-          secondsRemaining: targetSecs,
-          totalSeconds: targetSecs,
-          isRunning: true,
-        });
-        soundManager.playCountdownBeep(true);
-      } else {
-        // Pause or Resume
-        setActiveExerciseTimer({
-          ...activeExerciseTimer,
-          isRunning: !activeExerciseTimer.isRunning,
-        });
-      }
+      toggleActiveExerciseTimer(cleanStr, targetSecs);
     } else {
-      // Start countdown on this exercise
-      setActiveExerciseTimer({
-        exerciseName: cleanStr,
-        secondsRemaining: targetSecs,
-        totalSeconds: targetSecs,
-        isRunning: true,
-      });
-      soundManager.playCountdownBeep(true);
+      startExerciseTimer(cleanStr, targetSecs);
     }
   };
 
   const handleCancelExerciseTimer = () => {
-    setActiveExerciseTimer(null);
+    stopExerciseTimer();
   };
 
   const handleAdjustActiveTimerRemaining = (secondsDelta: number) => {
-    if (!activeExerciseTimer) return;
-    const newRemaining = Math.max(5, activeExerciseTimer.secondsRemaining + secondsDelta);
-    setActiveExerciseTimer({
-      ...activeExerciseTimer,
-      secondsRemaining: newRemaining,
-    });
+    adjustActiveTimerRemaining(secondsDelta);
   };
 
   // Helper to determine if a strength entry is a real exercise or a rest/recovery note
@@ -798,10 +774,177 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     ? currentPhase.days 
     : [currentPhase.days[dayViewMode] || currentPhase.days[0]];
 
+  if (!hasCompletedQuestionnaire && !isMasterExempt) {
+    return (
+      <div className="space-y-6">
+        {/* COACH AJ'S LATEST DUTY WORKOUT SPOTLIGHT CARD - VISIBLE TO EVERY ATHLETE */}
+        {latestCoachLog && (
+          <div className="bg-gradient-to-r from-[#0b172a] via-[#0e1d35] to-[#0b172a] border-2 border-amber-500/40 hover:border-amber-500/60 rounded-2xl p-4 shadow-xl relative overflow-hidden transition-all">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 relative z-10">
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 shadow-md">
+                  <ShieldCheck className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-black px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-amber-400" />
+                      Coach AJ's Latest Duty Workout
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-400 font-bold">
+                      {latestCoachLog.date} • {latestCoachLog.durationMinutes}m • {latestCoachLog.totalVolumeLbs.toLocaleString()} lbs
+                    </span>
+                    <span className="text-slate-600 hidden sm:inline">•</span>
+                    <span className="text-[10px] font-mono text-amber-400/80">
+                      {COACH_AJ_EMAIL}
+                    </span>
+                  </div>
+                  <h3 className="text-sm sm:text-base font-black text-white font-athletic uppercase tracking-wide mt-0.5">
+                    {latestCoachLog.workoutTitle}
+                  </h3>
+                  <p className="text-xs text-slate-300 line-clamp-1 mt-0.5">
+                    {latestCoachLog.exercises.map((e) => e.exerciseName).join(' • ')}
+                    {latestCoachLog.notes ? ` — "${latestCoachLog.notes}"` : ''}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const program: WorkoutProgram = {
+                      id: `coach-latest-${latestCoachLog.id}`,
+                      title: latestCoachLog.workoutTitle.startsWith("Coach AJ's")
+                        ? latestCoachLog.workoutTitle
+                        : `Coach AJ's: ${latestCoachLog.workoutTitle}`,
+                      subtitle: 'Coach AJ Risner Verified Duty Session',
+                      category: 'Hybrid',
+                      frequency: 'Duty Session',
+                      estimatedDurationMinutes: latestCoachLog.durationMinutes || 60,
+                      description: `Direct from Coach AJ Risner's verified duty session (${latestCoachLog.date}). Total volume: ${latestCoachLog.totalVolumeLbs.toLocaleString()} lbs. Notes: ${latestCoachLog.notes || 'Duty protocol followed.'}`,
+                      exercises: latestCoachLog.exercises.map((ex, idx) => ({
+                        id: `adopted-ex-${idx}-${Date.now()}`,
+                        name: ex.exerciseName,
+                        muscleGroup: ex.muscleGroup,
+                        defaultSets: Math.max(1, ex.sets.length),
+                        targetReps: ex.sets.map((s) => s.reps).filter(Boolean).join('/') || '8-10',
+                        targetRpe: ex.sets[0]?.rpe || 8.5,
+                        weight_lbs: ex.sets[0]?.weightLbs || 45,
+                        restPeriodSeconds: 90,
+                        notes: `Coach AJ Logged: ${ex.sets.map((s) => `${s.weightLbs} lbs × ${s.reps}`).join(', ')}.`
+                      }))
+                    };
+                    onStartWorkout(program);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase text-xs tracking-wider shadow-md shadow-amber-950/40 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-black" />
+                  <span>Run Session</span>
+                </button>
+
+                {onNavigateToLogs && (
+                  <button
+                    type="button"
+                    onClick={onNavigateToLogs}
+                    className="px-3 py-2 rounded-xl border border-amber-500/40 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 font-bold text-xs transition cursor-pointer flex items-center gap-1"
+                  >
+                    <span>View All &rarr;</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LOCKED ASSESSMENT GATE */}
+        <div className="rounded-3xl border-2 border-blue-500/50 bg-gradient-to-b from-[#0b162a] via-[#091222] to-[#040810] p-6 sm:p-12 text-center shadow-2xl relative overflow-hidden my-4">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="max-w-2xl mx-auto space-y-6 relative z-10">
+            <div className="w-16 h-16 rounded-2xl bg-blue-600/30 border border-blue-400/50 flex items-center justify-center text-blue-400 mx-auto shadow-xl ring-8 ring-blue-500/10">
+              <Award className="w-8 h-8 text-blue-400" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/80 border border-blue-500/40 text-[11px] font-black uppercase font-mono tracking-wider text-blue-300">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                Physical Ability Assessment Required
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white font-athletic uppercase tracking-wide">
+                Unlock Your Prescribed Tactical Protocol
+              </h2>
+              <p className="text-sm text-slate-300 leading-relaxed max-w-xl mx-auto">
+                All training programs are locked until you complete the 2-minute physical ability assessment. The questionnaire evaluates your push-ups, pull-ups, and running endurance, and assigns you the single protocol that directly matches your mission goal.
+              </p>
+            </div>
+
+            {/* 3 Step Diagnostic Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <span className="text-blue-400 font-mono text-[10px] font-bold block mb-1">01 • CAPACITY</span>
+                <h4 className="text-xs font-bold text-white uppercase font-athletic">Push, Pull &amp; Running</h4>
+                <p className="text-[11px] text-slate-400 mt-1">Evaluates your baseline push-ups, pull-ups, and aerobic stamina.</p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <span className="text-amber-400 font-mono text-[10px] font-bold block mb-1">02 • MISSION GOAL</span>
+                <h4 className="text-xs font-bold text-white uppercase font-athletic">Targeted Track</h4>
+                <p className="text-[11px] text-slate-400 mt-1">Select your goal: Apex Master, Tactical Hypertrophy, PAT, or Bespoke AI.</p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <span className="text-emerald-400 font-mono text-[10px] font-bold block mb-1">03 • PRESCRIBED</span>
+                <h4 className="text-xs font-bold text-white uppercase font-athletic">Zero Guesswork</h4>
+                <p className="text-[11px] text-slate-400 mt-1">Unlocks your exact assigned schedule with auto-overload rules.</p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={onOpenQuestionnaire}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:to-sky-400 text-white font-black uppercase text-sm font-athletic tracking-wider shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+              >
+                <Award className="w-4 h-4" />
+                <span>Take 2-Minute Physical Assessment</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </button>
+
+              {onOpenAIGenerator && (
+                <button
+                  type="button"
+                  onClick={onOpenAIGenerator}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 font-bold uppercase text-xs font-athletic tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Launch Workout Architect</span>
+                </button>
+              )}
+
+              {onOpenSingleDayWorkout && (
+                <button
+                  type="button"
+                  onClick={onOpenSingleDayWorkout}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/50 text-sky-200 font-bold uppercase text-xs font-athletic tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  title="Generate a custom single-day duty workout right now"
+                >
+                  <Zap className="w-3.5 h-3.5 text-sky-400 fill-sky-400" />
+                  <span>Single-Day AI Session</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* INITIAL QUESTIONNAIRE & PROGRAM RECOMMENDATION BANNER */}
-      {currentAthlete?.questionnaire ? (
+      {currentAthlete?.questionnaire && (
         <div className="bg-gradient-to-r from-[#0c182c] via-[#0f1f38] to-[#0c182c] border border-blue-500/40 rounded-2xl p-3 sm:p-3.5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-blue-400 shrink-0">
@@ -834,37 +977,68 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             <span>Retake Assessment</span>
           </button>
         </div>
-      ) : (
-        <div className="bg-gradient-to-r from-blue-950/90 via-[#0d1a30] to-blue-950/90 border-2 border-blue-400/60 rounded-2xl p-4 sm:p-4.5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md">
-              <Sparkles className="w-5 h-5 text-white animate-pulse" />
+      )}
+
+      {/* ON-DEMAND SINGLE DAY WORKOUT BANNER */}
+      {onOpenSingleDayWorkout && (
+        <div className="bg-gradient-to-r from-[#0a1526] via-[#0d1e38] to-[#0a1526] border border-sky-500/30 hover:border-sky-500/50 rounded-2xl p-3.5 sm:p-4 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 shrink-0 shadow">
+              <Zap className="w-5 h-5 fill-sky-400 text-sky-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400 font-black">
-                  Initial Tactical Assessment
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-sky-300 font-black px-2 py-0.5 rounded bg-sky-500/20 border border-sky-500/40">
+                  On-Demand AI Duty Session
                 </span>
-                <span className="text-[9px] bg-red-950/80 border border-red-500/40 text-red-300 px-1.5 py-0.5 rounded font-mono font-bold">
-                  Recommended
+                <span className="text-xs text-white font-bold font-athletic tracking-wide uppercase">
+                  Need Something Different Today?
                 </span>
               </div>
-              <h2 className="text-xs sm:text-sm font-black text-white font-athletic uppercase tracking-wide">
-                New Officer or Athlete? Take the 2-Minute Physical Ability &amp; Program Matcher
-              </h2>
-              <p className="text-[11px] text-slate-300 mt-0.5">
-                Diagnose your baseline push/pull/running capacity and goals to automatically unlock your recommended beginning training plan.
+              <p className="text-xs text-slate-300 mt-0.5">
+                Build a custom workout in seconds based on your available time (15–90m), equipment on hand, and injury constraints.
               </p>
             </div>
           </div>
           <button
             type="button"
-            onClick={onOpenQuestionnaire}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-athletic font-black uppercase text-xs tracking-wider shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 self-start md:self-auto active:scale-[0.98]"
+            onClick={onOpenSingleDayWorkout}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black uppercase text-xs font-athletic tracking-wider shadow-md shadow-sky-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 self-start sm:self-auto"
           >
-            <ShieldCheck className="w-4 h-4" />
-            <span>Take Ability Questionnaire</span>
+            <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <span>Generate Single Day</span>
+          </button>
+        </div>
+      )}
+
+      {/* GUIDED APP TOUR & FEATURE SHOWCASE BANNER */}
+      {onOpenGuidedTour && (
+        <div className="bg-gradient-to-r from-[#0a1829] via-[#0d223d] to-[#0a1829] border border-emerald-500/30 hover:border-emerald-500/50 rounded-2xl p-3.5 sm:p-4 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 shadow">
+              <Compass className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-300 font-black px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40">
+                  New Officer Guided Walkthrough
+                </span>
+                <span className="text-xs text-white font-bold font-athletic tracking-wide uppercase">
+                  Take the Full Feature Tour
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Explore daily readiness scores, auto-overload progression, AI workout architect, and verified academy test simulators.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenGuidedTour}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-black uppercase text-xs font-athletic tracking-wider shadow-md shadow-emerald-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 self-start sm:self-auto"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <span>Launch Tour</span>
           </button>
         </div>
       )}
@@ -976,7 +1150,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span>
                   {selectedProgram === 'custom_ai' && activeCustomProgram ? (
                     <>
-                      <span className="text-amber-400">✨ AI:</span> {activeCustomProgram.title}
+                      <span className="text-amber-400">Custom Track:</span> {activeCustomProgram.title}
                     </>
                   ) : selectedProgram === 'apex_protocol' ? (
                     <>The Apex <span className="text-blue-400">Protocol (LEO Master)</span></>
@@ -1004,10 +1178,22 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 type="button"
                 onClick={onOpenAIGenerator}
                 className="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:to-sky-400 text-white border-blue-400 shadow-md shadow-blue-600/30 active:scale-95"
-                title="Generate a custom tailored workout schedule with AI"
+                title="Generate a multi-week custom tailored workout schedule"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-pulse" />
-                <span>AI Workout Architect</span>
+                <Zap className="w-3.5 h-3.5 text-blue-300" />
+                <span>Workout Architect</span>
+              </button>
+            )}
+
+            {onOpenSingleDayWorkout && (
+              <button
+                type="button"
+                onClick={onOpenSingleDayWorkout}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-black border-amber-300 shadow-md shadow-amber-500/20 active:scale-95"
+                title="Create an on-demand single day workout"
+              >
+                <Zap className="w-3.5 h-3.5 fill-black text-black" />
+                <span>Single Day Duty Workout</span>
               </button>
             )}
 
@@ -1043,7 +1229,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               }`}
               title="Toggle Auto-Overload Guidelines"
             >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
               <span>Auto-Overload</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showOverloadRules ? 'rotate-180' : ''}`} />
             </button>
@@ -1065,164 +1251,200 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           </div>
         </div>
 
-        {/* Compact 5-Program Selector Bar (Responsive Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3 pt-3 border-t border-slate-800/80">
-          {/* Program 1: The Apex Protocol */}
-          <button
-            type="button"
-            onClick={() => handleProgramSwitch('apex_protocol')}
-            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-              selectedProgram === 'apex_protocol'
-                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
-                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'apex_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">The Apex Protocol</span>
-              </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">26-Wk Master • Barbell & VO2</span>
-            </div>
-            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'apex_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              26 WKS
-            </span>
-          </button>
-
-          {/* Program 2: Tactical Hypertrophy & Conditioning Protocol */}
-          <button
-            type="button"
-            onClick={() => handleProgramSwitch('tactical_hypertrophy')}
-            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-              selectedProgram === 'tactical_hypertrophy'
-                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
-                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Tactical Hypertrophy</span>
-              </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">6-Wk Cycle • 4-Day + Conditioning</span>
-            </div>
-            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              6 WKS
-            </span>
-          </button>
-
-          {/* Program 3: Hybrid Protocol */}
-          <button
-            type="button"
-            onClick={() => handleProgramSwitch('hybrid_protocol')}
-            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-              selectedProgram === 'hybrid_protocol'
-                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
-                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid Protocol</span>
-              </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Strength/Run</span>
-            </div>
-            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'hybrid_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              12 WKS
-            </span>
-          </button>
-
-          {/* Program 4: Hybrid DB & Bodyweight */}
-          <button
-            type="button"
-            onClick={() => handleProgramSwitch('hybrid_db')}
-            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-              selectedProgram === 'hybrid_db'
-                ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
-                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_db' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid DB &amp; BW</span>
-              </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Dumbbell &amp; Calisthenics</span>
-            </div>
-            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'hybrid_db' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              12 WKS
-            </span>
-          </button>
-
-          {/* Program 5: Universal PAT Protocol */}
-          <button
-            type="button"
-            onClick={() => handleProgramSwitch('universal_pat')}
-            className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-              selectedProgram === 'universal_pat'
-                ? 'bg-amber-950/70 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
-                : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${selectedProgram === 'universal_pat' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
-                <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Universal PAT</span>
-              </div>
-              <span className="text-[10px] text-slate-400 block font-mono truncate">8-Wk Cycle • Academy &amp; Agility</span>
-            </div>
-            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-              selectedProgram === 'universal_pat' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400'
-            }`}>
-              8 WKS
-            </span>
-          </button>
-
-          {/* Program 6: AI-Generated Personalized Plan */}
-          {activeCustomProgram && (
+        {/* Program Selector: Full 5-Program Grid for Coach AJ, or Prescribed Protocol Header for Regular Users */}
+        {isMasterExempt ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3 pt-3 border-t border-slate-800/80">
+            {/* Program 1: The Apex Protocol */}
             <button
               type="button"
-              onClick={() => handleProgramSwitch('custom_ai')}
+              onClick={() => handleProgramSwitch('apex_protocol')}
               className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                selectedProgram === 'custom_ai'
-                  ? 'bg-gradient-to-r from-blue-950 to-indigo-950 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                selectedProgram === 'apex_protocol'
+                  ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
                   : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
               }`}
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-pulse shrink-0" />
-                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic text-white">
-                    {activeCustomProgram.title}
-                  </span>
+                  <span className={`w-2 h-2 rounded-full ${selectedProgram === 'apex_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
+                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">The Apex Protocol</span>
                 </div>
-                <span className="text-[10px] text-blue-300 block font-mono truncate">
-                  AI Plan • {activeCustomProgram.frequency}
-                </span>
+                <span className="text-[10px] text-slate-400 block font-mono truncate">26-Wk Master • Barbell & VO2</span>
               </div>
               <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-                selectedProgram === 'custom_ai' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'
+                selectedProgram === 'apex_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
               }`}>
-                AI PLAN
+                26 WKS
               </span>
             </button>
-          )}
-        </div>
+
+            {/* Program 2: Tactical Hypertrophy & Conditioning Protocol */}
+            <button
+              type="button"
+              onClick={() => handleProgramSwitch('tactical_hypertrophy')}
+              className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                selectedProgram === 'tactical_hypertrophy'
+                  ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                  : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
+                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Tactical Hypertrophy</span>
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono truncate">6-Wk Cycle • 4-Day + Conditioning</span>
+              </div>
+              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+                selectedProgram === 'tactical_hypertrophy' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
+              }`}>
+                6 WKS
+              </span>
+            </button>
+
+            {/* Program 3: Hybrid Protocol */}
+            <button
+              type="button"
+              onClick={() => handleProgramSwitch('hybrid_protocol')}
+              className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                selectedProgram === 'hybrid_protocol'
+                  ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                  : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
+                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid Protocol</span>
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Strength/Run</span>
+              </div>
+              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+                selectedProgram === 'hybrid_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
+              }`}>
+                12 WKS
+              </span>
+            </button>
+
+            {/* Program 4: Hybrid DB & Bodyweight */}
+            <button
+              type="button"
+              onClick={() => handleProgramSwitch('hybrid_db')}
+              className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                selectedProgram === 'hybrid_db'
+                  ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                  : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_db' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
+                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid DB &amp; BW</span>
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Dumbbell &amp; Calisthenics</span>
+              </div>
+              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+                selectedProgram === 'hybrid_db' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
+              }`}>
+                12 WKS
+              </span>
+            </button>
+
+            {/* Program 5: Universal PAT Protocol */}
+            <button
+              type="button"
+              onClick={() => handleProgramSwitch('universal_pat')}
+              className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                selectedProgram === 'universal_pat'
+                  ? 'bg-amber-950/70 border-amber-400 shadow-md ring-1 ring-amber-400/40 text-white'
+                  : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${selectedProgram === 'universal_pat' ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
+                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Universal PAT</span>
+                </div>
+                <span className="text-[10px] text-slate-400 block font-mono truncate">8-Wk Cycle • Academy &amp; Agility</span>
+              </div>
+              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+                selectedProgram === 'universal_pat' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400'
+              }`}>
+                8 WKS
+              </span>
+            </button>
+
+            {/* Program 6: AI-Generated Personalized Plan */}
+            {activeCustomProgram && (
+              <button
+                type="button"
+                onClick={() => handleProgramSwitch('custom_ai')}
+                className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                  selectedProgram === 'custom_ai'
+                    ? 'bg-gradient-to-r from-blue-950 to-indigo-950 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
+                    : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                    <span className="text-xs font-black uppercase tracking-wide truncate font-athletic text-white">
+                      {activeCustomProgram.title}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-blue-300 block font-mono truncate">
+                    Custom Protocol • {activeCustomProgram.frequency}
+                  </span>
+                </div>
+                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
+                  selectedProgram === 'custom_ai' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  CUSTOM PLAN
+                </span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-blue-950/40 via-slate-900/50 to-blue-950/40 p-3 rounded-xl border border-blue-500/30">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-blue-400 shrink-0">
+                <Award className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400 font-black">
+                    Prescribed Duty Protocol
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30 font-bold">
+                    {currentAthlete?.questionnaire?.fitnessTier || 'Operational Tier'}
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    • {currentAthlete?.questionnaire?.weeklyDays || 4} Days/Wk
+                  </span>
+                </div>
+                <div className="text-xs text-slate-200 mt-0.5">
+                  Assigned Track: <span className="font-bold text-white font-athletic uppercase">{currentAthlete?.questionnaire?.recommendedProgramTitle || 'Assigned Protocol'}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onOpenQuestionnaire}
+              className="px-3 py-1.5 rounded-lg border border-blue-500/40 bg-blue-950/80 hover:bg-blue-900 text-blue-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto shrink-0 shadow-sm"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
+              <span>Retake Assessment</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Dynamic Program Content - Smooth CSS Fade-in Transition When Switching Programs */}
       <div key={`${selectedProgram}-${activeApexPhaseKey}-${activeApexWeek}-${activeTacticalWeek}-${activePatWeek}`} className="animate-tab-fade space-y-6">
-        {selectedProgram === 'custom_ai' && activeCustomProgram ? (
-          <div className="space-y-6">
+        {selectedProgram === 'custom_ai' ? (
+          activeCustomProgram ? (
+            <div className="space-y-6">
             {/* AI Program Overview Hero */}
             <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-950/70 via-[#0e1628] to-indigo-950/40 border-2 border-blue-500/50 shadow-xl relative overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1255,7 +1477,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                       onClick={onOpenAIGenerator}
                       className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                      <Zap className="w-3.5 h-3.5 text-blue-300" />
                       <span>Re-Architect Plan</span>
                     </button>
                   )}
@@ -1404,7 +1626,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                       ) : (
                         <div className="space-y-3">
                           {day.exercises.map((ex, exIdx) => {
-                            const currentRest = ex.restPeriodSeconds || 90;
+                            const cleanExerciseName = ex.name.replace(/\[.*?\]/g, '').trim();
+                            const currentRest = exerciseRestTimes[cleanExerciseName] || ex.restPeriodSeconds || 90;
                             return (
                               <div
                                 key={ex.id || exIdx}
@@ -1439,15 +1662,120 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                     </span>
                                   </div>
 
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleExerciseTimer(ex.name, currentRest)}
-                                    className="p-2 bg-slate-900 hover:bg-blue-900/40 text-blue-400 border border-slate-700 hover:border-blue-500/50 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-mono font-bold"
-                                    title="Start rest timer"
-                                  >
-                                    <Timer className="w-3.5 h-3.5" />
-                                    <span>{currentRest}s</span>
-                                  </button>
+                                  {/* Dedicated Rest Timer for this AI Exercise */}
+                                  <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                                    {activeExerciseTimer && activeExerciseTimer.exerciseName === cleanExerciseName ? (
+                                      <div className="flex items-center gap-1 bg-[#0f172a] border border-blue-500/60 shadow-lg shadow-blue-500/20 rounded-xl p-1 animate-in fade-in duration-200">
+                                        {/* -15s */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleAdjustActiveTimerRemaining(-15)}
+                                          className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                          title="Minus 15s"
+                                        >
+                                          -15
+                                        </button>
+
+                                        {/* Main Toggle / Countdown Display */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleExerciseTimer(cleanExerciseName, currentRest)}
+                                          className={`flex items-center gap-1.5 px-3 py-1 font-mono text-xs font-black rounded-lg transition-all cursor-pointer ${
+                                            activeExerciseTimer.secondsRemaining === 0
+                                              ? 'bg-emerald-500 text-black animate-pulse'
+                                              : activeExerciseTimer.isRunning
+                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                                                : 'bg-slate-800 text-blue-300 border border-blue-500/30'
+                                          }`}
+                                          title={
+                                            activeExerciseTimer.secondsRemaining === 0
+                                              ? 'Rest complete! Click to restart.'
+                                              : activeExerciseTimer.isRunning
+                                                ? 'Pause countdown'
+                                                : 'Resume countdown'
+                                          }
+                                        >
+                                          {activeExerciseTimer.secondsRemaining === 0 ? (
+                                            <span className="flex items-center gap-1">
+                                              <CheckCircle2 className="w-3.5 h-3.5" />
+                                              <span>DONE!</span>
+                                            </span>
+                                          ) : (
+                                            <>
+                                              {activeExerciseTimer.isRunning ? (
+                                                <Pause className="w-3 h-3 fill-current" />
+                                              ) : (
+                                                <Play className="w-3 h-3 fill-current ml-0.5" />
+                                              )}
+                                              <span>{activeExerciseTimer.secondsRemaining}s</span>
+                                            </>
+                                          )}
+                                        </button>
+
+                                        {/* +15s */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleAdjustActiveTimerRemaining(15)}
+                                          className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                          title="Plus 15s"
+                                        >
+                                          +15
+                                        </button>
+
+                                        {/* Cancel Timer */}
+                                        <button
+                                          type="button"
+                                          onClick={handleCancelExerciseTimer}
+                                          className="p-1 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded transition-colors cursor-pointer ml-0.5"
+                                          title="Dismiss timer"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center bg-[#0a0f1d] border border-slate-800 rounded-lg p-0.5">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleUpdateExerciseRest(cleanExerciseName, currentRest - 15)}
+                                            className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                            title="Minus 15s"
+                                          >
+                                            -15
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleToggleExerciseTimer(cleanExerciseName, currentRest)}
+                                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-800/80 hover:bg-blue-600 hover:text-white text-blue-400 font-mono text-xs font-bold rounded transition-all cursor-pointer"
+                                            title={`Click to start ${currentRest}s rest countdown`}
+                                          >
+                                            <Clock className="w-3 h-3" />
+                                            <span>{currentRest}s</span>
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleUpdateExerciseRest(cleanExerciseName, currentRest + 15)}
+                                            className="px-1.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                            title="Plus 15s"
+                                          >
+                                            +15
+                                          </button>
+                                        </div>
+
+                                        {/* 1-Tap Trigger Button */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleExerciseTimer(cleanExerciseName, currentRest)}
+                                          className="p-1.5 bg-[#0a0f1d] hover:bg-blue-900/30 text-slate-400 hover:text-blue-400 border border-slate-800 hover:border-blue-500/40 rounded-lg transition-colors cursor-pointer"
+                                          title="Start rest timer now"
+                                        >
+                                          <Timer className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -1461,6 +1789,36 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </div>
           </div>
         ) : (
+          <div className="p-6 sm:p-10 rounded-2xl bg-gradient-to-br from-blue-950/80 via-[#0e1628] to-indigo-950/60 border-2 border-blue-500/50 shadow-xl text-center space-y-4 my-2">
+            <div className="w-14 h-14 rounded-2xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-blue-300 mx-auto shadow-md">
+              <Zap className="w-7 h-7 text-blue-400" />
+            </div>
+            <div className="max-w-xl mx-auto space-y-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-blue-300 font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/40 inline-block">
+                Individualized Programming Prescribed
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-white font-athletic uppercase tracking-wide">
+                Custom Workout Protocol
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Your diagnostic assessment prescribed a bespoke individualized protocol. Launch the Workout Architect to construct your custom training schedule, equipment split, and duty targets.
+              </p>
+            </div>
+            {onOpenAIGenerator && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onOpenAIGenerator}
+                  className="px-6 py-3.5 bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:to-sky-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xl shadow-blue-600/30 inline-flex items-center gap-2 cursor-pointer active:scale-95 font-athletic"
+                >
+                  <Zap className="w-4 h-4 text-white" />
+                  <span>Launch Workout Architect</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            )}
+          </div>
+        )) : (
           <>
         {/* COMPACT UNIVERSAL PAT WEEK SELECTOR RAIL */}
         {selectedProgram === 'universal_pat' && (
@@ -1677,7 +2035,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           <div className="bg-zinc-900/95 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-lg animate-in fade-in duration-200">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2.5 border-b border-zinc-800">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
                   {selectedProgram === 'apex_protocol' 
                     ? `The Apex Protocol Auto-Overload Laws (${currentPhase.weeks})`

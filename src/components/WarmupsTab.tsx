@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Flame, CheckCircle2, ChevronRight, ChevronLeft, 
-  ShieldCheck, Sparkles, X, Activity, Dumbbell, Play, RotateCcw
+  ShieldCheck, X, Activity, Dumbbell, Play, RotateCcw
 } from 'lucide-react';
 import { WarmUpRoutine, WarmUpStep } from '../types';
 import { INITIAL_WARMUPS } from '../data/initialData';

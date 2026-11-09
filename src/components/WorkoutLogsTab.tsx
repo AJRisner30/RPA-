@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   History, Calendar, Clock, Dumbbell, Trash2, ChevronDown, 
   ChevronUp, Search, Download, Plus, Award, CheckCircle2, 
-  Flame, TrendingUp, Sparkles, Pause, Play, Timer, X,
+  Flame, TrendingUp, Pause, Play, Timer, X,
   AlertTriangle, RotateCcw, Filter, Check, ShieldAlert,
   ShieldCheck, Eye, Zap, ArrowRight, User
 } from 'lucide-react';
@@ -16,6 +16,7 @@ import {
   clearHybridStrengthLogs
 } from '../utils/storage';
 import { soundManager } from '../utils/audio';
+import { useRestTimer } from '../hooks/useRestTimer';
 import { TEMPLATE_EXERCISES, HybridStrengthLogItem, getDefaultRestPeriod } from '../data/protocolData';
 import { getCurrentAthlete, getAthletes, AthleteProfile, isCoachSession } from '../utils/athleteAuth';
 import { useFirebase } from '../context/FirebaseContext';
@@ -77,13 +78,14 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(logs[0]?.id || null);
 
-  // Dedicated inline rest timer state
-  const [activeRestTimer, setActiveRestTimer] = useState<{
-    exerciseName: string;
-    secondsRemaining: number;
-    totalSeconds: number;
-    isRunning: boolean;
-  } | null>(null);
+  // Dedicated inline rest timer state (synchronized with wall clock via useRestTimer)
+  const {
+    activeTimer: activeRestTimer,
+    startTimer: startRestTimer,
+    togglePauseResume: toggleRestTimer,
+    adjustRemaining: adjustRestTimer,
+    stopTimer: stopRestTimer,
+  } = useRestTimer();
 
   // Listen for athlete profile changes or global clear events
   useEffect(() => {
@@ -106,34 +108,8 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (!activeRestTimer || !activeRestTimer.isRunning) return;
-
-    const interval = window.setInterval(() => {
-      setActiveRestTimer((prev) => {
-        if (!prev || !prev.isRunning) return prev;
-        if (prev.secondsRemaining <= 1) {
-          soundManager.playRestComplete();
-          return { ...prev, secondsRemaining: 0, isRunning: false };
-        }
-        if (prev.secondsRemaining <= 4 && prev.secondsRemaining > 1) {
-          soundManager.playCountdownBeep();
-        }
-        return { ...prev, secondsRemaining: prev.secondsRemaining - 1 };
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [activeRestTimer?.isRunning]);
-
   const handleStartRest = (secs: number, exName: string) => {
-    setActiveRestTimer({
-      exerciseName: exName,
-      secondsRemaining: secs,
-      totalSeconds: secs,
-      isRunning: true,
-    });
-    soundManager.playCountdownBeep(true);
+    startRestTimer(exName, secs);
   };
 
   // Load hybridStrengthLogs from localStorage on mount - start fresh with [] by default
@@ -659,12 +635,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
                   <>
                     <button
                       type="button"
-                      onClick={() =>
-                        setActiveRestTimer({
-                          ...activeRestTimer,
-                          isRunning: !activeRestTimer.isRunning,
-                        })
-                      }
+                      onClick={() => toggleRestTimer(exercise, restSeconds)}
                       className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-mono font-black flex items-center gap-1 cursor-pointer shadow-sm"
                     >
                       {activeRestTimer.isRunning ? (
@@ -677,12 +648,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setActiveRestTimer({
-                          ...activeRestTimer,
-                          secondsRemaining: activeRestTimer.secondsRemaining + 30,
-                        })
-                      }
+                      onClick={() => adjustRestTimer(30)}
                       className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono rounded-lg transition-colors cursor-pointer"
                       title="Add 30s"
                     >
@@ -701,7 +667,7 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setActiveRestTimer(null)}
+                  onClick={() => stopRestTimer()}
                   className="p-1 text-zinc-400 hover:text-blue-400 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
                   title="Dismiss timer"
                 >

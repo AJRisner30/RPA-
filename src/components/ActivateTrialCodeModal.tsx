@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  KeyRound, ShieldCheck, Sparkles, CheckCircle2, 
+  KeyRound, ShieldCheck, CheckCircle2, 
   AlertCircle, X, ArrowRight, Zap, RefreshCw, Clock
 } from 'lucide-react';
 import { useUserTier } from '../hooks/useUserTier';
@@ -177,7 +177,7 @@ export const ActivateTrialCodeModal: React.FC<ActivateTrialCodeModalProps> = ({
                   {submitting ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Sparkles className="w-4 h-4" />
+                    <KeyRound className="w-4 h-4" />
                   )}
                   <span>{submitting ? 'Verifying Code...' : 'Activate Free Trial Code'}</span>
                 </button>
