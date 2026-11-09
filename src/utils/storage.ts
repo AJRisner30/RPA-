@@ -289,3 +289,98 @@ export function extractPersonalRecords(logs: WorkoutSessionLog[]): PersonalRecor
 
   return Array.from(prMap.values()).sort((a, b) => b.estimated1RM - a.estimated1RM);
 }
+
+const ACTIVE_CUSTOM_AI_PROGRAM_KEY = 'rpa_active_custom_ai_program_v1';
+const SAVED_CUSTOM_AI_PROGRAMS_KEY = 'rpa_saved_custom_ai_programs_v1';
+const ACTIVE_PROGRAM_KEY = 'rpa_active_program_key_v1';
+
+/**
+ * Persists the user's active custom AI program locally so it is never
+ * canceled out or lost when closing or refreshing the app.
+ */
+export function saveActiveCustomAIProgram(program: WorkoutProgram): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(ACTIVE_CUSTOM_AI_PROGRAM_KEY, JSON.stringify(program));
+    // Also append to saved collection if not present
+    const existingSaved = getStoredCustomAIPrograms();
+    const filtered = existingSaved.filter((p) => p.id !== program.id);
+    const updated = [program, ...filtered];
+    localStorage.setItem(SAVED_CUSTOM_AI_PROGRAMS_KEY, JSON.stringify(updated));
+    // Persist active program track key to custom_ai
+    saveActiveProgramKey('custom_ai');
+  } catch (e) {
+    console.error('Failed to save active custom AI program', e);
+  }
+}
+
+/**
+ * Loads the active custom AI program from localStorage.
+ */
+export function getStoredActiveCustomAIProgram(): WorkoutProgram | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(ACTIVE_CUSTOM_AI_PROGRAM_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && parsed.id ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clears the active custom AI program from localStorage when intentionally cleared.
+ */
+export function clearActiveCustomAIProgram(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(ACTIVE_CUSTOM_AI_PROGRAM_KEY);
+    // If active program key was custom_ai, reset it
+    const activeKey = getStoredActiveProgramKey();
+    if (activeKey === 'custom_ai') {
+      localStorage.removeItem(ACTIVE_PROGRAM_KEY);
+    }
+  } catch (e) {
+    console.error('Failed to clear active custom AI program', e);
+  }
+}
+
+/**
+ * Retrieves all custom AI programs saved in localStorage.
+ */
+export function getStoredCustomAIPrograms(): WorkoutProgram[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(SAVED_CUSTOM_AI_PROGRAMS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Persists the currently selected program track key ('apex_protocol', 'custom_ai', etc.)
+ */
+export function saveActiveProgramKey(key: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(ACTIVE_PROGRAM_KEY, key);
+  } catch (e) {
+    console.error('Failed to save active program key', e);
+  }
+}
+
+/**
+ * Retrieves the currently active program track key from localStorage.
+ */
+export function getStoredActiveProgramKey(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(ACTIVE_PROGRAM_KEY);
+  } catch {
+    return null;
+  }
+}

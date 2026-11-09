@@ -3,7 +3,7 @@ import {
   X, User, ShieldCheck, Dumbbell, Award, Plus, LogIn, 
   Check, ChevronRight, Lock, Mail, Activity, Download, ArrowRight,
   Trash2, AlertTriangle, Cloud, LogOut, CheckCircle2, RefreshCw, Copy, ExternalLink, KeyRound,
-  Compass, Sparkles
+  Compass
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog } from '../types';
 import { ReadinessScoreCard } from './ReadinessScoreCard';
@@ -699,7 +699,7 @@ export const AthleteLoginModal: React.FC<AthleteLoginModalProps> = ({
               }}
               className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md shadow-blue-900/40 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95 shrink-0"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+              <Compass className="w-3.5 h-3.5 text-amber-300" />
               <span>Launch App Tour</span>
             </button>
           </div>

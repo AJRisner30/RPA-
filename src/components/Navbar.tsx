@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { 
   Dumbbell, Flame, Calculator, History, TrendingUp, Mail, 
   Instagram, ExternalLink, Zap, UserCheck, Cloud, LogOut, Award, ShieldCheck, Lock,
-  ChevronLeft, ChevronRight, Compass, Sparkles
+  ChevronLeft, ChevronRight, Compass
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { AthleteProfile, isCoachSession } from '../utils/athleteAuth';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  X, ChevronRight, ChevronLeft, Check, Sparkles, Compass, 
+  X, ChevronRight, ChevronLeft, Check, Compass, Film,
   Dumbbell, Timer, TrendingUp, Calculator, ShieldCheck, Zap, 
   Activity, Copy, CheckCircle2, Play, Flame, Award, 
   ExternalLink, ArrowRight, Eye, RefreshCw, Smartphone, Cloud, Share2
@@ -316,7 +316,7 @@ export const GuidedTourModal: React.FC<GuidedTourModalProps> = ({
               }`}
               title="Toggle Promotional Demo Mode with copy-ready pitch and caption hooks"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-current" />
+              <Film className="w-3.5 h-3.5 text-amber-400" />
               <span>Promo Demo</span>
             </button>
 
@@ -371,7 +371,7 @@ export const GuidedTourModal: React.FC<GuidedTourModalProps> = ({
             <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-950/50 via-[#181308] to-amber-950/40 border border-amber-500/50 text-xs shadow-lg animate-in fade-in space-y-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/30 pb-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <Film className="w-4 h-4 text-amber-400" />
                   <span className="font-athletic font-black uppercase text-amber-300 text-xs tracking-wider">
                     Promotional Demo & Reel Hook Copy
                   </span>

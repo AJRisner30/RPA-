@@ -5,7 +5,7 @@ import {
   ChevronUp, Timer, TrendingUp, Calendar, 
   ChevronLeft, ChevronRight, CheckCircle2,
   SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw,
-  LogOut, RefreshCw, BatteryCharging, Compass, Sparkles
+  LogOut, RefreshCw, BatteryCharging, Compass
 } from 'lucide-react';
 import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey, WorkoutSessionLog } from '../types';
 import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData, getUniversalPatWeekData } from '../data/protocolData';
@@ -16,6 +16,8 @@ import { RequireTier } from './RequireTier';
 import { COACH_AJ_EMAIL, COACH_AJ_NAME } from '../data/coachLogsData';
 import { isMasterExemptAccount, isCoachSession } from '../utils/athleteAuth';
 import { auth } from '../firebase';
+import { isCircuitExercise } from '../utils/circuitParser';
+import { TacticalCircuitCard } from './TacticalCircuitCard';
 
 // Custom Running Shoe SVG icon
 const ShoeIcon = () => (
@@ -1037,7 +1039,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             onClick={onOpenGuidedTour}
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-black uppercase text-xs font-athletic tracking-wider shadow-md shadow-emerald-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 self-start sm:self-auto"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <Compass className="w-3.5 h-3.5 text-amber-300" />
             <span>Launch Tour</span>
           </button>
         </div>
@@ -1626,6 +1628,20 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                       ) : (
                         <div className="space-y-3">
                           {day.exercises.map((ex, exIdx) => {
+                            if (isCircuitExercise(ex)) {
+                              return (
+                                <TacticalCircuitCard
+                                  key={ex.id || exIdx}
+                                  exercise={ex}
+                                  index={exIdx}
+                                  activeTimer={activeExerciseTimer}
+                                  onToggleTimer={handleToggleExerciseTimer}
+                                  onAdjustTimer={handleAdjustActiveTimerRemaining}
+                                  onStopTimer={stopExerciseTimer}
+                                />
+                              );
+                            }
+
                             const cleanExerciseName = ex.name.replace(/\[.*?\]/g, '').trim();
                             const currentRest = exerciseRestTimes[cleanExerciseName] || ex.restPeriodSeconds || 90;
                             return (

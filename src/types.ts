@@ -31,7 +31,7 @@ export interface ExerciseTemplate {
   restPeriodSeconds: number; // e.g. 90
   notes?: string;
   videoGuide?: string;
-  type?: 'strength' | 'cardio' | 'core';
+  type?: 'strength' | 'cardio' | 'core' | 'circuit';
   distance_miles?: number;
   weight_lbs?: number;
   pace?: string;

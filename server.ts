@@ -344,11 +344,12 @@ function generateFallbackWorkoutPlan(params: WorkoutGenerationRequest) {
           id: `ex-circuit-${d.day}`,
           name: `${circuitStyle} Finisher`,
           muscleGroup: 'Full Body' as const,
+          type: 'circuit',
           defaultSets: 3,
           targetReps: '3 rounds (40s work / 20s rest)',
           restPeriodSeconds: 60,
           targetRpe: 8,
-          notes: 'High-density conditioning circuit for work capacity and fat oxidation.',
+          notes: 'Circuit Stations: 1. Kettlebell Swings (40s), 2. Combat Sprawls / Burpees (40s), 3. Mountain Climbers (40s), 4. Loaded Farmer Marches (40s). Continuous rotation, 60s recovery between rounds.',
         });
       }
     });
@@ -371,11 +372,12 @@ function generateFallbackWorkoutPlan(params: WorkoutGenerationRequest) {
             id: `ex-circuit-${d.day}`,
             name: `Combat Metabolic Conditioning Circuit`,
             muscleGroup: 'Full Body' as const,
+            type: 'circuit',
             defaultSets: 3,
-            targetReps: '3 rounds',
+            targetReps: '3 rounds (40s work / 20s rest)',
             restPeriodSeconds: 60,
             targetRpe: 8,
-            notes: 'Explosive kettlebell/dumbbell combat circuit.',
+            notes: 'Circuit Stations: 1. Combat Burpees (40s), 2. Kettlebell Swings (40s), 3. Speed Mountain Climbers (40s), 4. Plank Knee Drives (40s). 60s round rest.',
           });
         }
       }
@@ -893,12 +895,12 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: `sw-cardio-${Date.now()}`,
       name: `${circuitStyle} Finisher (4 Rounds)`,
       muscleGroup: 'Full Body',
-      type: 'cardio',
+      type: 'circuit',
       defaultSets: 4,
       targetReps: '4 rounds (45s work / 15s rest)',
       restPeriodSeconds: 60,
       targetRpe: 9,
-      notes: 'Metabolic density circuit: Kettlebell/Dumbbell Swings, Burpees, Mountain Climbers, and High Knees.',
+      notes: 'Circuit Stations: 1. Kettlebell Swings (45s), 2. Combat Burpees (45s), 3. Speed Mountain Climbers (45s), 4. High Knee Sprints (45s). Continuous flow, 60s rest after each full round.',
     });
     title += ' + Cardio Circuit';
     category = 'Hybrid';
@@ -918,12 +920,12 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: `sw-cardio-2-${Date.now()}`,
       name: `Combat Core & Metabolic Finisher`,
       muscleGroup: 'Full Body',
-      type: 'cardio',
+      type: 'circuit',
       defaultSets: 3,
-      targetReps: '3 rounds',
+      targetReps: '3 rounds (40s work / 20s rest)',
       restPeriodSeconds: 45,
       targetRpe: 8,
-      notes: 'Plank jacks, medicine ball / sandbag slams, and farmer walk strides.',
+      notes: 'Circuit Stations: 1. Plank Jacks (40s), 2. Sandbag / Ball Slams (40s), 3. Heavy Farmer Walk Strides (40s), 4. Hollow Body Hold (40s). Rest 45s between rounds.',
     });
     title += ' + Hybrid Cardio & Run';
     category = 'Hybrid';
@@ -1088,10 +1090,8 @@ RULES:
    - id: unique string (e.g. "ex-1")
    - name: clear exercise name
    - muscleGroup: one of ['Chest', 'Back', 'Quads', 'Hamstrings & Glutes', 'Shoulders', 'Arms', 'Core', 'Full Body']
-   - type: optional string, set to "cardio" for runs and conditioning circuits, or "strength" / "core"
-   - defaultSets: integer (typically 3 or 4; 1 for continuous running sessions)
-   - targetReps: string (e.g. "6-8 reps", "10-12 reps", "1.5 Miles", "20 mins", "4 rounds")
-   - restPeriodSeconds: integer (e.g. 60, 90, 120, or 0 for running)
+   - type: optional string, set to "circuit" for metabolic circuits/finishers, "cardio" for runs, or "strength" / "core"
+   - For circuit exercises: set type to "circuit", defaultSets to round count (e.g. 3 or 4), targetReps to interval scheme (e.g. "3 rounds (40s work / 20s rest)"), restPeriodSeconds to rest between rounds (e.g. 60), and in notes list the numbered stations: "Circuit Stations: 1. [Movement 1], 2. [Movement 2], 3. [Movement 3], 4. [Movement 4]. [Execution cue]"
    - targetRpe: integer between 6 and 9
    - notes: tactical execution cue, pace guidance, and progressive overload trigger
 4. Category MUST be one of: 'Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'. If running or cardio circuits are added, category should prefer 'Hybrid' or 'Athletic Conditioning'.
@@ -1285,7 +1285,7 @@ ${injuryDirectives}
 RULES:
 1. Build an executable, high-impact, single-day session fitting strictly within ${duration} minutes.
 2. Select ${targetExerciseCount} specific exercises calibrated to the duration.
-3. If running or cardio circuits are requested, ensure the session contains the running session or cardio circuit.
+3. If running or cardio circuits are requested, ensure the session contains the running session or cardio circuit. If programming a circuit, set exercise type to "circuit" and list each numbered station clearly in notes (e.g. "Circuit Stations: 1. [Movement 1], 2. [Movement 2], 3. [Movement 3], 4. [Movement 4]. Continuous station rotation.").
 4. STRICTLY match the available equipment: ${(params.equipment || []).join(', ')}. Never prescribe equipment they don't have.
 5. Provide engaging tactical names, sets, reps, rest timers, target RPE, and tactical coaching cues in 'notes'.
 6. Category MUST be one of: 'Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'.

@@ -15,6 +15,9 @@ import {
 } from '../utils/aiWorkoutService';
 
 import { useRestTimer } from '../hooks/useRestTimer';
+import { saveActiveCustomAIProgram } from '../utils/storage';
+import { isCircuitExercise } from '../utils/circuitParser';
+import { TacticalCircuitCard } from './TacticalCircuitCard';
 
 interface AISingleDayWorkoutModalProps {
   isOpen: boolean;
@@ -278,7 +281,11 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
 
   const handleStartWorkoutNow = () => {
     if (!generatedWorkout) return;
+    saveActiveCustomAIProgram(generatedWorkout);
     onStartWorkout(generatedWorkout);
+    if (onSaveToCloud) {
+      onSaveToCloud(generatedWorkout).catch(() => {});
+    }
     onClose();
   };
 
@@ -776,7 +783,22 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                 </div>
 
                 <div className="space-y-2.5">
-                  {generatedWorkout.exercises.map((ex, idx) => (
+                  {generatedWorkout.exercises.map((ex, idx) => {
+                    if (isCircuitExercise(ex)) {
+                      return (
+                        <TacticalCircuitCard
+                          key={ex.id || idx}
+                          exercise={ex}
+                          index={idx}
+                          activeTimer={activeSingleTimer}
+                          onToggleTimer={handleToggleSingleTimer}
+                          onAdjustTimer={handleAdjustSingleTimerRemaining}
+                          onStopTimer={stopSingleTimer}
+                        />
+                      );
+                    }
+
+                    return (
                     <div
                       key={ex.id || idx}
                       className="p-3.5 rounded-2xl bg-[#0f172a] border border-slate-800 hover:border-amber-500/40 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
@@ -918,7 +940,8 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

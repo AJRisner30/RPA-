@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   getStoredPrograms, savePrograms, 
-  getStoredWorkoutLogs
+  getStoredWorkoutLogs,
+  saveActiveCustomAIProgram,
+  getStoredActiveCustomAIProgram,
+  clearActiveCustomAIProgram,
+  saveActiveProgramKey,
+  getStoredActiveProgramKey
 } from './utils/storage';
 import { WorkoutProgram, WorkoutSessionLog, ProgramKey, QuestionnaireAnswers, SubscriptionRecord } from './types';
 import { Navbar, TabType } from './components/Navbar';
@@ -85,7 +90,9 @@ export default function App() {
   // AI Workout Architect Generator modal & active custom AI program
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState<boolean>(false);
   const [isSingleDayModalOpen, setIsSingleDayModalOpen] = useState<boolean>(false);
-  const [activeCustomAIProgram, setActiveCustomAIProgram] = useState<WorkoutProgram | null>(null);
+  const [activeCustomAIProgram, setActiveCustomAIProgram] = useState<WorkoutProgram | null>(() => 
+    getStoredActiveCustomAIProgram()
+  );
 
   // Guided App Tour & Feature Showcase state
   const [isGuidedTourOpen, setIsGuidedTourOpen] = useState<boolean>(false);
@@ -105,9 +112,19 @@ export default function App() {
     resetTestAccount,
   } = useUserTier();
 
-  const [activeProgramKey, setActiveProgramKey] = useState<ProgramKey>(() => 
-    getCurrentAthlete().questionnaire?.recommendedProgramKey || 'apex_protocol'
-  );
+  const [activeProgramKey, setActiveProgramKey] = useState<ProgramKey | 'custom_ai'>(() => {
+    const storedKey = getStoredActiveProgramKey();
+    if (storedKey === 'custom_ai' && getStoredActiveCustomAIProgram()) {
+      return 'custom_ai';
+    }
+    if (storedKey && ['apex_protocol', 'tactical_hypertrophy', 'hybrid_protocol', 'hybrid_db', 'universal_pat'].includes(storedKey)) {
+      return storedKey as ProgramKey;
+    }
+    if (getStoredActiveCustomAIProgram()) {
+      return 'custom_ai';
+    }
+    return getCurrentAthlete().questionnaire?.recommendedProgramKey || 'apex_protocol';
+  });
 
   // Active workout session modal state
   const [activeLiveProgram, setActiveLiveProgram] = useState<WorkoutProgram | null>(null);
@@ -284,7 +301,13 @@ export default function App() {
     // 4. Subscribe to user custom AI programs
     const unsubscribeCustomProgs = subscribeToUserCustomPrograms(user.uid, (cloudProgs) => {
       if (cloudProgs && cloudProgs.length > 0) {
-        setActiveCustomAIProgram((prev) => prev || cloudProgs[0]);
+        setActiveCustomAIProgram((prev) => {
+          if (!prev) {
+            saveActiveCustomAIProgram(cloudProgs[0]);
+            return cloudProgs[0];
+          }
+          return prev;
+        });
       }
     });
 
@@ -697,14 +720,23 @@ export default function App() {
                 onSavePrograms={handleUpdatePrograms}
                 currentAthlete={currentAthlete}
                 activeProgramKey={activeProgramKey}
-                onSelectProgram={(key) => setActiveProgramKey(key)}
+                onSelectProgram={(key) => {
+                  setActiveProgramKey(key);
+                  saveActiveProgramKey(key);
+                }}
                 onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
                 onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
                 onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
                 onOpenSingleDayWorkout={() => setIsSingleDayModalOpen(true)}
                 onOpenGuidedTour={() => setIsGuidedTourOpen(true)}
                 activeCustomProgram={activeCustomAIProgram}
-                onClearCustomProgram={() => setActiveCustomAIProgram(null)}
+                onClearCustomProgram={() => {
+                  clearActiveCustomAIProgram();
+                  setActiveCustomAIProgram(null);
+                  const fallback = currentAthlete.questionnaire?.recommendedProgramKey || 'apex_protocol';
+                  setActiveProgramKey(fallback);
+                  saveActiveProgramKey(fallback);
+                }}
                 readinessScore={readiness.overallScore}
                 readinessTier={readiness.tier}
                 latestCoachLog={coachLogs[0] || null}
@@ -926,17 +958,32 @@ export default function App() {
         isOpen={isAIGeneratorOpen}
         onClose={() => setIsAIGeneratorOpen(false)}
         onActivateProgram={(program) => {
+          saveActiveCustomAIProgram(program);
           setActiveCustomAIProgram(program);
           setActiveProgramKey('custom_ai');
+          saveActiveProgramKey('custom_ai');
           setActiveTab('workouts');
+          if (user) {
+            saveCustomProgramToFirestore(program, user.uid).catch((err) => {
+              console.warn('[Firebase] Auto-save custom AI program note:', err);
+            });
+          }
         }}
         onStartWorkout={(program) => {
+          saveActiveCustomAIProgram(program);
           setActiveCustomAIProgram(program);
           setActiveProgramKey('custom_ai');
+          saveActiveProgramKey('custom_ai');
           setActiveTab('workouts');
+          if (user) {
+            saveCustomProgramToFirestore(program, user.uid).catch((err) => {
+              console.warn('[Firebase] Auto-save custom AI program note:', err);
+            });
+          }
           handleStartWorkout(program);
         }}
         onSaveToCloud={async (program) => {
+          saveActiveCustomAIProgram(program);
           if (user) {
             await saveCustomProgramToFirestore(program, user.uid);
           }
@@ -951,12 +998,20 @@ export default function App() {
         isOpen={isSingleDayModalOpen}
         onClose={() => setIsSingleDayModalOpen(false)}
         onStartWorkout={(program) => {
+          saveActiveCustomAIProgram(program);
           setActiveCustomAIProgram(program);
           setActiveProgramKey('custom_ai');
+          saveActiveProgramKey('custom_ai');
           setActiveTab('workouts');
+          if (user) {
+            saveCustomProgramToFirestore(program, user.uid).catch((err) => {
+              console.warn('[Firebase] Auto-save single day workout note:', err);
+            });
+          }
           handleStartWorkout(program);
         }}
         onSaveToCloud={async (program) => {
+          saveActiveCustomAIProgram(program);
           if (user) {
             await saveCustomProgramToFirestore(program, user.uid);
           }

@@ -15,6 +15,9 @@ import {
 } from '../utils/aiWorkoutService';
 
 import { useRestTimer } from '../hooks/useRestTimer';
+import { saveActiveCustomAIProgram } from '../utils/storage';
+import { isCircuitExercise } from '../utils/circuitParser';
+import { TacticalCircuitCard } from './TacticalCircuitCard';
 
 interface AIWorkoutGeneratorModalProps {
   isOpen: boolean;
@@ -332,13 +335,21 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   const handleActivate = () => {
     if (!generatedPlan) return;
     const prog = buildAppWorkoutProgram(generatedPlan);
+    saveActiveCustomAIProgram(prog);
     onActivateProgram(prog);
+    if (onSaveToCloud) {
+      onSaveToCloud(prog).catch(() => {});
+    }
     onClose();
   };
 
   const handleStartDayWorkout = (dayIndex: number) => {
     if (!generatedPlan) return;
     const prog = buildAppWorkoutProgram(generatedPlan);
+    saveActiveCustomAIProgram(prog);
+    if (onSaveToCloud) {
+      onSaveToCloud(prog).catch(() => {});
+    }
     const day = prog.schedule?.[dayIndex];
     if (day && day.exercises.length > 0) {
       // Create single day executable program
@@ -728,7 +739,22 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                         <div className="hidden sm:block sm:col-span-3 text-right">Target RPE / Form Cue</div>
                       </div>
 
-                      {generatedPlan.schedule[activeDayIndex].exercises.map((ex: any, exIdx: number) => (
+                      {generatedPlan.schedule[activeDayIndex].exercises.map((ex: any, exIdx: number) => {
+                        if (isCircuitExercise(ex)) {
+                          return (
+                            <TacticalCircuitCard
+                              key={exIdx}
+                              exercise={ex}
+                              index={exIdx}
+                              activeTimer={activeBuilderTimer}
+                              onToggleTimer={handleToggleBuilderTimer}
+                              onAdjustTimer={handleAdjustBuilderTimerRemaining}
+                              onStopTimer={stopBuilderTimer}
+                            />
+                          );
+                        }
+
+                        return (
                         <div 
                           key={exIdx}
                           className="p-3 rounded-xl bg-[#080e1a] border border-slate-800/80 hover:border-blue-500/40 transition flex flex-col gap-2"
@@ -882,7 +908,8 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                             </div>
                           )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

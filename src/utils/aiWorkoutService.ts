@@ -26,6 +26,8 @@ export interface GeneratedExercise {
   restPeriodSeconds: number;
   targetRpe: number;
   notes: string;
+  type?: 'strength' | 'cardio' | 'core' | 'circuit';
+  circuitStations?: string[];
 }
 
 export interface GeneratedDay {
@@ -1286,11 +1288,12 @@ export function generateCalibratedWorkoutPlan(params: WorkoutGenerationRequest):
           id: `ex-circuit-duty-${d.day}`,
           name: `${circuitStyle} Finisher`,
           muscleGroup: 'Full Body',
+          type: 'circuit',
           defaultSets: 3,
           targetReps: '3 rounds (40s work / 20s rest)',
           restPeriodSeconds: 60,
           targetRpe: 8,
-          notes: 'High-density metabolic conditioning circuit: Swings, Sprawls, Mountain Climbers, and Farmer Marches.',
+          notes: 'Circuit Stations: 1. Kettlebell Swings (40s), 2. Combat Sprawls / Burpees (40s), 3. Mountain Climbers (40s), 4. Loaded Farmer Marches (40s). Complete all 4 stations back-to-back with zero delay, take 60s recovery between rounds.',
         });
       }
     });
@@ -1313,11 +1316,12 @@ export function generateCalibratedWorkoutPlan(params: WorkoutGenerationRequest):
             id: `ex-circuit-duty-${d.day}`,
             name: `Tactical Pursuit Circuit (Burpees, Swings & Core)`,
             muscleGroup: 'Full Body',
+            type: 'circuit',
             defaultSets: 3,
-            targetReps: '3 rounds',
+            targetReps: '3 rounds (40s work / 20s rest)',
             restPeriodSeconds: 60,
             targetRpe: 8,
-            notes: 'High-power output metabolic circuit for rapid lactate clearance.',
+            notes: 'Circuit Stations: 1. Combat Burpees (40s), 2. Kettlebell Power Swings (40s), 3. Speed Mountain Climbers (40s), 4. Plank Knee Drives (40s). 60s round rest.',
           });
         }
       }
@@ -1946,12 +1950,12 @@ function buildLocalSingleWorkout(params: SingleDayWorkoutRequest): WorkoutProgra
       id: `sw-cardio-${Date.now()}`,
       name: `${circuitStyle} Finisher (4 Rounds)`,
       muscleGroup: 'Full Body',
-      type: 'cardio',
+      type: 'circuit',
       defaultSets: 4,
       targetReps: '4 rounds (45s work / 15s rest)',
       restPeriodSeconds: 60,
       targetRpe: 9,
-      notes: 'High-density metabolic conditioning circuit: Swings, Sprawls, Mountain Climbers, and Jump Ropes.',
+      notes: 'Circuit Stations: 1. Kettlebell Swings (45s), 2. Combat Sprawls (45s), 3. Lateral Mountain Climbers (45s), 4. Jump Ropes / High Knees (45s). Continuous rotation with 60s rest after each full round.',
     });
     title += ' + Cardio Circuit';
     category = 'Hybrid';
@@ -1971,12 +1975,12 @@ function buildLocalSingleWorkout(params: SingleDayWorkoutRequest): WorkoutProgra
       id: `sw-cardio-2-${Date.now()}`,
       name: `Combat Core & Functional Circuit`,
       muscleGroup: 'Full Body',
-      type: 'cardio',
+      type: 'circuit',
       defaultSets: 3,
-      targetReps: '3 rounds',
+      targetReps: '3 rounds (40s work / 20s rest)',
       restPeriodSeconds: 45,
       targetRpe: 8,
-      notes: 'Plank walkouts, dumbbell snatches, and sandbag carries.',
+      notes: 'Circuit Stations: 1. Plank Walkouts (40s), 2. Dumbbell Snatches (40s), 3. Sandbag Carries (40s), 4. Hollow Rock Holds (40s). Rest 45s between rounds.',
     });
     title += ' + Hybrid Run & Circuit';
     category = 'Hybrid';
