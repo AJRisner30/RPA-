@@ -11,7 +11,8 @@ import {
   extractBannedMovements, 
   sanitizePlanAgainstLimitations,
   getDistinctCircuitForDay,
-  sanitizeExerciseList
+  sanitizeExerciseList,
+  validateAndFixSplitLogic
 } from './tacticalEngineServer.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1108,6 +1109,41 @@ Select from diverse tactical circuit archetypes such as:
 Each day's circuit MUST be unique with distinct movements, stations, and work/rest intervals.
 ================================================================================`;
 
+      const splitArchitectureDirective = `
+================================================================================
+PHYSIOLOGICAL RECOVERY & WORKOUT SPLIT ARCHITECTURE (MANDATORY):
+You MUST build a logical training split adhering strictly to exercise science and physiological recovery:
+1. Minimum 48-72 hours between training the same major muscle group, especially LEGS / LOWER BODY / POSTERIOR CHAIN.
+2. NEVER PROGRAM BACK-TO-BACK OR NEAR-CONSECUTIVE LEG DAYS:
+   - For example, Day 2 Legs, Day 3 Rest, Day 4 Legs is STRICTLY FORBIDDEN and medically illogical.
+   - Lower body sessions must NEVER be scheduled on consecutive training days, even if separated by a rest day. Always program an Upper Body session or 2+ rest days between lower body sessions!
+3. Follow these exact architectural templates for the athlete's frequency (${daysPerWeek} training days per week):
+   * 3-DAY SPLIT:
+     - Day 1: Full Body A (Horizontal Push Bench/Press, Squat, Core)
+     - Day 2: Rest & Recovery
+     - Day 3: Full Body B (Vertical Press, Hinge/Deadlift, Pulling)
+     - Day 4: Rest & Recovery
+     - Day 5: Full Body C (Unilateral Legs, Incline Press, Carries)
+     - Days 6-7: Rest
+   * 4-DAY SPLIT:
+     - Day 1: Upper Body A (Chest, Horizontal Rows, Delts)
+     - Day 2: Lower Body A (Squat/Quad Dominant, Calves, Core)
+     - Day 3: REST & ACTIVE RECOVERY (Mandatory Rest)
+     - Day 4: Upper Body B (Vertical Pulling, Incline Press, Delts, Arms) - MUST BE UPPER BODY
+     - Day 5: Lower Body B (Deadlift/Posterior Chain Hinge, Hamstrings, Glutes, Loaded Carries)
+     - Days 6-7: Rest & Mobility Flush
+   * 5-DAY SPLIT:
+     - Day 1: Upper Push (Chest, Anterior/Lateral Delts, Triceps)
+     - Day 2: Upper Pull (Lats, Upper Back, Biceps)
+     - Day 3: Lower Body Chassis A (Squats, Quads, Calves, Core)
+     - Day 4: REST & ACTIVE RECOVERY
+     - Day 5: Upper Body Armor & Density (Push/Pull, Delts, Arms)
+     - Day 6: Lower Body Chassis B (Deadlifts, Posterior Chain, Carries)
+     - Day 7: REST & REGENERATION
+   * 6-DAY SPLIT:
+     - Day 1: Push A | Day 2: Pull A | Day 3: Legs A (Squat focus) | Day 4: Push B | Day 5: Pull B | Day 6: Legs B (Deadlift/Hinge focus) | Day 7: Rest
+================================================================================`;
+
       const systemPrompt = `You are the Head Tactical Strength & Conditioning Coach at Patrol Ready Performance, specializing in elite physical preparation, law enforcement readiness, hybrid athlete periodization, and science-backed progressive overload.
 Create a comprehensive, custom-tailored workout schedule matching the athlete's exact specifications:
 - Fitness Goals: ${params.goals.join(', ')}
@@ -1120,6 +1156,7 @@ Create a comprehensive, custom-tailored workout schedule matching the athlete's 
 - Reported Injuries / Medical Limitations: ${injuryReported || 'None reported'}
 - Special Notes / Constraints: ${params.notes || 'None'}
 ${bannedSection}
+${splitArchitectureDirective}
 ${cardioDirective}
 ${circuitVarietyDirective}
 ${injuryDirectives}
@@ -1230,7 +1267,8 @@ RULES:
           const responseText = response.text;
           if (responseText) {
             const parsedPlan = JSON.parse(responseText);
-            const sanitizedPlan = sanitizePlanAgainstLimitations(parsedPlan, bannedRules);
+            const fixedPlan = validateAndFixSplitLogic(parsedPlan, bannedRules);
+            const sanitizedPlan = sanitizePlanAgainstLimitations(fixedPlan, bannedRules);
             return res.json({
               success: true,
               data: sanitizedPlan,
@@ -1252,7 +1290,8 @@ RULES:
         [params.notes || '', params.injuryNotes || '', ...(params.injuries || [])].join(' '),
         params.injuries || []
       );
-      const sanitizedFallback = sanitizePlanAgainstLimitations(fallback, bannedRules);
+      const fixedFallback = validateAndFixSplitLogic(fallback, bannedRules);
+      const sanitizedFallback = sanitizePlanAgainstLimitations(fixedFallback, bannedRules);
       return res.json({
         success: true,
         data: sanitizedFallback,

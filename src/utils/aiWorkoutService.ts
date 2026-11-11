@@ -4,6 +4,7 @@ import {
   extractBannedMovements,
   sanitizeExerciseList,
   getDistinctCircuitForDay,
+  validateAndFixSplitLogic,
 } from './tacticalExerciseEngine';
 
 export interface WorkoutGenerationRequest {
@@ -1485,11 +1486,13 @@ export async function generateWorkoutPlanClient(
           }),
         }));
 
-        return {
+        const planCandidate = {
           ...result.data,
           schedule: sanitizedSchedule,
           source: result.source || 'tactical-engine',
         };
+
+        return validateAndFixSplitLogic(planCandidate);
       }
     } else {
       console.warn('[AIWorkoutService] Server responded with status:', response.status);

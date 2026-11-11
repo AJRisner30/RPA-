@@ -459,6 +459,145 @@ export function getDistinctCircuitForDay(
   };
 }
 
+/**
+ * Detects whether a training day is primarily focused on Lower Body / Legs / Posterior Chain
+ */
+export function isLegOrLowerDay(day: { focus?: string; exercises?: any[] }): boolean {
+  if (!day) return false;
+  const focusLower = (day.focus || '').toLowerCase();
+
+  // Explicit Upper / Push / Pull indicators override generic mentions
+  const isExplicitUpper = /\b(upper body|upper push|upper pull|push armor|pull armor|chest|bench|back|lat|shoulders?|deltoids?|biceps|triceps|arms)\b/i.test(focusLower);
+  const isExplicitLower = /\b(lower body|legs?|quads?|hamstrings?|posterior chain|glutes?|squats?|deadlifts?|calves|chassis b)\b/i.test(focusLower);
+
+  if (isExplicitLower && !isExplicitUpper) {
+    return true;
+  }
+  if (isExplicitUpper && !isExplicitLower) {
+    return false;
+  }
+
+  // Count exercises if focus is ambiguous or hybrid
+  if (Array.isArray(day.exercises) && day.exercises.length > 0) {
+    const nonCardio = day.exercises.filter((ex: any) => ex.type !== 'cardio' && ex.type !== 'circuit');
+    if (nonCardio.length > 0) {
+      const lowerCount = nonCardio.filter((ex: any) => {
+        const mg = (ex.muscleGroup || '').toLowerCase();
+        const nm = (ex.name || '').toLowerCase();
+        return mg.includes('quad') || mg.includes('hamstring') || mg.includes('glute') ||
+               nm.includes('squat') || nm.includes('deadlift') || nm.includes('lunge') ||
+               nm.includes('split squat') || nm.includes('hip thrust') || nm.includes('leg press');
+      }).length;
+      return lowerCount / nonCardio.length >= 0.5;
+    }
+  }
+
+  return isExplicitLower;
+}
+
+/**
+ * Validates the training schedule to ensure physiological recovery rules:
+ * 1. Lower body / leg training requires at least 48-72 hours recovery.
+ * 2. Never program consecutive leg days (e.g. Day 2 Legs, Day 3 Legs).
+ * 3. Never program near-consecutive leg days separated by only 1 rest day without an upper body session (e.g. Day 2 Legs, Day 3 Rest, Day 4 Legs).
+ * If an illegal leg clash is detected, automatically converts the second session into an Upper Body session.
+ */
+export function validateAndFixSplitLogic(plan: any, bannedRules: BannedLimitation[] = []): any {
+  if (!plan || !Array.isArray(plan.schedule) || plan.schedule.length === 0) {
+    return plan;
+  }
+
+  const updatedSchedule = [...plan.schedule];
+  let lastTrainingDayNumber: number | null = null;
+  let lastTrainingDayWasLower = false;
+
+  for (let i = 0; i < updatedSchedule.length; i++) {
+    const day = updatedSchedule[i];
+    if (day.isRestDay || !day.exercises || day.exercises.length === 0) {
+      continue;
+    }
+
+    const currentDayIsLower = isLegOrLowerDay(day);
+
+    if (currentDayIsLower && lastTrainingDayWasLower) {
+      // Clash detected! Either consecutive (e.g. Day 2 Legs -> Day 3 Legs) or separated by only 1 rest day (e.g. Day 2 Legs -> Day 3 Rest -> Day 4 Legs)
+      // Convert this day to an Upper Body session with safe compound and accessory movements
+      const dayNum = day.day || (i + 1);
+      const isStrength = (plan.category || '').toLowerCase().includes('strength');
+      const compoundReps = isStrength ? '5 reps' : '8-10 reps';
+      const accessoryReps = isStrength ? '6-8 reps' : '10-12 reps';
+
+      // Keep any cardio or circuit exercises
+      const existingCardio = day.exercises.filter((ex: any) => ex.type === 'cardio' || ex.type === 'circuit');
+
+      const upperReplacementExercises = [
+        {
+          id: `ex-${dayNum}-fix-1`,
+          name: isStrength ? 'Barbell Bench Press or DB Floor Press' : 'Incline Dumbbell Bench Press',
+          muscleGroup: 'Chest',
+          defaultSets: 4,
+          targetReps: compoundReps,
+          restPeriodSeconds: isStrength ? 150 : 90,
+          targetRpe: 8,
+          notes: 'Upper body chest and triceps pressing strength. Maintain tight upper back stability.',
+        },
+        {
+          id: `ex-${dayNum}-fix-2`,
+          name: 'Chest-Supported Row or Pendlay Barbell Row',
+          muscleGroup: 'Back',
+          defaultSets: 4,
+          targetReps: compoundReps,
+          restPeriodSeconds: isStrength ? 120 : 90,
+          targetRpe: 8,
+          notes: 'Explosive pull to sternum, squeeze lats and scapular retractors.',
+        },
+        {
+          id: `ex-${dayNum}-fix-3`,
+          name: 'Half-Kneeling Landmine Press or Seated DB Arnold Press',
+          muscleGroup: 'Shoulders',
+          defaultSets: 3,
+          targetReps: accessoryReps,
+          restPeriodSeconds: 60,
+          targetRpe: 8,
+          notes: 'Scapular plane overhead pressing. Core braced to prevent lumbar arching.',
+        },
+        {
+          id: `ex-${dayNum}-fix-4`,
+          name: 'Neutral-Grip Lat Pulldown or Inverted Rows',
+          muscleGroup: 'Back',
+          defaultSets: 3,
+          targetReps: accessoryReps,
+          restPeriodSeconds: 60,
+          targetRpe: 8,
+          notes: 'Full lat stretch at extension, drive elbows down into back pockets.',
+        },
+        ...existingCardio,
+      ];
+
+      const sanitizedUpper = bannedRules.length > 0
+        ? sanitizeExerciseList(upperReplacementExercises, bannedRules)
+        : upperReplacementExercises;
+
+      updatedSchedule[i] = {
+        ...day,
+        focus: `Day ${dayNum}: Upper Body Heavy Armor & Pull Density (Re-balanced for Recovery)`,
+        exercises: sanitizedUpper,
+      };
+
+      lastTrainingDayNumber = dayNum;
+      lastTrainingDayWasLower = false;
+    } else {
+      lastTrainingDayNumber = day.day || (i + 1);
+      lastTrainingDayWasLower = currentDayIsLower;
+    }
+  }
+
+  return {
+    ...plan,
+    schedule: updatedSchedule,
+  };
+}
+
 export function buildDynamicCalibratedPlan(params: {
   goals: string[];
   fitnessLevel: string;
@@ -567,7 +706,14 @@ export function buildDynamicCalibratedPlan(params: {
           { id: `ex-${dayNum}-4`, name: 'Heavy Dumbbell Farmer Carries', muscleGroup: 'Full Body', defaultSets: 3, targetReps: '60 yds', restPeriodSeconds: 60, targetRpe: 8, notes: 'Crush grip, chest proud, short rapid steps.' }
         );
       }
-    } else {
+    } else if (daysPerWeek === 4) {
+      // 4-Day Split: [1, 2, 4, 5] (Rest on 3, 6, 7)
+      // Day 1: Upper A
+      // Day 2: Lower A (Squat/Quad)
+      // Day 3: Rest
+      // Day 4: Upper B (Pull/Incline/Arms)
+      // Day 5: Lower B (Deadlift/Hinge/Carries)
+      // Day 6-7: Rest
       if (cycleDay === 1) {
         dayFocus = `Day ${dayNum}: Upper Body Heavy Armor (Chest, Back & Shoulders)`;
         dayExercises.push(
@@ -577,11 +723,11 @@ export function buildDynamicCalibratedPlan(params: {
           { id: `ex-${dayNum}-4`, name: 'Neutral-Grip Lat Pulldown or Pull-Ups', muscleGroup: 'Back', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Full dead-hang stretch, drive down through elbows.' }
         );
       } else if (cycleDay === 2) {
-        dayFocus = `Day ${dayNum}: Lower Body Kinetic Power & Posterior Chain`;
+        dayFocus = `Day ${dayNum}: Lower Body Kinetic Power & Quad Armor`;
         dayExercises.push(
-          { id: `ex-${dayNum}-1`, name: isStrength ? 'Box Squat or Back Squat' : 'Goblet Squats or Hack Squat', muscleGroup: 'Quads', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Brace against duty belt, drive knees out.' },
-          { id: `ex-${dayNum}-2`, name: 'Romanian Deadlift (Dumbbell or Barbell)', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Hips back deeply, feel full hamstring recruitment.' },
-          { id: `ex-${dayNum}-3`, name: 'Bulgarian Split Squats or Backward Sled Drags', muscleGroup: 'Quads', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Single-leg duty stability.' },
+          { id: `ex-${dayNum}-1`, name: isStrength ? 'Box Squat to Parallel or Back Squat' : 'Goblet Squats or Hack Squat', muscleGroup: 'Quads', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Brace against duty belt, drive knees out.' },
+          { id: `ex-${dayNum}-2`, name: 'Bulgarian Split Squats or Step-Ups', muscleGroup: 'Quads', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Single-leg duty stability and knee resilience.' },
+          { id: `ex-${dayNum}-3`, name: 'Romanian Deadlift (Dumbbell or Barbell)', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Hips back deeply, feel full hamstring recruitment.' },
           { id: `ex-${dayNum}-4`, name: 'Standing Calf Raises & Hanging Knee Tucks', muscleGroup: 'Core', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Strict core anti-extension.' }
         );
       } else if (cycleDay === 4) {
@@ -593,11 +739,116 @@ export function buildDynamicCalibratedPlan(params: {
           { id: `ex-${dayNum}-4`, name: 'Hammer Curls & Overhead Triceps Extensions', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Arm tendon resilience for physical duty.' }
         );
       } else {
+        // cycleDay === 5
         dayFocus = `Day ${dayNum}: Posterior Chain Power & Tactical Loaded Carriage`;
         dayExercises.push(
           { id: `ex-${dayNum}-1`, name: 'High-Handle Trap Bar Deadlift', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Maximum whole-body recruitment.' },
           { id: `ex-${dayNum}-2`, name: 'Barbell or Dumbbell Hip Thrusts', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Glute power for rapid sprinting.' },
-          { id: `ex-${dayNum}-3`, name: 'Heavy Dumbbell Farmer Carries', muscleGroup: 'Full Body', defaultSets: 4, targetReps: '60 yds', restPeriodSeconds: 60, targetRpe: 9, notes: 'Crush grip, chest proud, short rapid steps.' }
+          { id: `ex-${dayNum}-3`, name: 'Backward Sled Drags or Hamstring Curls', muscleGroup: 'Quads', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Knee bulletproofing and blood flow flush.' },
+          { id: `ex-${dayNum}-4`, name: 'Heavy Dumbbell Farmer Carries', muscleGroup: 'Full Body', defaultSets: 4, targetReps: '60 yds', restPeriodSeconds: 60, targetRpe: 9, notes: 'Crush grip, chest proud, short rapid steps.' }
+        );
+      }
+    } else if (daysPerWeek === 5) {
+      // 5-Day Split: [1, 2, 3, 5, 6] (Rest on 4, 7)
+      // Day 1: Upper Push Armor
+      // Day 2: Upper Pull Armor
+      // Day 3: Lower Body Chassis A (Squats, Quads, Core)
+      // Day 4: REST & ACTIVE RECOVERY
+      // Day 5: Upper Body Density & Armor (Push/Pull, Delts, Arms)
+      // Day 6: Lower Body Chassis B (Deadlifts, Posterior Chain, Carries)
+      // Day 7: REST
+      if (cycleDay === 1) {
+        dayFocus = `Day ${dayNum}: Upper Push Armor (Chest, Delts & Triceps)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: isStrength ? 'Barbell Bench Press or DB Floor Press' : 'Incline Dumbbell Bench Press', muscleGroup: 'Chest', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Tight arch, controlled descent, explode to lockout.' },
+          { id: `ex-${dayNum}-2`, name: 'Half-Kneeling Landmine Press or Seated DB Press', muscleGroup: 'Shoulders', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Scapular plane pressing protects rotator cuff.' },
+          { id: `ex-${dayNum}-3`, name: 'Dumbbell Incline Flyes or Push-Up Burnouts', muscleGroup: 'Chest', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Controlled stretch, strict contraction.' },
+          { id: `ex-${dayNum}-4`, name: 'Overhead Cable or DB Triceps Extensions', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Long-head triceps lockout stability.' }
+        );
+      } else if (cycleDay === 2) {
+        dayFocus = `Day ${dayNum}: Upper Pull Armor (Lats, Mid-Back & Biceps)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: 'Chest-Supported Dumbbell Row or Pendlay Row', muscleGroup: 'Back', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Drive elbows back, squeeze mid-back for 1s.' },
+          { id: `ex-${dayNum}-2`, name: 'Neutral-Grip Lat Pulldown or Pull-Ups', muscleGroup: 'Back', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Full dead-hang stretch, drive down through elbows.' },
+          { id: `ex-${dayNum}-3`, name: 'Rear Delt Flyes or Face Pulls', muscleGroup: 'Shoulders', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Posterior shoulder integrity and upper posture.' },
+          { id: `ex-${dayNum}-4`, name: 'Incline Dumbbell Biceps Curls or Hammer Curls', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Strict curls without torso sway.' }
+        );
+      } else if (cycleDay === 3) {
+        dayFocus = `Day ${dayNum}: Lower Body Chassis A (Squat Power & Quad Armor)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: isStrength ? 'Box Squat to Parallel or Back Squat' : 'Goblet Squats or Hack Squat', muscleGroup: 'Quads', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Braced core, vertical spine, explode up.' },
+          { id: `ex-${dayNum}-2`, name: 'Bulgarian Split Squats (Foot Elevated)', muscleGroup: 'Quads', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Single-leg pursuit stability and knee armor.' },
+          { id: `ex-${dayNum}-3`, name: 'Standing Calf Raises', muscleGroup: 'Quads', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Full stretch, hold 2s at top.' },
+          { id: `ex-${dayNum}-4`, name: 'Hanging Knee Tucks or RKC Plank', muscleGroup: 'Core', defaultSets: 3, targetReps: '12-15 reps', restPeriodSeconds: 60, targetRpe: 7, notes: 'Anti-extension core armor.' }
+        );
+      } else if (cycleDay === 5) {
+        dayFocus = `Day ${dayNum}: Upper Body Armor & Density (Push/Pull Supersets)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: 'Neutral-Grip Dumbbell Floor Press', muscleGroup: 'Chest', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Heavy pressing power with zero shoulder strain.' },
+          { id: `ex-${dayNum}-2`, name: 'Single-Arm Dumbbell Meadows Row', muscleGroup: 'Back', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Stretch lat fully, pull toward hip crease.' },
+          { id: `ex-${dayNum}-3`, name: 'Dumbbell Lateral Raises (Heavy Leaning)', muscleGroup: 'Shoulders', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Medial deltoid armor cap.' },
+          { id: `ex-${dayNum}-4`, name: 'Dual Cable or DB Hammer Curls & Triceps Dips', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Forearm and elbow tendon durability.' }
+        );
+      } else {
+        // cycleDay === 6
+        dayFocus = `Day ${dayNum}: Lower Body Chassis B (Posterior Chain & Loaded Carries)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: 'High-Handle Trap Bar Deadlift', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Drive through heels, neutral spine.' },
+          { id: `ex-${dayNum}-2`, name: 'Romanian Deadlift (Dumbbell or Barbell)', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Deep hamstring hinge, maintain lat engagement.' },
+          { id: `ex-${dayNum}-3`, name: 'Barbell or Dumbbell Hip Thrusts', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Glute power for rapid sprinting.' },
+          { id: `ex-${dayNum}-4`, name: 'Heavy Dumbbell Farmer Carries', muscleGroup: 'Full Body', defaultSets: 4, targetReps: '60 yds', restPeriodSeconds: 60, targetRpe: 9, notes: 'Crush grip, chest proud, short rapid steps.' }
+        );
+      }
+    } else {
+      // 6-Day Split: [1, 2, 3, 4, 5, 6] (Push A, Pull A, Legs A, Push B, Pull B, Legs B)
+      if (cycleDay === 1) {
+        dayFocus = `Day ${dayNum}: Push A (Chest, Shoulders & Triceps Heavy)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: isStrength ? 'Barbell Bench Press or DB Floor Press' : 'Flat Dumbbell Bench Press', muscleGroup: 'Chest', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Heavy chest push power.' },
+          { id: `ex-${dayNum}-2`, name: 'Seated Dumbbell Shoulder Press', muscleGroup: 'Shoulders', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Vertical pressing power.' },
+          { id: `ex-${dayNum}-3`, name: 'Dumbbell Incline Press', muscleGroup: 'Chest', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Clavicular head development.' },
+          { id: `ex-${dayNum}-4`, name: 'Overhead Triceps Extensions', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Triceps lockout endurance.' }
+        );
+      } else if (cycleDay === 2) {
+        dayFocus = `Day ${dayNum}: Pull A (Back, Rear Delts & Biceps Heavy)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: 'Chest-Supported Row or Pendlay Row', muscleGroup: 'Back', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Heavy horizontal pulling.' },
+          { id: `ex-${dayNum}-2`, name: 'Neutral-Grip Lat Pulldown or Weighted Pull-Ups', muscleGroup: 'Back', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Vertical pulling lat sweep.' },
+          { id: `ex-${dayNum}-3`, name: 'Face Pulls or Rear Delt Flyes', muscleGroup: 'Shoulders', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Scapular health and upper back density.' },
+          { id: `ex-${dayNum}-4`, name: 'Barbell or Incline DB Biceps Curls', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Peak contraction curls.' }
+        );
+      } else if (cycleDay === 3) {
+        dayFocus = `Day ${dayNum}: Legs A (Squat Power & Quad Hypertrophy)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: isStrength ? 'Box Squat to Parallel or Back Squat' : 'Goblet Squats or Hack Squat', muscleGroup: 'Quads', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Lower body foundation and knee armor.' },
+          { id: `ex-${dayNum}-2`, name: 'Bulgarian Split Squats (Foot Elevated)', muscleGroup: 'Quads', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Unilateral pursuit stamina.' },
+          { id: `ex-${dayNum}-3`, name: 'Standing Calf Raises', muscleGroup: 'Quads', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Achilles and calf spring power.' },
+          { id: `ex-${dayNum}-4`, name: 'Hanging Knee Raises or RKC Plank', muscleGroup: 'Core', defaultSets: 3, targetReps: '12-15 reps', restPeriodSeconds: 60, targetRpe: 7, notes: 'Anti-extension core resilience.' }
+        );
+      } else if (cycleDay === 4) {
+        dayFocus = `Day ${dayNum}: Push B (Incline Press, Lateral Delts & Triceps)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: 'Incline Dumbbell Bench Press', muscleGroup: 'Chest', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Controlled 3-second descent.' },
+          { id: `ex-${dayNum}-2`, name: 'Half-Kneeling Landmine Press', muscleGroup: 'Shoulders', defaultSets: setsCompound, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Scapular mobility and overhead drive.' },
+          { id: `ex-${dayNum}-3`, name: 'Dumbbell Lateral Raises (Heavy Leaning)', muscleGroup: 'Shoulders', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Lateral deltoid width.' },
+          { id: `ex-${dayNum}-4`, name: 'Triceps Rope Pushdowns', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Flare rope out at bottom.' }
+        );
+      } else if (cycleDay === 5) {
+        dayFocus = `Day ${dayNum}: Pull B (Lats, Upper Back Rows & Grip/Arms)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: 'Single-Arm Dumbbell Meadows Row', muscleGroup: 'Back', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Pull elbow toward hip.' },
+          { id: `ex-${dayNum}-2`, name: 'Neutral-Grip Lat Pulldown or Inverted Rows', muscleGroup: 'Back', defaultSets: setsCompound, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Full dead-hang stretch.' },
+          { id: `ex-${dayNum}-3`, name: 'Heavy Kettlebell or DB Shrugs', muscleGroup: 'Back', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Trapezius armor for vest wear.' },
+          { id: `ex-${dayNum}-4`, name: 'Incline Hammer Curls', muscleGroup: 'Arms', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 7, notes: 'Forearm brachioradialis strength.' }
+        );
+      } else {
+        // cycleDay === 6
+        dayFocus = `Day ${dayNum}: Legs B (Posterior Chain Hinge, Glutes & Loaded Carries)`;
+        dayExercises.push(
+          { id: `ex-${dayNum}-1`, name: 'High-Handle Trap Bar Deadlift', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsCompound, restPeriodSeconds: restCompound, targetRpe: 8, notes: 'Maximum posterior chain tension.' },
+          { id: `ex-${dayNum}-2`, name: 'Romanian Deadlift (Dumbbell or Barbell)', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsCompound, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Deep hamstring stretch.' },
+          { id: `ex-${dayNum}-3`, name: 'Barbell or Dumbbell Hip Thrusts', muscleGroup: 'Hamstrings & Glutes', defaultSets: setsAccessory, targetReps: repsAccessory, restPeriodSeconds: restAccessory, targetRpe: 8, notes: 'Full glute extension.' },
+          { id: `ex-${dayNum}-4`, name: 'Heavy Dumbbell Farmer Carries', muscleGroup: 'Full Body', defaultSets: 4, targetReps: '60 yds', restPeriodSeconds: 60, targetRpe: 9, notes: 'Crush grip, short rapid strides.' }
         );
       }
     }
@@ -647,5 +898,6 @@ export function buildDynamicCalibratedPlan(params: {
     source: 'tactical-engine',
   };
 
-  return sanitizePlanAgainstLimitations(rawPlan, bannedRules);
+  const fixedPlan = validateAndFixSplitLogic(rawPlan, bannedRules);
+  return sanitizePlanAgainstLimitations(fixedPlan, bannedRules);
 }

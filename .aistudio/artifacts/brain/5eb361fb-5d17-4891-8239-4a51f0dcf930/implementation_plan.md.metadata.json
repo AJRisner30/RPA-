@@ -1,6 +1,6 @@
 {
-  "summary":  "Documentation for the complete transition from Google Sign-In to standard Email and Password authentication in Patrol Ready Performance, including the automated password setup process for previous Google users.",
-  "updatedAt":  "2026-10-31T19:45:16.128877938Z",
+  "summary":  "Implemented smart workout split architecture with physiological recovery validation to prevent consecutive or near-consecutive leg days (e.g., Day 2 Legs, Day 3 Rest, Day 4 Legs). Both AI prompts and algorithmic engines now enforce structured 3, 4, 5, and 6-day splits, backed by an automated validator and converter.",
+  "updatedAt":  "2026-11-11T03:25:31.890464490Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
