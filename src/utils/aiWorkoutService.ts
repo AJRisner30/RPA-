@@ -11,7 +11,8 @@ export interface WorkoutGenerationRequest {
   goals: string[];
   fitnessLevel: string;
   frequency: string;
-  scheduleDuration: 'weekly' | 'monthly';
+  scheduleDuration: 'weekly' | 'monthly' | '8weeks' | '12weeks' | string;
+  scheduleWeeks?: number; // 1 to 12 weeks
   equipment: string[];
   sessionDurationMinutes?: number;
   injuries?: string[];

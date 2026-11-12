@@ -12,7 +12,8 @@ import {
   sanitizePlanAgainstLimitations,
   getDistinctCircuitForDay,
   sanitizeExerciseList,
-  validateAndFixSplitLogic
+  validateAndFixSplitLogic,
+  periodizeSchedule
 } from './tacticalEngineServer.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,7 +23,8 @@ interface WorkoutGenerationRequest {
   goals: string[];
   fitnessLevel: string;
   frequency: string;
-  scheduleDuration: 'weekly' | 'monthly';
+  scheduleDuration: 'weekly' | 'monthly' | '8weeks' | '12weeks' | string;
+  scheduleWeeks?: number;
   equipment: string[];
   sessionDurationMinutes?: number;
   injuries?: string[];
@@ -1025,7 +1027,24 @@ async function startServer() {
     }
 
     try {
-      const scheduleDaysTarget = params.scheduleDuration === 'monthly' ? 28 : 7;
+      let weeksCount = 4;
+      if (typeof params.scheduleWeeks === 'number' && params.scheduleWeeks >= 1 && params.scheduleWeeks <= 12) {
+        weeksCount = Math.round(params.scheduleWeeks);
+      } else if (params.scheduleDuration === '12weeks' || params.scheduleDuration === '12-week' || params.scheduleDuration === 'macrocycle') {
+        weeksCount = 12;
+      } else if (params.scheduleDuration === '8weeks' || params.scheduleDuration === '8-week') {
+        weeksCount = 8;
+      } else if (params.scheduleDuration === 'monthly' || params.scheduleDuration === '4weeks' || params.scheduleDuration === '4-week') {
+        weeksCount = 4;
+      } else if (params.scheduleDuration === 'weekly' || params.scheduleDuration === '1week' || params.scheduleDuration === '1-week') {
+        weeksCount = 1;
+      } else if (typeof params.scheduleDuration === 'string') {
+        const match = params.scheduleDuration.match(/(\d+)\s*week/i);
+        if (match) {
+          weeksCount = Math.max(1, Math.min(12, parseInt(match[1], 10)));
+        }
+      }
+      const scheduleDaysTarget = weeksCount * 7;
       const daysPerWeek = parseInt(params.frequency, 10) || 4;
 
       const injuriesList = [
@@ -1149,7 +1168,7 @@ Create a comprehensive, custom-tailored workout schedule matching the athlete's 
 - Fitness Goals: ${params.goals.join(', ')}
 - Current Fitness Level: ${params.fitnessLevel}
 - Workout Frequency: ${params.frequency} (${daysPerWeek} training days per 7 days)
-- Schedule Type: ${params.scheduleDuration === 'monthly' ? '4-Week Monthly Periodized Block (Day 1 through Day 28)' : '7-Day Rotation Schedule (Day 1 through Day 7)'}
+- Schedule Type: ${weeksCount > 1 ? `${weeksCount}-Week Periodized Program (${scheduleDaysTarget} Total Days)` : '7-Day Rotation Schedule (Day 1 through Day 7)'}
 - Available Equipment: ${params.equipment.join(', ')}
 - Target Session Duration: ${params.sessionDurationMinutes || 55} minutes
 - Cardio / Running Preference: ${params.cardioPreference ? `${params.cardioPreference.toUpperCase()} (${params.runningDistancePreference || params.cardioCircuitType || 'Integrated'})` : 'Default'}
@@ -1267,6 +1286,36 @@ RULES:
           const responseText = response.text;
           if (responseText) {
             const parsedPlan = JSON.parse(responseText);
+
+            if (Array.isArray(parsedPlan.schedule) && parsedPlan.schedule.length > 0) {
+              parsedPlan.schedule = periodizeSchedule(
+                parsedPlan.schedule,
+                scheduleDaysTarget,
+                weeksCount,
+                params.goals.join(' '),
+                params.fitnessLevel,
+                bannedRules,
+                params.cardioPreference,
+                params.runningDistancePreference,
+                params.cardioCircuitType,
+                daysPerWeek
+              );
+            }
+
+            parsedPlan.scheduleDuration = weeksCount === 1
+              ? '7-Day Rotation'
+              : weeksCount === 4
+              ? '4-Week Monthly Periodization'
+              : `${weeksCount}-Week Periodized Macro-Cycle (${weeksCount <= 4 ? 'Phase 1' : weeksCount <= 8 ? 'Phases 1-2' : 'Full 3-Phase Periodization'})`;
+
+            if (weeksCount >= 8 && (!parsedPlan.weeklyProgressionTips || parsedPlan.weeklyProgressionTips.length < 3)) {
+              parsedPlan.weeklyProgressionTips = [
+                'Phase 1 (Weeks 1-4 Accumulation): Build kinetic volume and technical precision. Week 4 features a 25% volume deload.',
+                'Phase 2 (Weeks 5-8 Intensification): Heavier compound multi-joint sets with double progression (+2.5-5 lbs upper, +5-10 lbs lower).',
+                'Phase 3 (Weeks 9-12 Peak Duty Power): Rate of force development, max strength realization, and Week 12 benchmark testing & tactical taper.',
+              ];
+            }
+
             const fixedPlan = validateAndFixSplitLogic(parsedPlan, bannedRules);
             const sanitizedPlan = sanitizePlanAgainstLimitations(fixedPlan, bannedRules);
             return res.json({

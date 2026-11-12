@@ -52,7 +52,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     currentAthlete?.experienceLevel || 'Intermediate'
   );
   const [frequency, setFrequency] = useState<string>('4 Days / Week');
-  const [scheduleDuration, setScheduleDuration] = useState<'weekly' | 'monthly'>('weekly');
+  const [scheduleDuration, setScheduleDuration] = useState<'weekly' | 'monthly' | '8weeks' | '12weeks' | string>('12weeks');
+  const [scheduleWeeks, setScheduleWeeks] = useState<number>(12);
+  const [selectedWeekFilter, setSelectedWeekFilter] = useState<'all' | number>(1);
   const [equipment, setEquipment] = useState<string[]>([
     'Full Commercial Gym (Barbells, DBs, Cables, Machines)',
   ]);
@@ -246,6 +248,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
         fitnessLevel,
         frequency,
         scheduleDuration,
+        scheduleWeeks,
         equipment,
         sessionDurationMinutes,
         injuries: selectedInjuries,
@@ -263,6 +266,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
       setGeneratedPlan(plan);
       setActiveDayIndex(0);
+      setSelectedWeekFilter(1);
       setIsSaved(false);
     } catch (err: any) {
       console.error('[AIWorkoutGenerator] Generation error:', err);
@@ -661,32 +665,79 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   </div>
                 </div>
 
+                {/* Week Filter Pills (When schedule is multi-week) */}
+                {generatedPlan.schedule && generatedPlan.schedule.length > 7 && (
+                  <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-thin mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWeekFilter('all')}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer border ${
+                        selectedWeekFilter === 'all'
+                          ? 'bg-blue-600 text-white border-blue-400 shadow-sm'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                      }`}
+                    >
+                      All Days ({generatedPlan.schedule.length})
+                    </button>
+                    {Array.from({ length: Math.ceil(generatedPlan.schedule.length / 7) }).map((_, wIdx) => {
+                      const wkNum = wIdx + 1;
+                      const isSelected = selectedWeekFilter === wkNum;
+                      const phaseTag = wkNum <= 4 ? 'Phase 1' : wkNum <= 8 ? 'Phase 2' : 'Phase 3';
+                      return (
+                        <button
+                          key={wkNum}
+                          type="button"
+                          onClick={() => {
+                            setSelectedWeekFilter(wkNum);
+                            setActiveDayIndex((wkNum - 1) * 7);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer border flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border-blue-400 shadow-sm'
+                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span>Week {wkNum}</span>
+                          <span className="text-[10px] opacity-75 font-sans">({phaseTag})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* Day Buttons Rail */}
                 <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-thin">
-                  {(generatedPlan.schedule || []).map((day: any, idx: number) => {
-                    const isSelected = activeDayIndex === idx;
-                    const isRest = day.isRestDay || !day.exercises || day.exercises.length === 0;
+                  {(generatedPlan.schedule || [])
+                    .map((day: any, idx: number) => ({ day, idx }))
+                    .filter(({ idx }) => {
+                      if (selectedWeekFilter === 'all') return true;
+                      const weekOfIndex = Math.floor(idx / 7) + 1;
+                      return weekOfIndex === selectedWeekFilter;
+                    })
+                    .map(({ day, idx }) => {
+                      const isSelected = activeDayIndex === idx;
+                      const isRest = day.isRestDay || !day.exercises || day.exercises.length === 0;
 
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setActiveDayIndex(idx)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition-all shrink-0 cursor-pointer flex flex-col items-center min-w-[70px] border ${
-                          isSelected
-                            ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-900/40 ring-1 ring-blue-400/50'
-                            : isRest
-                            ? 'bg-[#090f1d] hover:bg-[#0f172a] text-slate-400 border-slate-800/80'
-                            : 'bg-[#0e1628] hover:bg-[#142038] text-slate-200 border-slate-700'
-                        }`}
-                      >
-                        <span className="text-[10px] font-mono opacity-80">Day {day.day || idx + 1}</span>
-                        <span className="font-athletic text-xs truncate max-w-[80px]">
-                          {isRest ? 'Rest' : 'Workout'}
-                        </span>
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setActiveDayIndex(idx)}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase transition-all shrink-0 cursor-pointer flex flex-col items-center min-w-[70px] border ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-900/40 ring-1 ring-blue-400/50'
+                              : isRest
+                              ? 'bg-[#090f1d] hover:bg-[#0f172a] text-slate-400 border-slate-800/80'
+                              : 'bg-[#0e1628] hover:bg-[#142038] text-slate-200 border-slate-700'
+                          }`}
+                        >
+                          <span className="text-[10px] font-mono opacity-80">Day {day.day || idx + 1}</span>
+                          <span className="font-athletic text-xs truncate max-w-[80px]">
+                            {isRest ? 'Rest' : 'Workout'}
+                          </span>
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
 
@@ -1125,39 +1176,117 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                 </div>
 
                 <div className="space-y-2.5">
-                  <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">4</span>
-                    <span>Schedule Horizon</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">4</span>
+                      <span>Schedule Horizon (Periodized Macro-Cycle)</span>
+                    </label>
+                    <span className="text-[11px] font-mono text-amber-400 font-bold">
+                      {scheduleWeeks} Weeks ({scheduleWeeks * 7} Total Days)
+                    </span>
+                  </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* 4 Macro-Cycle Presets */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       type="button"
-                      onClick={() => setScheduleDuration('weekly')}
-                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
-                        scheduleDuration === 'weekly'
-                          ? 'bg-blue-950/70 border-blue-500 text-white ring-1 ring-blue-500/40'
+                      onClick={() => {
+                        setScheduleDuration('12weeks');
+                        setScheduleWeeks(12);
+                      }}
+                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center relative overflow-hidden ${
+                        scheduleWeeks === 12
+                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50 shadow-lg shadow-blue-900/30'
                           : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
                       }`}
                     >
-                      <Calendar className="w-5 h-5 text-blue-400 mb-1" />
-                      <span className="font-bold text-xs uppercase font-athletic">7-Day Split</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">Weekly Rotation</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setScheduleDuration('monthly')}
-                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
-                        scheduleDuration === 'monthly'
-                          ? 'bg-blue-950/70 border-blue-500 text-white ring-1 ring-blue-500/40'
-                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                      }`}
-                    >
+                      <span className="absolute top-1 right-1 px-1.5 py-0.2 bg-amber-500 text-black text-[9px] font-black uppercase rounded tracking-tighter">
+                        PRO
+                      </span>
                       <Award className="w-5 h-5 text-amber-400 mb-1" />
-                      <span className="font-bold text-xs uppercase font-athletic">4-Week Block</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">Monthly Periodization</span>
+                      <span className="font-bold text-xs uppercase font-athletic">12-Week Macro</span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">84 Days • 3 Phases</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setScheduleDuration('8weeks');
+                        setScheduleWeeks(8);
+                      }}
+                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
+                        scheduleWeeks === 8
+                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50'
+                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
+                      }`}
+                    >
+                      <Zap className="w-5 h-5 text-sky-400 mb-1" />
+                      <span className="font-bold text-xs uppercase font-athletic">8-Week Cycle</span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">56 Days • 2 Phases</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setScheduleDuration('monthly');
+                        setScheduleWeeks(4);
+                      }}
+                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
+                        scheduleWeeks === 4
+                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50'
+                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
+                      }`}
+                    >
+                      <ShieldCheck className="w-5 h-5 text-blue-400 mb-1" />
+                      <span className="font-bold text-xs uppercase font-athletic">4-Week Block</span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">28 Days • Base</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setScheduleDuration('weekly');
+                        setScheduleWeeks(1);
+                      }}
+                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
+                        scheduleWeeks === 1
+                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50'
+                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
+                      }`}
+                    >
+                      <Calendar className="w-5 h-5 text-slate-400 mb-1" />
+                      <span className="font-bold text-xs uppercase font-athletic">1-Week Split</span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">7 Days • Rotation</span>
+                    </button>
+                  </div>
+
+                  {/* Week-by-Week Fine Stepper (1 to 12 Weeks) */}
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#080d19] border border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-mono text-slate-400">Duration Fine-Tuning:</span>
+                      <span className="text-xs font-mono font-bold text-white">{scheduleWeeks} {scheduleWeeks === 1 ? 'Week' : 'Weeks'}</span>
+                      <span className="text-[10px] text-slate-400">({scheduleWeeks * 7} days)</span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 6, 8, 10, 12].map((wk) => (
+                        <button
+                          key={wk}
+                          type="button"
+                          onClick={() => {
+                            setScheduleWeeks(wk);
+                            setScheduleDuration(wk === 1 ? 'weekly' : wk === 4 ? 'monthly' : `${wk}weeks`);
+                          }}
+                          className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition cursor-pointer border ${
+                            scheduleWeeks === wk
+                              ? 'bg-blue-600 text-white border-blue-400'
+                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          {wk}w
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="pt-2">

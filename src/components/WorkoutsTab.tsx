@@ -144,6 +144,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   const [showCoachNotes, setShowCoachNotes] = useState<boolean>(false);
   const [showOverloadRules, setShowOverloadRules] = useState<boolean>(false);
   const [dayViewMode, setDayViewMode] = useState<number | 'all'>('all');
+  const [customAiWeekFilter, setCustomAiWeekFilter] = useState<number | 'all'>('all');
 
   // Inline exercise countdown timer (synchronized with wall clock via useRestTimer)
   const {
@@ -1509,26 +1510,73 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
             {/* AI Plan Day Schedule Navigator */}
             {activeCustomProgram.schedule && activeCustomProgram.schedule.length > 0 && (
-              <div className="bg-[#0f172a] border-2 border-blue-500/40 rounded-2xl p-2.5 sm:p-3 shadow-md">
-                <div className="flex items-center justify-between gap-2 mb-2 px-1">
+              <div className="bg-[#0f172a] border-2 border-blue-500/40 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
+                <div className="flex items-center justify-between gap-2 px-1">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-blue-400" />
                     <span className="text-xs font-black uppercase tracking-wider text-white font-athletic">
-                      AI Schedule Horizon ({activeCustomProgram.schedule.length} Days)
+                      AI Schedule Horizon ({activeCustomProgram.schedule.length} Days • {Math.ceil(activeCustomProgram.schedule.length / 7)} Weeks)
                     </span>
                   </div>
-                  {dayViewMode !== 'all' && (
+                  {(dayViewMode !== 'all' || customAiWeekFilter !== 'all') && (
                     <button
                       type="button"
-                      onClick={() => setDayViewMode('all')}
+                      onClick={() => {
+                        setDayViewMode('all');
+                        setCustomAiWeekFilter('all');
+                      }}
                       className="px-2.5 py-0.5 bg-red-950/70 hover:bg-red-900 text-red-200 border border-red-700 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <X className="w-3 h-3" />
-                      <span>Show All Days</span>
+                      <span>Reset Filters</span>
                     </button>
                   )}
                 </div>
 
+                {/* Week Filter Pills if multi-week program */}
+                {activeCustomProgram.schedule.length > 7 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomAiWeekFilter('all');
+                        setDayViewMode('all');
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer border ${
+                        customAiWeekFilter === 'all'
+                          ? 'bg-blue-600 text-white border-blue-400'
+                          : 'bg-[#0a0f1d] text-slate-400 border-slate-700 hover:text-white'
+                      }`}
+                    >
+                      All Weeks ({Math.ceil(activeCustomProgram.schedule.length / 7)})
+                    </button>
+                    {Array.from({ length: Math.ceil(activeCustomProgram.schedule.length / 7) }).map((_, wIdx) => {
+                      const wkNum = wIdx + 1;
+                      const isSelected = customAiWeekFilter === wkNum;
+                      const phaseTag = wkNum <= 4 ? 'Phase 1' : wkNum <= 8 ? 'Phase 2' : 'Phase 3';
+                      return (
+                        <button
+                          key={wkNum}
+                          type="button"
+                          onClick={() => {
+                            setCustomAiWeekFilter(wkNum);
+                            setDayViewMode('all');
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer border flex items-center gap-1 ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border-blue-400 shadow-sm'
+                              : 'bg-[#0a0f1d] text-slate-400 border-slate-700 hover:text-white'
+                          }`}
+                        >
+                          <span>Week {wkNum}</span>
+                          <span className="text-[10px] opacity-75 font-sans">({phaseTag})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Day Buttons Rail */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                   <button
                     type="button"
@@ -1539,38 +1587,55 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                         : 'bg-[#0a0f1d] text-slate-200 border-slate-700 hover:border-blue-400 hover:text-white'
                     }`}
                   >
-                    All Days ({activeCustomProgram.schedule.length})
+                    All Days
                   </button>
 
-                  {activeCustomProgram.schedule.map((day, idx) => {
-                    const isSelected = dayViewMode === idx;
-                    const isRest = !day.exercises || day.exercises.length === 0;
+                  {activeCustomProgram.schedule
+                    .map((day, idx) => ({ day, idx }))
+                    .filter(({ idx }) => {
+                      if (customAiWeekFilter === 'all') return true;
+                      const weekOfIndex = Math.floor(idx / 7) + 1;
+                      return weekOfIndex === customAiWeekFilter;
+                    })
+                    .map(({ day, idx }) => {
+                      const isSelected = dayViewMode === idx;
+                      const isRest = !day.exercises || day.exercises.length === 0;
 
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setDayViewMode(idx)}
-                        className={`relative px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border-2 ${
-                          isSelected
-                            ? 'bg-blue-600 text-white border-blue-400 shadow-md ring-2 ring-blue-400/30'
-                            : isRest
-                            ? 'bg-[#0a0f1d]/80 text-slate-400 border-slate-800 hover:border-slate-600'
-                            : 'bg-[#0a0f1d] text-slate-200 border-slate-700 hover:border-blue-400 hover:text-white'
-                        }`}
-                      >
-                        <span>Day {day.day || idx + 1}</span>
-                        {isRest && <span className="text-[9px] uppercase font-mono opacity-80">(Rest)</span>}
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setDayViewMode(idx)}
+                          className={`relative px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border-2 ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border-blue-400 shadow-md ring-2 ring-blue-400/30'
+                              : isRest
+                              ? 'bg-[#0a0f1d]/80 text-slate-400 border-slate-800 hover:border-slate-600'
+                              : 'bg-[#0a0f1d] text-slate-200 border-slate-700 hover:border-blue-400 hover:text-white'
+                          }`}
+                        >
+                          <span>Day {day.day || idx + 1}</span>
+                          {isRest && <span className="text-[9px] uppercase font-mono opacity-80">(Rest)</span>}
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
             )}
 
             {/* AI Plan Day Cards */}
             <div className="space-y-5">
-              {(activeCustomProgram.schedule || []).filter((_, idx) => dayViewMode === 'all' || dayViewMode === idx).map((day, idx) => {
+              {(activeCustomProgram.schedule || [])
+                .map((day, idx) => ({ day, idx }))
+                .filter(({ idx }) => {
+                  if (dayViewMode !== 'all') return dayViewMode === idx;
+                  if (customAiWeekFilter !== 'all') {
+                    const weekOfIndex = Math.floor(idx / 7) + 1;
+                    return weekOfIndex === customAiWeekFilter;
+                  }
+                  return true;
+                })
+                .map(({ day, idx }) => {
                 const dayNum = day.day || (dayViewMode === 'all' ? idx + 1 : (typeof dayViewMode === 'number' ? dayViewMode + 1 : idx + 1));
                 const isRest = !day.exercises || day.exercises.length === 0;
 

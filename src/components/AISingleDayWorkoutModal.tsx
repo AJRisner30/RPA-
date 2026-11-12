@@ -15,7 +15,7 @@ import {
 } from '../utils/aiWorkoutService';
 
 import { useRestTimer } from '../hooks/useRestTimer';
-import { saveActiveCustomAIProgram } from '../utils/storage';
+import { saveSingleDayWorkout } from '../utils/storage';
 import { isCircuitExercise } from '../utils/circuitParser';
 import { TacticalCircuitCard } from './TacticalCircuitCard';
 
@@ -281,7 +281,8 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
 
   const handleStartWorkoutNow = () => {
     if (!generatedWorkout) return;
-    saveActiveCustomAIProgram(generatedWorkout);
+    // Save to user single-day session history without canceling their active multi-week plan
+    saveSingleDayWorkout(generatedWorkout);
     onStartWorkout(generatedWorkout);
     if (onSaveToCloud) {
       onSaveToCloud(generatedWorkout).catch(() => {});
@@ -290,15 +291,20 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
   };
 
   const handleSaveWorkout = async () => {
-    if (!generatedWorkout || !onSaveToCloud) return;
-    setIsSaving(true);
-    try {
-      await onSaveToCloud(generatedWorkout);
+    if (!generatedWorkout) return;
+    saveSingleDayWorkout(generatedWorkout);
+    if (onSaveToCloud) {
+      setIsSaving(true);
+      try {
+        await onSaveToCloud(generatedWorkout);
+        setIsSaved(true);
+      } catch (err) {
+        console.warn('[AISingleDayWorkout] Save error:', err);
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
       setIsSaved(true);
-    } catch (err) {
-      console.warn('[AISingleDayWorkout] Save error:', err);
-    } finally {
-      setIsSaving(false);
     }
   };
 

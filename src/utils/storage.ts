@@ -292,7 +292,39 @@ export function extractPersonalRecords(logs: WorkoutSessionLog[]): PersonalRecor
 
 const ACTIVE_CUSTOM_AI_PROGRAM_KEY = 'rpa_active_custom_ai_program_v1';
 const SAVED_CUSTOM_AI_PROGRAMS_KEY = 'rpa_saved_custom_ai_programs_v1';
+const SAVED_SINGLE_DAY_WORKOUTS_KEY = 'rpa_saved_single_day_workouts_v1';
 const ACTIVE_PROGRAM_KEY = 'rpa_active_program_key_v1';
+
+/**
+ * Saves a single-day on-demand workout into the user's saved single-day library
+ * without overriding or displacing their active multi-week custom AI program.
+ */
+export function saveSingleDayWorkout(program: WorkoutProgram): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const existing = getStoredSingleDayWorkouts();
+    const filtered = existing.filter((p) => p.id !== program.id);
+    const updated = [program, ...filtered];
+    localStorage.setItem(SAVED_SINGLE_DAY_WORKOUTS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('Failed to save single day workout', e);
+  }
+}
+
+/**
+ * Retrieves all saved single-day workouts from localStorage.
+ */
+export function getStoredSingleDayWorkouts(): WorkoutProgram[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(SAVED_SINGLE_DAY_WORKOUTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Persists the user's active custom AI program locally so it is never

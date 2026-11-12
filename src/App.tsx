@@ -301,10 +301,19 @@ export default function App() {
     // 4. Subscribe to user custom AI programs
     const unsubscribeCustomProgs = subscribeToUserCustomPrograms(user.uid, (cloudProgs) => {
       if (cloudProgs && cloudProgs.length > 0) {
+        // Prioritize structured multi-week AI programs over single-day sessions
+        const multiWeekProgs = cloudProgs.filter((p) => p.schedule && p.schedule.length > 1 && !p.id.startsWith('ai-single-'));
+        const programToActivate = multiWeekProgs[0] || cloudProgs[0];
+
         setActiveCustomAIProgram((prev) => {
-          if (!prev) {
-            saveActiveCustomAIProgram(cloudProgs[0]);
-            return cloudProgs[0];
+          // If we already have an active multi-week plan, preserve it!
+          if (prev && prev.schedule && prev.schedule.length > 1) {
+            const updatedMatching = cloudProgs.find((p) => p.id === prev.id);
+            return updatedMatching || prev;
+          }
+          if (!prev && programToActivate) {
+            saveActiveCustomAIProgram(programToActivate);
+            return programToActivate;
           }
           return prev;
         });
@@ -998,20 +1007,10 @@ export default function App() {
         isOpen={isSingleDayModalOpen}
         onClose={() => setIsSingleDayModalOpen(false)}
         onStartWorkout={(program) => {
-          saveActiveCustomAIProgram(program);
-          setActiveCustomAIProgram(program);
-          setActiveProgramKey('custom_ai');
-          saveActiveProgramKey('custom_ai');
-          setActiveTab('workouts');
-          if (user) {
-            saveCustomProgramToFirestore(program, user.uid).catch((err) => {
-              console.warn('[Firebase] Auto-save single day workout note:', err);
-            });
-          }
+          // Launch the single-day workout directly into the live workout tracker WITHOUT canceling the active multi-week AI plan!
           handleStartWorkout(program);
         }}
         onSaveToCloud={async (program) => {
-          saveActiveCustomAIProgram(program);
           if (user) {
             await saveCustomProgramToFirestore(program, user.uid);
           }
