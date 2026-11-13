@@ -326,7 +326,7 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
 
             {/* Quick Actions List */}
             <div className="py-3 space-y-2 overflow-y-auto">
-              {/* AI Workout Architect */}
+              {/* Adaptive AI Program Engine */}
               {onOpenAIGenerator && (
                 <button
                   type="button"
@@ -341,8 +341,8 @@ export const AndroidBottomNav: React.FC<AndroidBottomNavProps> = ({
                       <Zap className="w-4 h-4 text-blue-400" />
                     </div>
                     <div>
-                      <div className="text-xs font-black uppercase tracking-wider text-white">Workout Architect</div>
-                      <div className="text-[11px] text-blue-300">Generate customized tactical training schedule</div>
+                      <div className="text-xs font-black uppercase tracking-wider text-white">Adapt Core Program</div>
+                      <div className="text-[11px] text-blue-300">Alter core programs for injuries, ability &amp; gear</div>
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-blue-400" />

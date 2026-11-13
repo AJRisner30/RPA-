@@ -1031,7 +1031,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
-                Explore daily readiness scores, auto-overload progression, AI workout architect, and verified academy test simulators.
+                Explore daily readiness scores, auto-overload progression, Adaptive AI injury/ability program tailoring, and verified academy test simulators.
               </p>
             </div>
           </div>
@@ -1920,10 +1920,10 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 Individualized Programming Prescribed
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white font-athletic uppercase tracking-wide">
-                Custom Workout Protocol
+                Adapted Master Protocol
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Your diagnostic assessment prescribed a bespoke individualized protocol. Launch the Workout Architect to construct your custom training schedule, equipment split, and duty targets.
+                Your diagnostic assessment prescribed individualized adaptations. Launch the Adaptive AI Program Engine to tailor any of Coach Risner&apos;s core protocols around your injuries, equipment, and ability level.
               </p>
             </div>
             {onOpenAIGenerator && (

@@ -3,7 +3,8 @@ import {
   X, ChevronRight, ChevronLeft, Check, Compass, Film,
   Dumbbell, Timer, TrendingUp, Calculator, ShieldCheck, Zap, 
   Activity, Copy, CheckCircle2, Play, Flame, Award, 
-  ExternalLink, ArrowRight, Eye, RefreshCw, Smartphone, Cloud, Share2
+  ExternalLink, ArrowRight, Eye, RefreshCw, Smartphone, Cloud, Share2,
+  SlidersHorizontal
 } from 'lucide-react';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { TabType } from './Navbar';
@@ -32,7 +33,7 @@ interface TourStep {
   locationTip: string;
   promoPitch: string;
   socialHook: string;
-  visualPreviewType: 'readiness' | 'programs' | 'ai_architect' | 'live_tracker' | 'auto_overload' | 'pt_calculator' | 'coach_logs' | 'offline_perks';
+  visualPreviewType: 'readiness' | 'programs' | 'adaptive_ai' | 'live_tracker' | 'auto_overload' | 'pt_calculator' | 'coach_logs' | 'offline_perks';
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -57,9 +58,9 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'programs',
-    badge: 'Duty Protocols',
-    title: '4 Periodized Law Enforcement Protocols',
-    tagline: 'Evidence-based training for recruits, patrol officers, and SWAT operators',
+    badge: 'Core Protocols',
+    title: '5 Periodized Coach Risner Core Protocols',
+    tagline: 'Proven law enforcement tracks for recruits, patrol officers, and tactical operators',
     tabTarget: 'workouts',
     actionLabel: 'Take Ability Matcher',
     actionCallback: 'questionnaire',
@@ -67,36 +68,37 @@ export const TOUR_STEPS: TourStep[] = [
     iconColor: 'text-amber-400',
     locationTip: 'Found in: Workouts Tab → Program Selector & Diagnostic Ability Matcher',
     features: [
-      'Universal PAT Protocol: 8-week structured state police academy & physical ability test preparation.',
-      'SWAT / SRT Operator Heavy: Heavy barbell strength paired with kit mobility and pursuit conditioning.',
-      'Patrol Hybrid Conditioning: Balances compound strength with aerobic 1.5-mile running pace.',
-      'Muscle Armor Hypertrophy: Joint resilience and shoulder/core armor to handle 30-lb duty belts.',
-      'Diagnostic Assessment: 2-minute questionnaire automatically prescribes your ideal protocol.'
+      'The Apex Protocol (26-Week Master): Multi-phase tactical strength, power & VO2 Max conditioning.',
+      'Tactical Hypertrophy (6-Week): 4-day Upper/Lower armor split + 2-day aerobic engine.',
+      '12-Week Hybrid Protocol & 12-Week DB/Bodyweight: Full gym or garage/station gym options.',
+      'Universal Police PAT (8-Week): State academy prep for 1.5-mi runs, 300m sprints & 165-lb dummy drag.',
+      'Adaptive Ready: Every core protocol can be customized to your injuries & ability with one click.'
     ],
-    promoPitch: 'Built by law enforcement for law enforcement. Every protocol is structured in multi-week periodized phases to pass academy tests or maintain elite physical dominance on the street.',
-    socialHook: 'No generic bodybuilder fluff. 4 combat-tested training protocols designed for police, sheriff, and tactical operators.',
+    promoPitch: 'Built by law enforcement for law enforcement. Choose from 5 combat-tested Coach Risner training protocols structured in multi-week phases to crush academy tests and dominate the street.',
+    socialHook: 'No generic bodybuilder fluff. 5 proven training protocols designed for police, sheriff, and tactical operators.',
     visualPreviewType: 'programs'
   },
   {
-    id: 'ai_architect',
-    badge: 'AI Workout Generator',
-    title: 'AI Duty Workout Architect & Cardio Generator',
-    tagline: 'Multi-week custom programs or on-demand single day duty workouts',
+    id: 'adaptive_ai',
+    badge: 'Adaptive AI',
+    title: 'Adaptive AI Injury & Ability Engine',
+    tagline: 'Surgically alters Coach Risner’s core programs around your injuries, ability level, and gear',
     tabTarget: 'workouts',
-    actionLabel: 'Open Workout Architect',
+    actionLabel: 'Open Adaptive AI',
     actionCallback: 'ai_generator',
-    icon: Zap,
+    icon: SlidersHorizontal,
     iconColor: 'text-sky-400',
-    locationTip: 'Found in: Top Bar → "Workout Architect" or Workouts Tab → "Generate Single Day"',
+    locationTip: 'Found in: Top Bar → "Adapt Program" or "Adapt This Program" on any protocol',
     features: [
-      'Custom Multi-Week Architect: Generates complete periodized programs based on your shift schedule and gear.',
-      'On-Demand Single Day Builder: Need something different today? Generate an instant session in 15–90 minutes.',
-      'Mandatory Running & Cardio Circuits: Option to inject interval runs, sprints, or conditioning circuits into every plan.',
-      'Equipment Agnostic: Adapts seamlessly to precinct garage gyms, commercial gyms, hotel rooms, or bodyweight.'
+      'Adapts Proven Core Programs: Modifies any of Coach Risner’s 5 master tracks—preserving authentic splits, mesocycles, and deload weeks instead of building random workouts.',
+      '1-for-1 Clinical Injury Swaps: Automatically intercepts movements that aggravate hip labrum, lumbar disc, shoulder, or knee limitations and tags replacements ("Replaced: [Original]").',
+      'Ability-Level Calibration: Scales sets, target reps, rest periods, and target RPE across Beginner, Intermediate, Advanced, and Elite tiers.',
+      'Equipment & Conditioning Scaling: Converts barbell lifts to DB/bodyweight when away from a gym and scales run distances/paces or swaps runs to low-impact tactical circuits.',
+      'On-Demand Single Day Duty Sessions: Still need a quick 1-day session? Launch a standalone workout anytime without overwriting your active multi-week adapted plan.'
     ],
-    promoPitch: 'Unpredictable overtime or stuck in a hotel? The AI Tactical Workout Architect builds custom multi-week periodized training or on-demand 30-minute sessions with cardio circuits on the fly.',
-    socialHook: 'Build your own tactical police fitness program in 10 seconds. Time, equipment, and running circuits completely tailored to you.',
-    visualPreviewType: 'ai_architect'
+    promoPitch: 'Dealing with a torn hip labrum, bad knee, or limited garage equipment? Patrol Ready\'s Adaptive AI takes Coach Risner\'s proven core programs and surgically swaps aggravating exercises, scales sets/reps/RPE to your ability level, and adjusts conditioning runs around your exact limitations.',
+    socialHook: 'Stop letting a knee or back limitation sideline your training. Our Adaptive AI modifies Coach Risner\'s tactical programs around your exact injuries and ability level.',
+    visualPreviewType: 'adaptive_ai'
   },
   {
     id: 'live_tracker',
@@ -512,42 +514,55 @@ export const GuidedTourModal: React.FC<GuidedTourModalProps> = ({
                 <div className="space-y-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/40">
                     <div className="flex items-center justify-between font-bold text-blue-200">
-                      <span>Universal PAT Academy Prep</span>
-                      <span className="text-[10px] font-mono text-amber-400">8 Weeks</span>
+                      <span>The Apex Protocol (LEO Master)</span>
+                      <span className="text-[10px] font-mono text-amber-400">26 Weeks</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Pushups, sit-ups, 1.5 mi run and agility test conditioning.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">5-phase tactical strength, power &amp; VO2 conditioning.</p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
                     <div className="flex items-center justify-between font-bold text-slate-200">
-                      <span>Patrol Hybrid Strength & Run</span>
-                      <span className="text-[10px] font-mono text-blue-400">Continuous</span>
+                      <span>Universal Police PAT Prep</span>
+                      <span className="text-[10px] font-mono text-blue-400">8 Weeks</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Compound lifts paired with Zone 2 aerobic running.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Cadence push-ups, 300m sprints, dummy drag &amp; 1.5-mi run.</p>
                   </div>
                 </div>
               )}
 
-              {step.visualPreviewType === 'ai_architect' && (
-                <div className="space-y-2 p-3 rounded-xl bg-[#0d1628] border border-sky-500/30 text-xs">
+              {step.visualPreviewType === 'adaptive_ai' && (
+                <div className="space-y-2.5 p-3 rounded-xl bg-[#0d1628] border border-sky-500/30 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sky-300 flex items-center gap-1 font-athletic uppercase">
-                      <Zap className="w-3.5 h-3.5 fill-sky-400" />
-                      Single-Day Builder
+                    <span className="font-bold text-sky-300 flex items-center gap-1.5 font-athletic uppercase">
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
+                      The Apex Protocol • Adapted
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">10s Generation</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                      Hip-Sparing
+                    </span>
                   </div>
-                  <div className="space-y-1.5 text-[11px]">
-                    <div className="flex justify-between border-b border-slate-800 pb-1">
-                      <span className="text-slate-400">Time Available:</span>
-                      <span className="text-white font-mono font-bold">30 Minutes</span>
+                  <div className="p-2 rounded-lg bg-[#080e1a] border border-amber-500/40 space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-white">Box Squat to Parallel</span>
+                      <span className="font-mono text-amber-300 font-bold">3 × 8-10 • RPE 7.5</span>
                     </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                        <RefreshCw className="w-2.5 h-2.5" />
+                        Replaced: Barbell Back Squat
+                      </span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-500/30">
+                        Beginner Scaled (-1 Set)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
                     <div className="flex justify-between border-b border-slate-800 pb-1">
-                      <span className="text-slate-400">Location:</span>
-                      <span className="text-white font-mono font-bold">Precinct Garage / Dumbbells</span>
+                      <span className="text-slate-400">Equipment Match:</span>
+                      <span className="text-white font-mono font-bold">DB &amp; Home Gym Ready</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Cardio Circuit:</span>
-                      <span className="text-emerald-400 font-mono font-bold">✓ Included</span>
+                      <span className="text-slate-400">Conditioning:</span>
+                      <span className="text-emerald-400 font-mono font-bold">Low-Impact Circuit Swap</span>
                     </div>
                   </div>
                 </div>
