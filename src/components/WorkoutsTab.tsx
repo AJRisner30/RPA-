@@ -48,7 +48,7 @@ interface WorkoutsTabProps {
   onSelectProgram?: (programKey: ProgramKey | 'custom_ai') => void;
   onOpenQuestionnaire?: () => void;
   onOpenAthleteModal?: () => void;
-  onOpenAIGenerator?: () => void;
+  onOpenAIGenerator?: (baseProgramKey?: ProgramKey) => void;
   onOpenSingleDayWorkout?: () => void;
   onOpenGuidedTour?: () => void;
   activeCustomProgram?: WorkoutProgram | null;
@@ -918,11 +918,11 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               {onOpenAIGenerator && (
                 <button
                   type="button"
-                  onClick={onOpenAIGenerator}
+                  onClick={() => onOpenAIGenerator(currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol')}
                   className="w-full sm:w-auto px-5 py-3 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 font-bold uppercase text-xs font-athletic tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <Zap className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Launch Workout Architect</span>
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Adapt Program for Injuries &amp; Ability</span>
                 </button>
               )}
 
@@ -1179,12 +1179,18 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             {onOpenAIGenerator && (
               <button
                 type="button"
-                onClick={onOpenAIGenerator}
+                onClick={() =>
+                  onOpenAIGenerator(
+                    selectedProgram !== 'custom_ai'
+                      ? selectedProgram
+                      : ((activeCustomProgram?.baseProgramKey as ProgramKey) || 'apex_protocol')
+                  )
+                }
                 className="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:to-sky-400 text-white border-blue-400 shadow-md shadow-blue-600/30 active:scale-95"
-                title="Generate a multi-week custom tailored workout schedule"
+                title="Adapt Coach Risner's master programs for your injuries, equipment, and ability level"
               >
-                <Zap className="w-3.5 h-3.5 text-blue-300" />
-                <span>Workout Architect</span>
+                <SlidersHorizontal className="w-3.5 h-3.5 text-amber-300" />
+                <span>Adapt Program (Injuries &amp; Ability)</span>
               </button>
             )}
 
@@ -1477,11 +1483,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                   {onOpenAIGenerator && (
                     <button
                       type="button"
-                      onClick={onOpenAIGenerator}
+                      onClick={() =>
+                        onOpenAIGenerator(
+                          (activeCustomProgram.baseProgramKey as ProgramKey) || 'apex_protocol'
+                        )
+                      }
                       className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                     >
-                      <Zap className="w-3.5 h-3.5 text-blue-300" />
-                      <span>Re-Architect Plan</span>
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Modify Adaptations</span>
                     </button>
                   )}
 
@@ -1695,15 +1705,31 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                           {day.exercises.map((ex, exIdx) => {
                             if (isCircuitExercise(ex)) {
                               return (
-                                <TacticalCircuitCard
-                                  key={ex.id || exIdx}
-                                  exercise={ex}
-                                  index={exIdx}
-                                  activeTimer={activeExerciseTimer}
-                                  onToggleTimer={handleToggleExerciseTimer}
-                                  onAdjustTimer={handleAdjustActiveTimerRemaining}
-                                  onStopTimer={stopExerciseTimer}
-                                />
+                                <div key={ex.id || exIdx} className="space-y-1.5">
+                                  {(ex.originalExerciseName || ex.adaptationReason || ex.scalingNote) && (
+                                    <div className="flex flex-wrap items-center gap-1.5 px-2">
+                                      {ex.originalExerciseName && (
+                                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                                          <RefreshCw className="w-2.5 h-2.5 text-amber-400" />
+                                          Swapped from: {ex.originalExerciseName}
+                                        </span>
+                                      )}
+                                      {ex.adaptationReason && (
+                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                                          {ex.adaptationReason}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                  <TacticalCircuitCard
+                                    exercise={ex}
+                                    index={exIdx}
+                                    activeTimer={activeExerciseTimer}
+                                    onToggleTimer={handleToggleExerciseTimer}
+                                    onAdjustTimer={handleAdjustActiveTimerRemaining}
+                                    onStopTimer={stopExerciseTimer}
+                                  />
+                                </div>
                               );
                             }
 
@@ -1712,10 +1738,14 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                             return (
                               <div
                                 key={ex.id || exIdx}
-                                className="p-3.5 rounded-xl bg-[#0a0f1d] border border-slate-800 hover:border-blue-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                                className={`p-3.5 rounded-xl bg-[#0a0f1d] border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                                  ex.originalExerciseName
+                                    ? 'border-amber-500/50 hover:border-amber-400'
+                                    : 'border-slate-800 hover:border-blue-500/40'
+                                }`}
                               >
                                 <div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-wrap">
                                     <span className="w-5 h-5 rounded-md bg-blue-500/20 text-blue-300 font-mono text-xs font-black flex items-center justify-center shrink-0">
                                       {exIdx + 1}
                                     </span>
@@ -1725,6 +1755,17 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-500/30">
                                       {ex.muscleGroup}
                                     </span>
+                                    {ex.originalExerciseName && (
+                                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                                        <RefreshCw className="w-2.5 h-2.5 text-amber-400" />
+                                        Replaced: {ex.originalExerciseName}
+                                      </span>
+                                    )}
+                                    {ex.scalingNote && (
+                                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-500/30">
+                                        {ex.scalingNote}
+                                      </span>
+                                    )}
                                   </div>
                                   {ex.notes && (
                                     <p className="text-[11px] text-slate-400 mt-1 ml-7 italic">
@@ -1889,11 +1930,11 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={onOpenAIGenerator}
+                  onClick={() => onOpenAIGenerator('apex_protocol')}
                   className="px-6 py-3.5 bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:to-sky-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xl shadow-blue-600/30 inline-flex items-center gap-2 cursor-pointer active:scale-95 font-athletic"
                 >
-                  <Zap className="w-4 h-4 text-white" />
-                  <span>Launch Workout Architect</span>
+                  <SlidersHorizontal className="w-4 h-4 text-amber-300" />
+                  <span>Adapt a Master Program</span>
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </button>
               </div>
@@ -2278,6 +2319,38 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               <span className="text-[11px] text-slate-400">{COACH_RULES.progressiveOverload.rule}</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* DIRECT PROGRAM ADAPTATION BAR ON EVERY MASTER PROGRAM */}
+      {onOpenAIGenerator && selectedProgram !== 'custom_ai' && (
+        <div className="bg-gradient-to-r from-blue-950/60 via-[#0e192d] to-amber-950/30 border border-amber-500/40 rounded-2xl p-3 sm:p-3.5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-black px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40">
+                  Clinical &amp; Ability Program Adapter
+                </span>
+                <span className="text-xs font-bold text-white font-athletic uppercase">
+                  Need to Modify This Program for Injuries or Ability Level?
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-0.5">
+                Automatically swap movements that aggravate your joints, adjust sets/reps/RPE to your experience level, or scale running distances while keeping Coach Risner&apos;s exact weekly structure.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenAIGenerator(selectedProgram)}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase text-xs font-athletic tracking-wider shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 self-start sm:self-auto"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 text-black" />
+            <span>Adapt This Program &rarr;</span>
+          </button>
         </div>
       )}
 

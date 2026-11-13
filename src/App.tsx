@@ -89,10 +89,22 @@ export default function App() {
 
   // AI Workout Architect Generator modal & active custom AI program
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState<boolean>(false);
+  const [adapterTargetProgramKey, setAdapterTargetProgramKey] = useState<ProgramKey | undefined>(undefined);
   const [isSingleDayModalOpen, setIsSingleDayModalOpen] = useState<boolean>(false);
   const [activeCustomAIProgram, setActiveCustomAIProgram] = useState<WorkoutProgram | null>(() => 
     getStoredActiveCustomAIProgram()
   );
+
+  const handleOpenProgramAdapter = (baseKey?: ProgramKey) => {
+    if (baseKey) {
+      setAdapterTargetProgramKey(baseKey);
+    } else if (activeProgramKey !== 'custom_ai') {
+      setAdapterTargetProgramKey(activeProgramKey);
+    } else if (activeCustomAIProgram?.baseProgramKey) {
+      setAdapterTargetProgramKey(activeCustomAIProgram.baseProgramKey as ProgramKey);
+    }
+    setIsAIGeneratorOpen(true);
+  };
 
   // Guided App Tour & Feature Showcase state
   const [isGuidedTourOpen, setIsGuidedTourOpen] = useState<boolean>(false);
@@ -735,7 +747,7 @@ export default function App() {
                 }}
                 onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
                 onOpenAthleteModal={() => setIsAthleteModalOpen(true)}
-                onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
+                onOpenAIGenerator={handleOpenProgramAdapter}
                 onOpenSingleDayWorkout={() => setIsSingleDayModalOpen(true)}
                 onOpenGuidedTour={() => setIsGuidedTourOpen(true)}
                 activeCustomProgram={activeCustomAIProgram}
@@ -1000,6 +1012,7 @@ export default function App() {
         currentAthlete={currentAthlete}
         userEmail={user?.email || ''}
         onSwitchToSingleDay={() => setIsSingleDayModalOpen(true)}
+        initialBaseProgramKey={adapterTargetProgramKey}
       />
 
       {/* AI Single Day On-Demand Workout Modal */}

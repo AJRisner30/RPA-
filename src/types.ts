@@ -36,6 +36,9 @@ export interface ExerciseTemplate {
   weight_lbs?: number;
   pace?: string;
   progression_rules?: ProgressionRule;
+  originalExerciseName?: string;
+  adaptationReason?: string;
+  scalingNote?: string;
 }
 
 export interface WorkoutProgram {
@@ -49,6 +52,7 @@ export interface WorkoutProgram {
   recommendedWarmupId?: string;
   exercises: ExerciseTemplate[];
   schedule?: ProgramScheduleDay[];
+  baseProgramKey?: string;
 }
 
 export interface LiveSet {

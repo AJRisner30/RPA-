@@ -1,4 +1,4 @@
-import { WorkoutProgram, ExerciseTemplate, MuscleGroup } from '../types';
+import { WorkoutProgram, ExerciseTemplate, MuscleGroup, ProgramKey } from '../types';
 import {
   buildDynamicCalibratedPlan,
   extractBannedMovements,
@@ -6,13 +6,18 @@ import {
   getDistinctCircuitForDay,
   validateAndFixSplitLogic,
 } from './tacticalExerciseEngine';
+import {
+  adaptMasterProgram,
+  AdaptationSummaryStats,
+} from './masterProgramAdapter';
 
 export interface WorkoutGenerationRequest {
+  baseProgramKey?: ProgramKey | string;
   goals: string[];
   fitnessLevel: string;
   frequency: string;
   scheduleDuration: 'weekly' | 'monthly' | '8weeks' | '12weeks' | string;
-  scheduleWeeks?: number; // 1 to 12 weeks
+  scheduleWeeks?: number; // 1 to 26 weeks
   equipment: string[];
   sessionDurationMinutes?: number;
   injuries?: string[];
@@ -36,6 +41,9 @@ export interface GeneratedExercise {
   notes: string;
   type?: 'strength' | 'cardio' | 'core' | 'circuit';
   circuitStations?: string[];
+  originalExerciseName?: string;
+  adaptationReason?: string;
+  scalingNote?: string;
 }
 
 export interface GeneratedDay {
@@ -60,6 +68,8 @@ export interface GeneratedWorkoutPlan {
   nutritionAdvice: string;
   schedule: GeneratedDay[];
   source?: string;
+  baseProgramKey?: ProgramKey | string;
+  adaptationStats?: AdaptationSummaryStats;
 }
 
 /**
@@ -70,12 +80,11 @@ export function getEffectiveGeminiApiKey(_customKey?: string): string {
 }
 
 /**
- * High-precision tactical workout generator that directly respects ALL user input:
- * Equipment, Goals, Frequency (3-6 days), Schedule Duration (Weekly vs Monthly),
- * Session Duration, and Special Constraints.
+ * High-precision Master Program Adaptation Engine that directly adapts Coach Risner's
+ * core programs based on Injuries, Ability Level, Equipment, and Cardio Preferences.
  */
 export function generateCalibratedWorkoutPlan(params: WorkoutGenerationRequest): GeneratedWorkoutPlan {
-  return buildDynamicCalibratedPlan(params);
+  return adaptMasterProgram(params);
 }
 
 function _legacyUnusedWorkoutPlan(params: WorkoutGenerationRequest): GeneratedWorkoutPlan {
@@ -1464,46 +1473,41 @@ function _legacyUnusedWorkoutPlan(params: WorkoutGenerationRequest): GeneratedWo
 export async function generateWorkoutPlanClient(
   params: WorkoutGenerationRequest
 ): Promise<GeneratedWorkoutPlan> {
+  // Always adapt directly from Coach Risner's Master Program as the authoritative schedule foundation
+  const masterAdaptedPlan = adaptMasterProgram(params);
+
   try {
     const response = await fetch('/api/gemini/generate-workout-plan', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        ...params,
+        baseProgramKey: params.baseProgramKey || 'apex_protocol',
+      }),
     });
 
     if (response.ok) {
       const result = await response.json();
-      if (result && result.data && Array.isArray(result.data.schedule) && result.data.schedule.length > 0) {
-        const sanitizedSchedule = result.data.schedule.map((day: any) => ({
-          ...day,
-          exercises: (day.exercises || []).map((ex: any) => {
-            const raw = parseInt(String(ex.restPeriodSeconds), 10);
-            return {
-              ...ex,
-              restPeriodSeconds: !isNaN(raw) && raw > 0 ? raw : 90,
-            };
-          }),
-        }));
-
-        const planCandidate = {
-          ...result.data,
-          schedule: sanitizedSchedule,
-          source: result.source || 'tactical-engine',
+      if (result && result.data) {
+        return {
+          ...masterAdaptedPlan,
+          coachingPhilosophy: result.data.coachingPhilosophy || masterAdaptedPlan.coachingPhilosophy,
+          weeklyProgressionTips:
+            Array.isArray(result.data.weeklyProgressionTips) && result.data.weeklyProgressionTips.length > 0
+              ? result.data.weeklyProgressionTips
+              : masterAdaptedPlan.weeklyProgressionTips,
+          nutritionAdvice: result.data.nutritionAdvice || masterAdaptedPlan.nutritionAdvice,
+          source: result.source || 'master-program-adapter',
         };
-
-        return validateAndFixSplitLogic(planCandidate);
       }
-    } else {
-      console.warn('[AIWorkoutService] Server responded with status:', response.status);
     }
   } catch (err) {
-    console.warn('[AIWorkoutService] Server API unreachable, engaging tactical engine:', err);
+    console.warn('[AIWorkoutService] Using local Master Program Adaptation Engine:', err);
   }
 
-  // Gracefully deliver calibrated tactical plan
-  return generateCalibratedWorkoutPlan(params);
+  return masterAdaptedPlan;
 }
 
 export interface SingleDayWorkoutRequest {

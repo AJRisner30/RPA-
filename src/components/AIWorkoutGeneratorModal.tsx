@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  X, Dumbbell, ShieldCheck, Flame, 
+  X, ShieldCheck, Flame, 
   Target, Clock, Calendar, CheckCircle2, AlertCircle, 
   ArrowRight, RotateCcw, Copy, Check, Play, Pause, Save, 
-  Zap, Heart, Award, SlidersHorizontal, ChevronRight,
-  Info, Loader2, Timer, Dumbbell as WeightIcon, Activity
+  Zap, Heart, Award, SlidersHorizontal,
+  Info, Timer, Activity, RefreshCw
 } from 'lucide-react';
-import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile } from '../types';
-import { PatrolReadyCompanyEmblem } from './BrandingLogos';
-import { soundManager } from '../utils/audio';
+import { WorkoutProgram, ExerciseTemplate, AthleteProfile, ProgramKey } from '../types';
 import { 
   generateWorkoutPlanClient, 
   GeneratedWorkoutPlan 
 } from '../utils/aiWorkoutService';
-
+import { MASTER_PROGRAMS_CATALOG, getMasterProgramMetadata } from '../utils/masterProgramAdapter';
 import { useRestTimer } from '../hooks/useRestTimer';
 import { saveActiveCustomAIProgram } from '../utils/storage';
 import { isCircuitExercise } from '../utils/circuitParser';
@@ -28,6 +26,7 @@ interface AIWorkoutGeneratorModalProps {
   onSwitchToSingleDay?: () => void;
   currentAthlete?: AthleteProfile;
   userEmail?: string;
+  initialBaseProgramKey?: ProgramKey;
 }
 
 export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = ({
@@ -39,7 +38,37 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   onSwitchToSingleDay,
   currentAthlete,
   userEmail,
+  initialBaseProgramKey,
 }) => {
+  // Base Master Program to Adapt
+  const [baseProgramKey, setBaseProgramKey] = useState<ProgramKey>(
+    initialBaseProgramKey || currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol'
+  );
+
+  // Sync when modal opens with a specific program requested from WorkoutsTab
+  useEffect(() => {
+    if (initialBaseProgramKey) {
+      setBaseProgramKey(initialBaseProgramKey);
+      const meta = getMasterProgramMetadata(initialBaseProgramKey);
+      const defaultWks = meta.key === 'tactical_hypertrophy' ? 6 : meta.key === 'universal_pat' ? 8 : 12;
+      setScheduleWeeks(defaultWks);
+      setScheduleDuration(`${defaultWks}weeks`);
+      setFrequency(meta.frequency);
+    }
+  }, [initialBaseProgramKey, isOpen]);
+
+  const handleSelectBaseProgram = (progKey: ProgramKey) => {
+    setBaseProgramKey(progKey);
+    const meta = getMasterProgramMetadata(progKey);
+    const defaultWks = progKey === 'tactical_hypertrophy' ? 6 : progKey === 'universal_pat' ? 8 : 12;
+    setScheduleWeeks(defaultWks);
+    setScheduleDuration(`${defaultWks}weeks`);
+    setFrequency(meta.frequency);
+    if (progKey === 'hybrid_db') {
+      setEquipment(['Dumbbells & Adjustable Bench Only', 'Bodyweight & Pull-Up Bar Only']);
+    }
+  };
+
   // Intake state
   const [selectedGoals, setSelectedGoals] = useState<string[]>([
     currentAthlete?.primaryGoal === 'Hypertrophy'
@@ -61,7 +90,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   const [sessionDurationMinutes, setSessionDurationMinutes] = useState<number>(60);
   const [notes, setNotes] = useState<string>('');
 
-  // Running & Cardio Circuit Integration State
+  // Running & Cardio Circuit Adaptation State
   const [cardioPreference, setCardioPreference] = useState<'none' | 'running' | 'cardio_circuits' | 'hybrid'>('running');
   const [runningDistancePreference, setRunningDistancePreference] = useState<string>('1.5 Miles (Duty Standard)');
   const [cardioCircuitType, setCardioCircuitType] = useState<string>('Duty Tactical HIIT & Combat Intervals');
@@ -90,7 +119,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  // Dedicated, wall-clock synchronized rest timer for previewing / testing rest periods in the AI workout builder
+  // Dedicated, wall-clock synchronized rest timer for previewing / testing rest periods
   const {
     activeTimer: activeBuilderTimer,
     startTimer: startBuilderTimer,
@@ -143,27 +172,29 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
   if (!isOpen) return null;
 
-  const goalOptions = [
-    { id: 'Tactical Conditioning & Pursuit Speed', label: 'Tactical Conditioning & Pursuit', desc: 'Duty readiness, explosive sprint velocity, and combat chassis resilience.' },
-    { id: 'Muscle Gain & Armor Hypertrophy', label: 'Muscle Gain / Armor Hypertrophy', desc: 'Dense upper & lower body structural mass to withstand high-impact physical duty.' },
-    { id: 'Weight Loss & Metabolic Shred', label: 'Weight Loss & Metabolic Shred', desc: 'High metabolic output, conditioning density, and lean body composition.' },
-    { id: 'Max Strength & Heavy Power', label: 'Max Strength & Heavy Power', desc: 'Heavy compound barbell lifts (Squat, Bench, Deadlift, Overhead Press).' },
-    { id: 'Hybrid Conditioning & Tactical Durability', label: 'Hybrid Athlete & Rucking', desc: 'Simultaneous strength overload paired with Zone 2 rucking and aerobic power.' },
-    { id: 'Physical Ability Test (PAT) Prep', label: 'Police PAT / Academy Readiness', desc: 'Push-ups, dummy drag, sprint intervals, and obstacle clearance.' },
-  ];
+  const selectedMasterMeta = getMasterProgramMetadata(baseProgramKey);
 
   const fitnessLevelOptions = [
-    { id: 'Beginner', label: 'Beginner (0-1 Years)', desc: 'Learning compound movements, building neurological foundations.' },
-    { id: 'Intermediate', label: 'Intermediate (1-3 Years)', desc: 'Consistent lifting experience, ready for structured double progression.' },
-    { id: 'Advanced', label: 'Advanced (3-5+ Years)', desc: 'High work capacity, undulating periodization, heavy load management.' },
-    { id: 'Elite', label: 'Elite / Tactical Veteran', desc: 'Frontline operator conditioning, high-volume tactical load carriage.' },
-  ];
-
-  const frequencyOptions = [
-    { id: '3 Days / Week', label: '3 Days / Week', desc: 'Full Body rotational split with maximum recovery between sessions.' },
-    { id: '4 Days / Week', label: '4 Days / Week (Recommended)', desc: 'Upper / Lower or Push-Pull split balancing strength and recovery.' },
-    { id: '5 Days / Week', label: '5 Days / Week', desc: 'Targeted hypertrophy & athletic volume for committed athletes.' },
-    { id: '6 Days / Week', label: '6 Days / Week', desc: 'High frequency Push/Pull/Legs rotation for advanced conditioning.' },
+    {
+      id: 'Beginner',
+      label: 'Beginner / Rebuild (-1 Set • +2 Reps • RPE 7-7.5)',
+      desc: 'Reduces heavy set volume by 1 set per lift, raises target reps for motor control, and adds +15s rest for joint & CNS recovery.',
+    },
+    {
+      id: 'Intermediate',
+      label: 'Intermediate / Duty Standard (As Prescribed • RPE 8)',
+      desc: 'Preserves Coach Risner’s baseline sets, reps, and rest intervals with structured double progression.',
+    },
+    {
+      id: 'Advanced',
+      label: 'Advanced Operator (+1 Working Set on Compounds • RPE 8.5)',
+      desc: 'Adds 1 working set to primary compound lifts and increases conditioning density for veteran operators.',
+    },
+    {
+      id: 'Elite',
+      label: 'Elite / SWAT Readiness (+1 Set • High Density • RPE 9)',
+      desc: 'Maximum work capacity, tighter rest intervals (-15s), and +20% conditioning distance/interval output.',
+    },
   ];
 
   const equipmentOptions = [
@@ -179,50 +210,40 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     {
       id: 'Torn Hip Labrum / FAI (Hip-Sparing)',
       label: 'Torn Hip Labrum / FAI',
-      desc: 'Strictly forbids deep barbell squats or acute hip impingement (>90°). Replaces with Box Squats, Belt Squats, and Sled Work.',
+      desc: 'Swaps deep barbell squats, lunges & leg press in the master program for Box Squats to Parallel, Trap Bar RDLs, and Sled Work.',
       tag: 'Hip-Sparing',
     },
     {
       id: 'Lower Back / Lumbar Disc (Axial Deload)',
       label: 'Lower Back / Lumbar Disc',
-      desc: 'Eliminates heavy spinal axial compression and conventional floor deadlifts. Uses Belt Squats, McGill Big 3, and chest support.',
+      desc: 'Swaps conventional deadlifts, barbell rows & axial loads for Chest-Supported Rows, Belt/Goblet Squats, and McGill Big 3.',
       tag: 'Spinal Deload',
     },
     {
       id: 'Shoulder Impingement / Rotator Cuff',
       label: 'Shoulder Impingement / Rotator Cuff',
-      desc: 'Eliminates behind-the-neck and wide barbell bench. Uses neutral-grip floor presses, landmine presses, and face pulls.',
+      desc: 'Swaps barbell bench, dips & overhead press for Neutral-Grip DB Floor Press, Landmine Press, and Face Pulls.',
       tag: 'Scapular Plane',
     },
     {
       id: 'Knee Pain / Patellar Tendonitis',
       label: 'Knee Pain / Patellar Tendonitis',
-      desc: 'Eliminates jump squats and forward knee travel lunges. Employs backward sled drags, box squats with vertical shins, and leg curls.',
+      desc: 'Swaps lunges, jump squats & high-impact sprints for Backward Sled Drags, Box Squats (vertical shins), and Glute Bridges.',
       tag: 'Tendon-Safe',
     },
     {
       id: 'Cervical Spine / Neck Strain',
       label: 'Neck / Cervical Strain',
-      desc: 'Zero behind-the-neck loads or heavy barbell back yoke pressure.',
+      desc: 'Eliminates barbell back rack pressure and overhead axial loading across all weeks.',
       tag: 'Neck-Safe',
     },
     {
       id: 'Wrist / Elbow Tendonitis',
       label: 'Wrist / Elbow Tendonitis',
-      desc: 'Neutral-grip dumbbell and strap handles to eliminate wrist and epicondyle strain.',
+      desc: 'Substitutes straight-bar curls, chin-ups & heavy front racks with neutral-grip DBs and strap variations.',
       tag: 'Joint-Neutral',
     },
   ];
-
-  const toggleGoal = (goalId: string) => {
-    if (selectedGoals.includes(goalId)) {
-      if (selectedGoals.length > 1) {
-        setSelectedGoals(selectedGoals.filter((g) => g !== goalId));
-      }
-    } else {
-      setSelectedGoals([...selectedGoals, goalId]);
-    }
-  };
 
   const toggleEquipment = (eq: string) => {
     if (equipment.includes(eq)) {
@@ -239,14 +260,15 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     setError(null);
     setGenerationStep(1);
 
-    const stepTimer1 = setTimeout(() => setGenerationStep(2), 700);
-    const stepTimer2 = setTimeout(() => setGenerationStep(3), 1400);
+    const stepTimer1 = setTimeout(() => setGenerationStep(2), 650);
+    const stepTimer2 = setTimeout(() => setGenerationStep(3), 1300);
 
     try {
       const plan = await generateWorkoutPlanClient({
+        baseProgramKey,
         goals: selectedGoals,
         fitnessLevel,
-        frequency,
+        frequency: selectedMasterMeta.frequency,
         scheduleDuration,
         scheduleWeeks,
         equipment,
@@ -261,7 +283,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       });
 
       if (!plan || !plan.schedule || plan.schedule.length === 0) {
-        throw new Error('Failed to retrieve structured plan data from AI engine.');
+        throw new Error('Failed to adapt master program schedule.');
       }
 
       setGeneratedPlan(plan);
@@ -269,8 +291,8 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       setSelectedWeekFilter(1);
       setIsSaved(false);
     } catch (err: any) {
-      console.error('[AIWorkoutGenerator] Generation error:', err);
-      setError(err?.message || 'Failed to generate personalized workout plan. Please try again.');
+      console.error('[MasterProgramAdapter] Adaptation error:', err);
+      setError(err?.message || 'Failed to adapt program. Please try again.');
     } finally {
       clearTimeout(stepTimer1);
       clearTimeout(stepTimer2);
@@ -278,8 +300,8 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     }
   };
 
-  // Convert AI plan to a valid app WorkoutProgram object
-  const buildAppWorkoutProgram = (planData: any): WorkoutProgram => {
+  // Convert adapted plan to a valid app WorkoutProgram object, preserving all adaptation badges
+  const buildAppWorkoutProgram = (planData: GeneratedWorkoutPlan): WorkoutProgram => {
     const rawExercises: ExerciseTemplate[] = [];
     (planData.schedule || []).forEach((day: any) => {
       (day.exercises || []).forEach((ex: any) => {
@@ -296,6 +318,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
             restPeriodSeconds: cleanRest,
             targetRpe: ex.targetRpe || 8,
             notes: ex.notes || '',
+            originalExerciseName: ex.originalExerciseName,
+            adaptationReason: ex.adaptationReason,
+            scalingNote: ex.scalingNote,
           });
         }
       });
@@ -317,6 +342,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
           restPeriodSeconds: cleanRest,
           targetRpe: ex.targetRpe || 8,
           notes: ex.notes || '',
+          originalExerciseName: ex.originalExerciseName,
+          adaptationReason: ex.adaptationReason,
+          scalingNote: ex.scalingNote,
         };
       }),
     }));
@@ -325,12 +353,13 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
     return {
       id: programId,
-      title: planData.title || 'Personalized AI Tactical Protocol',
-      subtitle: planData.subtitle || 'Generated by Patrol Ready AI Engine',
-      category: planData.category || 'Hybrid',
-      frequency: planData.frequency || frequency,
+      title: planData.title || `${selectedMasterMeta.shortTitle} (Adapted)`,
+      subtitle: planData.subtitle || `Adapted from ${selectedMasterMeta.title}`,
+      category: (planData.category as any) || selectedMasterMeta.category || 'Hybrid',
+      frequency: planData.frequency || selectedMasterMeta.frequency,
       estimatedDurationMinutes: planData.estimatedDurationMinutes || sessionDurationMinutes,
-      description: planData.description || 'Custom tailored AI strength & conditioning protocol.',
+      description: planData.description || `Adapted from ${selectedMasterMeta.title} for ${fitnessLevel} ability and clinical joint guardrails.`,
+      baseProgramKey: planData.baseProgramKey || baseProgramKey,
       exercises: rawExercises.length > 0 ? rawExercises : (programSchedule[0]?.exercises || []),
       schedule: programSchedule,
     };
@@ -356,7 +385,6 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     }
     const day = prog.schedule?.[dayIndex];
     if (day && day.exercises.length > 0) {
-      // Create single day executable program
       const dayProgram: WorkoutProgram = {
         ...prog,
         title: `${prog.title} - ${day.focus}`,
@@ -378,7 +406,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       await onSaveToCloud(prog);
       setIsSaved(true);
     } catch (err) {
-      console.warn('[AIWorkoutGenerator] Save note:', err);
+      console.warn('[MasterProgramAdapter] Save note:', err);
     } finally {
       setIsSaving(false);
     }
@@ -391,9 +419,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     md += `**Category**: ${generatedPlan.category} | **Frequency**: ${generatedPlan.frequency} | **Duration**: ${generatedPlan.estimatedDurationMinutes} mins/session\n\n`;
     md += `### Description\n${generatedPlan.description}\n\n`;
     if (generatedPlan.coachingPhilosophy) {
-      md += `### Coaching Philosophy\n${generatedPlan.coachingPhilosophy}\n\n`;
+      md += `### Adaptation & Periodization Strategy\n${generatedPlan.coachingPhilosophy}\n\n`;
     }
-    md += `## Training Schedule\n\n`;
+    md += `## Adapted Training Schedule\n\n`;
     (generatedPlan.schedule || []).forEach((d: any) => {
       md += `### ${d.focus}\n`;
       if (d.isRestDay || !d.exercises || d.exercises.length === 0) {
@@ -401,6 +429,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       } else {
         d.exercises.forEach((ex: any, idx: number) => {
           md += `${idx + 1}. **${ex.name}** (${ex.muscleGroup}): ${ex.defaultSets} sets × ${ex.targetReps} | Rest: ${ex.restPeriodSeconds}s | RPE: ${ex.targetRpe || 8}\n`;
+          if (ex.originalExerciseName) md += `   - *Adapted From*: ${ex.originalExerciseName} (${ex.adaptationReason || 'Clinical/Equipment Swap'})\n`;
           if (ex.notes) md += `   - *Coaching Cue*: ${ex.notes}\n`;
         });
         md += `\n`;
@@ -424,6 +453,15 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Available week horizon buttons based on the selected master program
+  const availableWeekOptions = baseProgramKey === 'apex_protocol'
+    ? [4, 6, 8, 12, 26]
+    : baseProgramKey === 'tactical_hypertrophy'
+    ? [4, 6, 12]
+    : baseProgramKey === 'universal_pat'
+    ? [4, 6, 8, 12]
+    : [4, 6, 8, 12];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div 
@@ -437,16 +475,16 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
         <div className="p-4 sm:p-6 bg-[#0c1424] border-b border-slate-800 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-b from-blue-500/20 to-slate-900 rounded-xl border border-blue-400/40 text-blue-400 shadow-md">
-              <Zap className="w-5 h-5" />
+              <SlidersHorizontal className="w-5 h-5" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 uppercase tracking-wider">
-                  Patrol Ready • Tactical Periodization Engine
+                  Patrol Ready • Clinical &amp; Ability Program Adapter
                 </span>
               </div>
               <h2 className="text-lg sm:text-2xl font-black uppercase text-white font-athletic tracking-wide">
-                Personalized Workout Architect
+                Master Program Adaptation Engine
               </h2>
             </div>
           </div>
@@ -468,7 +506,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
             <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/50 text-red-200 flex items-start gap-3 text-xs animate-in fade-in">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
               <div>
-                <strong className="block font-bold mb-0.5">Generation Note</strong>
+                <strong className="block font-bold mb-0.5">Adaptation Note</strong>
                 <span>{error}</span>
               </div>
             </div>
@@ -480,16 +518,16 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
               <div className="relative">
                 <div className="w-20 h-20 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin flex items-center justify-center" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Zap className="w-8 h-8 text-blue-400 animate-pulse" />
+                  <ShieldCheck className="w-8 h-8 text-blue-400 animate-pulse" />
                 </div>
               </div>
 
               <div>
                 <h3 className="text-xl font-black uppercase text-white font-athletic tracking-wide">
-                  Generating Personalized Training Protocol
+                  Adapting {selectedMasterMeta.shortTitle}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-                  Applying tactical strength periodization, matching equipment loadout, and calculating volume-recovery curves.
+                  Preserving Coach Risner&apos;s authentic split &amp; mesocycle structure while swapping contraindicated movements and scaling volume to {fitnessLevel} ability.
                 </p>
               </div>
 
@@ -498,27 +536,27 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   generationStep >= 1 ? 'bg-blue-950/40 border-blue-500/50 text-blue-200' : 'bg-slate-900 border-slate-800 text-slate-500'
                 }`}>
                   <CheckCircle2 className={`w-4 h-4 ${generationStep >= 1 ? 'text-blue-400' : 'text-slate-600'}`} />
-                  <span>1. Parsing goals, fitness level &amp; equipment constraints</span>
+                  <span>1. Loading {selectedMasterMeta.shortTitle} ({scheduleWeeks} weeks)</span>
                 </div>
 
                 <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
                   generationStep >= 2 ? 'bg-blue-950/40 border-blue-500/50 text-blue-200' : 'bg-slate-900 border-slate-800 text-slate-500'
                 }`}>
                   <CheckCircle2 className={`w-4 h-4 ${generationStep >= 2 ? 'text-blue-400' : 'text-slate-600'}`} />
-                  <span>2. Calibrating volume load, RPE &amp; ATP-CP rest intervals</span>
+                  <span>2. Swapping injury-aggravating &amp; unavailable equipment lifts</span>
                 </div>
 
                 <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
                   generationStep >= 3 ? 'bg-blue-950/40 border-blue-500/50 text-blue-200' : 'bg-slate-900 border-slate-800 text-slate-500'
                 }`}>
                   <CheckCircle2 className={`w-4 h-4 ${generationStep >= 3 ? 'text-blue-400' : 'text-slate-600'}`} />
-                  <span>3. Structuring progressive overload &amp; periodized schedule</span>
+                  <span>3. Scaling sets, reps, RPE &amp; conditioning to {fitnessLevel}</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* VIEW GENERATED PLAN */}
+          {/* VIEW ADAPTED PLAN */}
           {!isGenerating && generatedPlan && (
             <div className="space-y-6 animate-in fade-in duration-300">
               {/* Plan Banner */}
@@ -527,26 +565,26 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-black uppercase font-mono tracking-wider">
-                        {generatedPlan.category || 'Hybrid'}
+                        Adapted Master Protocol
                       </span>
                       <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[10px] font-black uppercase font-mono">
-                        {generatedPlan.frequency || frequency}
+                        {generatedPlan.frequency || selectedMasterMeta.frequency}
                       </span>
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">
-                        {generatedPlan.scheduleDuration || (scheduleDuration === 'monthly' ? '4-Week Monthly Protocol' : '7-Day Rotation')}
+                        {generatedPlan.scheduleDuration || `${scheduleWeeks}-Week Adapted Cycle`}
                       </span>
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono flex items-center gap-1">
                         <Clock className="w-3 h-3 text-slate-400" />
                         {generatedPlan.estimatedDurationMinutes || sessionDurationMinutes} mins/session
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border bg-blue-950/70 text-blue-300 border-blue-500/40">
-                        <ShieldCheck className="w-3 h-3 text-blue-400" />
-                        Calibrated Duty Protocol
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border bg-sky-950/80 text-sky-300 border-sky-500/40">
+                        <Award className="w-3 h-3 text-sky-400" />
+                        {fitnessLevel} Scaling
                       </span>
-                      {(selectedInjuries.length > 0 || injuryNotes.trim().length > 0 || generatedPlan.title.includes('Adapted') || generatedPlan.title.includes('Protected')) && (
+                      {(selectedInjuries.length > 0 || injuryNotes.trim().length > 0 || (generatedPlan.adaptationStats?.clinicalSwapsCount || 0) > 0) && (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border bg-amber-500/20 text-amber-300 border-amber-500/40">
                           <ShieldCheck className="w-3 h-3 text-amber-400" />
-                          <span>Clinically Adapted</span>
+                          <span>Injury-Protected</span>
                         </span>
                       )}
                     </div>
@@ -567,7 +605,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                       className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Activate Plan</span>
+                      <span>Activate Adapted Plan</span>
                     </button>
 
                     <button
@@ -581,28 +619,43 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   </div>
                 </div>
 
-                {/* Coaching Philosophy / Progressive Overload Details */}
-                {generatedPlan.coachingPhilosophy && (
-                  <div className="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-300 leading-relaxed flex items-start gap-2">
-                    <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white uppercase font-bold text-[11px] font-athletic">Tactical Periodization Strategy: </strong>
-                      <span>{generatedPlan.coachingPhilosophy}</span>
+                {/* Adaptation Telemetry Strip */}
+                {generatedPlan.adaptationStats && (
+                  <div className="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="p-2.5 rounded-xl bg-[#080f1d] border border-blue-500/30">
+                      <span className="text-[10px] font-mono uppercase text-slate-400 block">Base Master Program</span>
+                      <span className="text-xs font-black text-white font-athletic uppercase truncate block mt-0.5">
+                        {generatedPlan.adaptationStats.baseProgramTitle}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#080f1d] border border-amber-500/30">
+                      <span className="text-[10px] font-mono uppercase text-slate-400 block">Clinical &amp; Equip Swaps</span>
+                      <span className="text-xs font-black text-amber-300 font-mono block mt-0.5">
+                        {generatedPlan.adaptationStats.clinicalSwapsCount + generatedPlan.adaptationStats.equipmentSwapsCount} Movements Replaced
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#080f1d] border border-sky-500/30">
+                      <span className="text-[10px] font-mono uppercase text-slate-400 block">Ability Calibration</span>
+                      <span className="text-xs font-black text-sky-300 font-mono block mt-0.5">
+                        {generatedPlan.adaptationStats.abilityLevel} ({generatedPlan.adaptationStats.scaledExercisesCount} Lifts Scaled)
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#080f1d] border border-emerald-500/30">
+                      <span className="text-[10px] font-mono uppercase text-slate-400 block">Conditioning / Runs</span>
+                      <span className="text-xs font-black text-emerald-300 font-mono block mt-0.5">
+                        {generatedPlan.adaptationStats.conditioningAdaptationsCount} Sessions Calibrated
+                      </span>
                     </div>
                   </div>
                 )}
 
-                {/* Injury Safety Callout Banner */}
-                {(selectedInjuries.length > 0 || injuryNotes.trim().length > 0 || generatedPlan.title.includes('Adapted') || generatedPlan.title.includes('Protected')) && (
-                  <div className="mt-3 p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 flex items-start gap-2.5 text-xs text-amber-200">
-                    <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                {/* Coaching Philosophy / Progressive Overload Details */}
+                {generatedPlan.coachingPhilosophy && (
+                  <div className="mt-4 pt-3 border-t border-slate-800/80 text-xs text-slate-300 leading-relaxed flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                     <div>
-                      <strong className="block text-amber-300 font-bold mb-0.5">
-                        Clinical Joint &amp; Injury Guardrails Enforced:
-                      </strong>
-                      <span className="text-[11px] leading-relaxed text-slate-200">
-                        Contraindicated exercises (such as heavy deep back squats, front squats, deep lunges, and axial compressive loads) have been eliminated. Replaced with safe, joint-preserving alternatives (Box Squats to parallel, High-Handle Trap Bar RDLs, Spanish Squats, and Sled Work) allowing continuous strength progression without irritating damaged tissue.
-                      </span>
+                      <strong className="text-white uppercase font-bold text-[11px] font-athletic">Adaptation Architecture: </strong>
+                      <span>{generatedPlan.coachingPhilosophy}</span>
                     </div>
                   </div>
                 )}
@@ -614,7 +667,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-blue-400" />
                     <h4 className="text-sm font-black uppercase text-white font-athletic tracking-wide">
-                      Tailored Schedule Horizon ({generatedPlan.schedule?.length || 7} Days)
+                      Adapted Master Schedule ({generatedPlan.schedule?.length || 7} Days • {Math.ceil((generatedPlan.schedule?.length || 7) / 7)} Weeks)
                     </h4>
                   </div>
 
@@ -682,7 +735,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                     {Array.from({ length: Math.ceil(generatedPlan.schedule.length / 7) }).map((_, wIdx) => {
                       const wkNum = wIdx + 1;
                       const isSelected = selectedWeekFilter === wkNum;
-                      const phaseTag = wkNum <= 4 ? 'Phase 1' : wkNum <= 8 ? 'Phase 2' : 'Phase 3';
+                      const phaseTag = wkNum === 4 || wkNum === 8 ? 'Deload' : wkNum <= 4 ? 'Phase 1' : wkNum <= 8 ? 'Phase 2' : 'Phase 3';
                       return (
                         <button
                           key={wkNum}
@@ -747,7 +800,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
                     <div>
                       <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-amber-400 uppercase mb-1">
-                        <span>Day {generatedPlan.schedule[activeDayIndex].day || activeDayIndex + 1} Prescribed Focus</span>
+                        <span>Day {generatedPlan.schedule[activeDayIndex].day || activeDayIndex + 1} Adapted Prescription</span>
                       </div>
                       <h4 className="text-lg sm:text-xl font-black uppercase text-white font-athletic">
                         {generatedPlan.schedule[activeDayIndex].focus}
@@ -778,37 +831,57 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                         Tactical Regeneration &amp; Active Recovery
                       </h5>
                       <p className="text-xs text-slate-400 max-w-md mx-auto mt-1 leading-relaxed">
-                        No heavy resistance training prescribed for this day. Perform light 20-30 minute Zone 1 mobility, hip/thoracic flushes, or casual walking to accelerate metabolic clearance.
+                        No heavy resistance training prescribed for this day in the master schedule. Perform light 20-30 minute Zone 1 mobility, hip/thoracic flushes, or casual walking.
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <div className="grid grid-cols-12 gap-2 text-[11px] font-mono text-slate-400 uppercase font-bold px-3 py-1 bg-slate-900/60 rounded-lg">
-                        <div className="col-span-6 sm:col-span-5">Exercise &amp; Muscle Group</div>
+                        <div className="col-span-6 sm:col-span-5">Exercise &amp; Adaptation Status</div>
                         <div className="col-span-3 sm:col-span-2 text-center">Sets × Reps</div>
                         <div className="col-span-3 sm:col-span-2 text-center">Rest Period</div>
-                        <div className="hidden sm:block sm:col-span-3 text-right">Target RPE / Form Cue</div>
+                        <div className="hidden sm:block sm:col-span-3 text-right">Target RPE</div>
                       </div>
 
                       {generatedPlan.schedule[activeDayIndex].exercises.map((ex: any, exIdx: number) => {
                         if (isCircuitExercise(ex)) {
                           return (
-                            <TacticalCircuitCard
-                              key={exIdx}
-                              exercise={ex}
-                              index={exIdx}
-                              activeTimer={activeBuilderTimer}
-                              onToggleTimer={handleToggleBuilderTimer}
-                              onAdjustTimer={handleAdjustBuilderTimerRemaining}
-                              onStopTimer={stopBuilderTimer}
-                            />
+                            <div key={exIdx} className="space-y-1.5">
+                              {(ex.originalExerciseName || ex.adaptationReason || ex.scalingNote) && (
+                                <div className="flex flex-wrap items-center gap-1.5 px-2">
+                                  {ex.originalExerciseName && (
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                                      <RefreshCw className="w-2.5 h-2.5 text-amber-400" />
+                                      Swapped from: {ex.originalExerciseName}
+                                    </span>
+                                  )}
+                                  {ex.adaptationReason && (
+                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                                      {ex.adaptationReason}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <TacticalCircuitCard
+                                exercise={ex}
+                                index={exIdx}
+                                activeTimer={activeBuilderTimer}
+                                onToggleTimer={handleToggleBuilderTimer}
+                                onAdjustTimer={handleAdjustBuilderTimerRemaining}
+                                onStopTimer={stopBuilderTimer}
+                              />
+                            </div>
                           );
                         }
 
                         return (
                         <div 
                           key={exIdx}
-                          className="p-3 rounded-xl bg-[#080e1a] border border-slate-800/80 hover:border-blue-500/40 transition flex flex-col gap-2"
+                          className={`p-3 rounded-xl bg-[#080e1a] border transition flex flex-col gap-2 ${
+                            ex.originalExerciseName
+                              ? 'border-amber-500/50 hover:border-amber-400'
+                              : 'border-slate-800/80 hover:border-blue-500/40'
+                          }`}
                         >
                           <div className="grid grid-cols-12 gap-2 items-center">
                             {/* Exercise Name & Muscle Group */}
@@ -821,9 +894,22 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                                   {ex.name}
                                 </span>
                               </div>
-                              <span className="text-[10px] text-blue-400 font-mono ml-7 block">
-                                {ex.muscleGroup || 'Full Body'}
-                              </span>
+                              <div className="flex flex-wrap items-center gap-1.5 ml-7 mt-1">
+                                <span className="text-[10px] text-blue-400 font-mono">
+                                  {ex.muscleGroup || 'Full Body'}
+                                </span>
+                                {ex.originalExerciseName && (
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                                    <RefreshCw className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                    <span>Replaced: {ex.originalExerciseName}</span>
+                                  </span>
+                                )}
+                                {ex.scalingNote && (
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-950/90 text-sky-300 border border-sky-500/30">
+                                    {ex.scalingNote}
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
                             {/* Sets x Reps */}
@@ -840,7 +926,6 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                             <div className="col-span-3 sm:col-span-2 text-center">
                               {activeBuilderTimer && activeBuilderTimer.exerciseName === ex.name ? (
                                 <div className="flex items-center justify-center gap-1 bg-[#0f172a] border border-blue-500/60 shadow-lg rounded-xl p-1 animate-in fade-in duration-200">
-                                  {/* -15s */}
                                   <button
                                     type="button"
                                     onClick={() => handleAdjustBuilderTimerRemaining(-15)}
@@ -850,7 +935,6 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                                     -15
                                   </button>
 
-                                  {/* Main Toggle / Countdown Display */}
                                   <button
                                     type="button"
                                     onClick={() => handleToggleBuilderTimer(ex.name, ex.restPeriodSeconds || 90)}
@@ -879,7 +963,6 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                                     )}
                                   </button>
 
-                                  {/* +15s */}
                                   <button
                                     type="button"
                                     onClick={() => handleAdjustBuilderTimerRemaining(15)}
@@ -889,7 +972,6 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                                     +15
                                   </button>
 
-                                  {/* Dismiss */}
                                   <button
                                     type="button"
                                     onClick={() => stopBuilderTimer()}
@@ -1003,7 +1085,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Modify Intake &amp; Regenerate</span>
+                  <span>Adjust Injury / Ability Settings</span>
                 </button>
 
                 <button
@@ -1011,7 +1093,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   onClick={handleActivate}
                   className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
                 >
-                  <span>Activate This Program</span>
+                  <span>Activate Adapted Program</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -1028,10 +1110,10 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                 </div>
                 <div>
                   <strong className="text-white block uppercase font-bold text-sm font-athletic mb-0.5">
-                    Tactical Exercise Prescription Engine
+                    Adapt Coach Risner&apos;s Core Programs to Your Injuries &amp; Ability
                   </strong>
                   <span>
-                    Answer 5 quick training questions below. The AI will synthesize a custom weekly or monthly workout schedule featuring target exercises, set volume, double progression reps, and timed rest intervals.
+                    Instead of building random workouts from scratch, this engine takes Coach Risner&apos;s proven master protocols and surgically alters exercises, set/rep volume, target RPE, and conditioning runs around your exact injuries, equipment, and ability level.
                   </span>
                 </div>
               </div>
@@ -1045,7 +1127,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                         Looking for a quick 1-day workout instead?
                       </div>
                       <div className="text-[11px] text-slate-300">
-                        Create an on-demand duty session tailored to today's available time and equipment.
+                        Generate an on-demand single-day session without replacing your active multi-week program.
                       </div>
                     </div>
                   </div>
@@ -1062,55 +1144,99 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                 </div>
               )}
 
-              {/* QUESTION 1: FITNESS GOALS */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
+              {/* STEP 1: SELECT MASTER PROGRAM TO ADAPT */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
                     <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">1</span>
-                    <span>Fitness Goals &amp; Operational Priorities</span>
+                    <span>Select Coach Risner Master Program to Adapt</span>
                   </label>
-                  <span className="text-[11px] font-mono text-slate-400">Select all that apply</span>
+                  <span className="text-[11px] font-mono text-blue-400 font-bold">
+                    Authentic Mesocycles &amp; Split Preserved
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {goalOptions.map((g) => {
-                    const isSelected = selectedGoals.includes(g.id);
+                  {MASTER_PROGRAMS_CATALOG.map((prog) => {
+                    const isSelected = baseProgramKey === prog.key;
                     return (
                       <button
-                        key={g.id}
+                        key={prog.key}
                         type="button"
-                        onClick={() => toggleGoal(g.id)}
-                        className={`p-3 rounded-2xl text-left border transition cursor-pointer flex items-start gap-3 ${
+                        onClick={() => handleSelectBaseProgram(prog.key)}
+                        className={`p-3.5 rounded-2xl text-left border transition cursor-pointer flex flex-col justify-between gap-2 ${
                           isSelected
-                            ? 'bg-blue-950/60 border-blue-500 text-white shadow-md shadow-blue-950/40 ring-1 ring-blue-500/40'
+                            ? 'bg-blue-950/75 border-blue-400 text-white shadow-lg shadow-blue-950/50 ring-1 ring-blue-400/50'
                             : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
                         }`}
                       >
-                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-blue-600 border-blue-400 text-white' : 'border-slate-700 bg-slate-900'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                        </div>
                         <div>
-                          <span className="font-bold text-xs uppercase tracking-wide block font-athletic">
-                            {g.label}
-                          </span>
-                          <span className="text-[11px] text-slate-400 mt-0.5 block leading-snug">
-                            {g.desc}
-                          </span>
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="font-black text-xs sm:text-sm uppercase tracking-wide font-athletic text-white">
+                              {prog.title}
+                            </span>
+                            <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded shrink-0 ${
+                              isSelected ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'
+                            }`}>
+                              {prog.nativeWeeks} WKS
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-snug">
+                            {prog.summary}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[10px] font-mono text-blue-300">
+                          <span>{prog.frequency}</span>
+                          <span>•</span>
+                          <span className="truncate max-w-[180px]">{prog.defaultEquipment}</span>
                         </div>
                       </button>
                     );
                   })}
                 </div>
+
+                {/* Adaptation Horizon Selector */}
+                <div className="p-3 rounded-xl bg-[#080d19] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-bold text-white uppercase font-athletic block">
+                      Program Horizon to Generate: <span className="text-amber-400">{scheduleWeeks} Weeks ({scheduleWeeks * 7} Days)</span>
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Includes built-in Week 4 &amp; Week 8 deloads and progressive mesocycle transitions from {selectedMasterMeta.shortTitle}.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {availableWeekOptions.map((wk) => (
+                      <button
+                        key={wk}
+                        type="button"
+                        onClick={() => {
+                          setScheduleWeeks(wk);
+                          setScheduleDuration(wk === 4 ? 'monthly' : `${wk}weeks`);
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition cursor-pointer border ${
+                          scheduleWeeks === wk
+                            ? 'bg-blue-600 text-white border-blue-400 shadow'
+                            : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                        }`}
+                      >
+                        {wk}W
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* QUESTION 2: CURRENT FITNESS LEVEL */}
+              {/* STEP 2: CURRENT ABILITY LEVEL & VOLUME SCALING */}
               <div className="space-y-2.5">
-                <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">2</span>
-                  <span>Current Training Experience Level</span>
-                </label>
+                <div className="flex items-center justify-between flex-wrap gap-1">
+                  <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">2</span>
+                    <span>Ability Level (Scales Sets, Reps, Rest &amp; Target RPE)</span>
+                  </label>
+                  <span className="text-[11px] font-mono text-sky-400">Auto-calibrates intensity &amp; volume</span>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {fitnessLevelOptions.map((lvl) => {
@@ -1145,222 +1271,18 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                 </div>
               </div>
 
-              {/* QUESTION 3: FREQUENCY & SCHEDULE DURATION */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2.5">
-                  <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">3</span>
-                    <span>Workout Frequency</span>
-                  </label>
-
-                  <div className="space-y-2">
-                    {frequencyOptions.map((f) => {
-                      const isSelected = frequency === f.id;
-                      return (
-                        <button
-                          key={f.id}
-                          type="button"
-                          onClick={() => setFrequency(f.id)}
-                          className={`w-full p-2.5 rounded-xl text-left border transition cursor-pointer flex items-center justify-between text-xs ${
-                            isSelected
-                              ? 'bg-blue-950/70 border-blue-500 text-white font-bold ring-1 ring-blue-500/40'
-                              : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                          }`}
-                        >
-                          <span>{f.label}</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-blue-400" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">4</span>
-                      <span>Schedule Horizon (Periodized Macro-Cycle)</span>
-                    </label>
-                    <span className="text-[11px] font-mono text-amber-400 font-bold">
-                      {scheduleWeeks} Weeks ({scheduleWeeks * 7} Total Days)
-                    </span>
-                  </div>
-
-                  {/* 4 Macro-Cycle Presets */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setScheduleDuration('12weeks');
-                        setScheduleWeeks(12);
-                      }}
-                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center relative overflow-hidden ${
-                        scheduleWeeks === 12
-                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50 shadow-lg shadow-blue-900/30'
-                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <span className="absolute top-1 right-1 px-1.5 py-0.2 bg-amber-500 text-black text-[9px] font-black uppercase rounded tracking-tighter">
-                        PRO
-                      </span>
-                      <Award className="w-5 h-5 text-amber-400 mb-1" />
-                      <span className="font-bold text-xs uppercase font-athletic">12-Week Macro</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">84 Days • 3 Phases</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setScheduleDuration('8weeks');
-                        setScheduleWeeks(8);
-                      }}
-                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
-                        scheduleWeeks === 8
-                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50'
-                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <Zap className="w-5 h-5 text-sky-400 mb-1" />
-                      <span className="font-bold text-xs uppercase font-athletic">8-Week Cycle</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">56 Days • 2 Phases</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setScheduleDuration('monthly');
-                        setScheduleWeeks(4);
-                      }}
-                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
-                        scheduleWeeks === 4
-                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50'
-                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <ShieldCheck className="w-5 h-5 text-blue-400 mb-1" />
-                      <span className="font-bold text-xs uppercase font-athletic">4-Week Block</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">28 Days • Base</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setScheduleDuration('weekly');
-                        setScheduleWeeks(1);
-                      }}
-                      className={`p-3 rounded-2xl text-center border transition cursor-pointer flex flex-col items-center justify-center ${
-                        scheduleWeeks === 1
-                          ? 'bg-blue-950/80 border-blue-500 text-white ring-2 ring-blue-500/50'
-                          : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <Calendar className="w-5 h-5 text-slate-400 mb-1" />
-                      <span className="font-bold text-xs uppercase font-athletic">1-Week Split</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">7 Days • Rotation</span>
-                    </button>
-                  </div>
-
-                  {/* Week-by-Week Fine Stepper (1 to 12 Weeks) */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#080d19] border border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-mono text-slate-400">Duration Fine-Tuning:</span>
-                      <span className="text-xs font-mono font-bold text-white">{scheduleWeeks} {scheduleWeeks === 1 ? 'Week' : 'Weeks'}</span>
-                      <span className="text-[10px] text-slate-400">({scheduleWeeks * 7} days)</span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 6, 8, 10, 12].map((wk) => (
-                        <button
-                          key={wk}
-                          type="button"
-                          onClick={() => {
-                            setScheduleWeeks(wk);
-                            setScheduleDuration(wk === 1 ? 'weekly' : wk === 4 ? 'monthly' : `${wk}weeks`);
-                          }}
-                          className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition cursor-pointer border ${
-                            scheduleWeeks === wk
-                              ? 'bg-blue-600 text-white border-blue-400'
-                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
-                          }`}
-                        >
-                          {wk}w
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <label className="text-xs text-slate-400 font-mono block mb-1">
-                      Target Time Per Session: <strong className="text-white">{sessionDurationMinutes} Minutes</strong>
-                    </label>
-                    <div className="flex gap-2">
-                      {[30, 45, 60, 75].map((mins) => (
-                        <button
-                          key={mins}
-                          type="button"
-                          onClick={() => setSessionDurationMinutes(mins)}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-mono font-bold border transition cursor-pointer ${
-                            sessionDurationMinutes === mins
-                              ? 'bg-blue-600 text-white border-blue-400'
-                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
-                          }`}
-                        >
-                          {mins}m
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* QUESTION 4: AVAILABLE EQUIPMENT */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">5</span>
-                    <span>Available Equipment Loadout</span>
-                  </label>
-                  <span className="text-[11px] font-mono text-slate-400">Select what you have access to</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {equipmentOptions.map((eq) => {
-                    const isSelected = equipment.includes(eq);
-                    return (
-                      <button
-                        key={eq}
-                        type="button"
-                        onClick={() => toggleEquipment(eq)}
-                        className={`p-2.5 rounded-xl text-left border transition cursor-pointer flex items-center gap-2.5 text-xs ${
-                          isSelected
-                            ? 'bg-blue-950/70 border-blue-500 text-white font-bold ring-1 ring-blue-500/40'
-                            : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-blue-600 border-blue-400 text-white' : 'border-slate-700 bg-slate-900'
-                        }`}>
-                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                        </div>
-                        <span className="leading-snug">{eq}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* QUESTION 6: PHYSICAL INJURIES & JOINT LIMITATIONS */}
+              {/* STEP 3: PHYSICAL INJURIES, SURGERIES & BANNED EXERCISES */}
               <div className="space-y-3 p-4 rounded-2xl bg-[#0c1426] border-2 border-amber-500/40 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-md bg-amber-500 text-black text-[11px] font-mono flex items-center justify-center font-black">6</span>
-                    <span>Injuries, Surgeries &amp; Joint Limitations (Clinical Guardrails)</span>
+                    <span className="w-5 h-5 rounded-md bg-amber-500 text-black text-[11px] font-mono flex items-center justify-center font-black">3</span>
+                    <span>Injuries, Joint Limitations &amp; Banned Exercises</span>
                   </label>
-                  <span className="text-[11px] font-mono text-amber-400 font-bold">Strictly eliminates contraindicated exercises</span>
+                  <span className="text-[11px] font-mono text-amber-400 font-bold">1-for-1 Biomechanical Exercise Swaps</span>
                 </div>
 
                 <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Select any injuries or painful joints. The AI will <strong>strictly forbid contraindicated exercises</strong> (such as heavy deep back squats for a torn hip labrum or heavy spinal compression for back pain) and prescribe joint-preserving clinical alternatives.
+                  Select any injuries or type specific movements you cannot perform. Every aggravated exercise inside <strong>{selectedMasterMeta.shortTitle}</strong> will be automatically replaced with a joint-sparing clinical equivalent while keeping the rest of the program intact.
                 </p>
 
                 {/* Injury Chips */}
@@ -1406,13 +1328,13 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                 {/* Freeform Injury Specifics */}
                 <div className="pt-1">
                   <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                    Specific Injury Details or Medical Diagnosis (e.g. &ldquo;Torn hip labrum on left side, hurts when squatting past 90 degrees&rdquo;):
+                    Specific Exercises to Ban or Injury Details (e.g. &ldquo;No barbell back squats, no overhead press, left knee meniscus&rdquo;):
                   </label>
                   <input
                     type="text"
                     value={injuryNotes}
                     onChange={(e) => setInjuryNotes(e.target.value)}
-                    placeholder="e.g. Torn hip labrum, pain when squatting below parallel; avoid deep lunges and leg press"
+                    placeholder="e.g. Cannot do conventional deadlifts, back squats, or running; swap with low-impact alternatives"
                     className="w-full px-3 py-2.5 rounded-xl bg-[#070b13] border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-amber-500 font-sans"
                   />
                 </div>
@@ -1423,147 +1345,116 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                     <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                     <div className="text-[11px] leading-relaxed flex-1">
                       <strong className="text-amber-300 font-bold block mb-0.5">
-                        Clinical Joint Guardrails Engaged:
+                        Clinical Movement Replacement Active for {selectedMasterMeta.shortTitle}:
                       </strong>
-                      {selectedInjuries.some(i => i.toLowerCase().includes('hip') || i.toLowerCase().includes('labrum')) || injuryNotes.toLowerCase().includes('hip') || injuryNotes.toLowerCase().includes('labrum') ? (
-                        <span>
-                          <strong>Heavy deep back squats, front squats, and deep leg presses will be strictly forbidden.</strong> The AI will program Box Squats to parallel (vertical shins), Belt Squats, High-Handle Trap Bar RDLs, Spanish Squats, and Sled Work to protect your torn hip labrum from impingement.
-                        </span>
-                      ) : (
-                        <span>
-                          Contradicted movements for your reported conditions will be removed and substituted with clinically sound, joint-sparing alternatives.
-                        </span>
-                      )}
+                      <span>
+                        All contraindicated exercises across every week and circuit will be intercepted and swapped with biomechanically matched joint-sparing movements (tagged with <em>&ldquo;Replaced: [Original Lift]&rdquo;</em> on your schedule).
+                      </span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* CARDIO & RUNNING INTEGRATION (USER REQUESTED FEATURE) */}
-              <div className="space-y-3 p-4 rounded-2xl bg-gradient-to-br from-[#0c1626] to-[#070b13] border-2 border-blue-500/40 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-sky-400" />
-                    <span>Cardio &amp; Running Integration</span>
-                  </label>
-                  <span className="text-[10px] font-mono text-sky-300 font-bold px-2 py-0.5 rounded bg-sky-950/70 border border-sky-500/30">
-                    Tactical Stamina
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Choose how you want cardiovascular conditioning structured into your training plan. You can add duty running to every session, high-intensity cardio circuits, or a balanced hybrid rotation.
-                </p>
-
-                {/* Cardio Mode Radio Buttons */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    { id: 'running', label: 'Add Running', desc: 'Aerobic base runs, duty mile benchmarks, or pursuit intervals' },
-                    { id: 'cardio_circuits', label: 'Cardio Circuits', desc: 'High-density metabolic finishers, kettlebell flows & HIIT' },
-                    { id: 'hybrid', label: 'Hybrid Run + Circuits', desc: 'Alternating running days and metabolic conditioning circuits' },
-                    { id: 'none', label: 'No Cardio', desc: 'Strict resistance training and barbell/dumbbell work only' },
-                  ].map((opt) => {
-                    const isSelected = cardioPreference === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setCardioPreference(opt.id as any)}
-                        className={`p-3 rounded-xl text-left border transition cursor-pointer flex flex-col justify-between ${
-                          isSelected
-                            ? 'bg-blue-950/80 border-blue-400 text-white ring-2 ring-blue-500/50 shadow-md'
-                            : 'bg-[#0a101d] hover:bg-[#10192e] border-slate-800 text-slate-300'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-xs uppercase font-athletic text-white">
-                              {opt.label}
-                            </span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
+              {/* STEP 4: EQUIPMENT & RUNNING / CONDITIONING ADAPTATION */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Equipment Loadout */}
+                <div className="space-y-2.5 p-4 rounded-2xl bg-[#0b1220] border border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">4</span>
+                      <span>Available Equipment</span>
+                    </label>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    If you don&apos;t have a full barbell gym, barbell lifts in the master program will automatically convert to dumbbell or bodyweight equivalents.
+                  </p>
+                  <div className="space-y-1.5">
+                    {equipmentOptions.map((eq) => {
+                      const isSelected = equipment.includes(eq);
+                      return (
+                        <button
+                          key={eq}
+                          type="button"
+                          onClick={() => toggleEquipment(eq)}
+                          className={`w-full p-2 rounded-xl text-left border transition cursor-pointer flex items-center gap-2.5 text-xs ${
+                            isSelected
+                              ? 'bg-blue-950/70 border-blue-500 text-white font-bold ring-1 ring-blue-500/40'
+                              : 'bg-[#080d18] hover:bg-[#101a2e] border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                            isSelected ? 'bg-blue-600 border-blue-400 text-white' : 'border-slate-700 bg-slate-900'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                           </div>
-                          <span className="text-[10px] text-slate-400 leading-snug block">
-                            {opt.desc}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <span className="leading-snug">{eq}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Sub-options for Running */}
-                {(cardioPreference === 'running' || cardioPreference === 'hybrid') && (
-                  <div className="pt-2 border-t border-slate-800/80 space-y-2">
-                    <label className="text-[11px] font-bold text-sky-300 uppercase font-mono block">
-                      Target Running Distance / Style:
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {/* Conditioning & Running Adaptation */}
+                <div className="space-y-3 p-4 rounded-2xl bg-[#0b1220] border border-slate-800 flex flex-col justify-between">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-black uppercase tracking-wide text-white font-athletic flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-sky-400" />
+                        <span>Running &amp; Conditioning Scaling</span>
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Choose how to handle the prescribed runs and conditioning finishers inside {selectedMasterMeta.shortTitle}.
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-2">
                       {[
-                        '1.5 Miles (Duty Standard)',
-                        '2.0 - 3.0 Miles (Aerobic Base)',
-                        'Foot Pursuit Sprints (400m-800m Repeats)',
-                        '5K (3.1 Miles) Stamina',
-                      ].map((dist) => (
-                        <button
-                          key={dist}
-                          type="button"
-                          onClick={() => setRunningDistancePreference(dist)}
-                          className={`p-2 rounded-lg text-[11px] font-bold border text-left transition cursor-pointer ${
-                            runningDistancePreference === dist
-                              ? 'bg-sky-950 text-white border-sky-400 ring-1 ring-sky-400/40'
-                              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white'
-                          }`}
-                        >
-                          {dist}
-                        </button>
-                      ))}
+                        { id: 'running', label: 'Keep & Scale Master Program Runs', desc: 'Scales run distances, intervals & paces to your ability level' },
+                        { id: 'cardio_circuits', label: 'Swap Runs to Low-Impact Tactical Circuits', desc: 'Replaces impact running with joint-sparing conditioning circuits' },
+                        { id: 'hybrid', label: 'Hybrid (Alternate Runs & Tactical Circuits)', desc: 'Combines scaled runs with metabolic work capacity circuits' },
+                        { id: 'none', label: 'Strength Only (Remove Conditioning)', desc: 'Strips conditioning runs to focus 100% on lifting blocks' },
+                      ].map((opt) => {
+                        const isSelected = cardioPreference === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setCardioPreference(opt.id as any)}
+                            className={`p-2.5 rounded-xl text-left border transition cursor-pointer flex items-center justify-between gap-2 ${
+                              isSelected
+                                ? 'bg-blue-950/80 border-blue-400 text-white ring-1 ring-blue-500/50'
+                                : 'bg-[#080d18] hover:bg-[#10192e] border-slate-800 text-slate-300'
+                            }`}
+                          >
+                            <div>
+                              <span className="font-bold text-xs uppercase font-athletic text-white block">
+                                {opt.label}
+                              </span>
+                              <span className="text-[10px] text-slate-400 leading-snug block">
+                                {opt.desc}
+                              </span>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-blue-400 shrink-0" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                )}
 
-                {/* Sub-options for Cardio Circuits */}
-                {(cardioPreference === 'cardio_circuits' || cardioPreference === 'hybrid') && (
-                  <div className="pt-2 border-t border-slate-800/80 space-y-2">
-                    <label className="text-[11px] font-bold text-amber-300 uppercase font-mono block">
-                      Preferred Cardio Circuit Style:
+                  {/* Additional Notes */}
+                  <div className="pt-2 border-t border-slate-800/80">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 block mb-1">
+                      Additional Adaptation Requests (Optional)
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {[
-                        'Duty Tactical HIIT & Combat Intervals',
-                        'Kettlebell & Dumbbell Conditioning Flow',
-                        'Assault Bike / Erg & Core Burner',
-                      ].map((circ) => (
-                        <button
-                          key={circ}
-                          type="button"
-                          onClick={() => setCardioCircuitType(circ)}
-                          className={`p-2 rounded-lg text-[11px] font-bold border text-left transition cursor-pointer ${
-                            cardioCircuitType === circ
-                              ? 'bg-amber-950 text-white border-amber-400 ring-1 ring-amber-400/40'
-                              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white'
-                          }`}
-                        >
-                          {circ}
-                        </button>
-                      ))}
-                    </div>
+                    <input
+                      type="text"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="e.g. Emphasize pull-up endurance and dummy drag readiness..."
+                      className="w-full px-3 py-2 rounded-xl bg-[#070b13] border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 font-sans"
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* OPTIONAL CONSTRAINTS / FOCUS NOTES */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Additional Training Focus / Equipment Preferences (Optional)</span>
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Focus on pull-ups and core stability; include explosive foot pursuit speed drills..."
-                  rows={2}
-                  maxLength={300}
-                  className="w-full p-3 rounded-xl bg-[#070b13] border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500 transition resize-none font-sans"
-                />
+                </div>
               </div>
 
               {/* GENERATE ACTION BUTTON */}
@@ -1573,12 +1464,12 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   onClick={handleGenerate}
                   className="w-full py-4 bg-gradient-to-r from-blue-600 via-sky-500 to-blue-600 hover:from-blue-500 hover:to-sky-400 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-blue-600/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 >
-                  <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
-                  <span>Generate Personalized Training Plan</span>
+                  <SlidersHorizontal className="w-5 h-5 text-amber-300" />
+                  <span>Adapt {selectedMasterMeta.shortTitle} ({scheduleWeeks} Weeks)</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
                 <div className="mt-2 text-center text-[11px] text-slate-500 font-mono">
-                  Patrol Ready Engine • Calibrated volume, double progression, and tactical rest intervals
+                  Patrol Ready Master Program Adapter • Authentic Coach Risner Splits • Clinical Joint Guardrails
                 </div>
               </div>
             </div>
