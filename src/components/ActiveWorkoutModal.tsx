@@ -6,13 +6,29 @@ import {
   LogOut, ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { WorkoutProgram, LiveExerciseSession, LiveSet, WorkoutSessionLog, MuscleGroup, isExerciseTimed, AutoOverloadRecommendation } from '../types';
+import {
+  WorkoutProgram,
+  LiveExerciseSession,
+  LiveSet,
+  WorkoutSessionLog,
+  MuscleGroup,
+  isExerciseTimed,
+  AutoOverloadRecommendation,
+  SupersetLiveEntry,
+} from '../types';
 import { calculate1RM, saveWorkoutLog, getStoredWorkoutLogs } from '../utils/storage';
 import { getAutoOverloadRecommendation } from '../utils/autoOverload';
 import { getCurrentAthlete } from '../utils/athleteAuth';
 import { soundManager } from '../utils/audio';
 import { useAndroidHaptics } from '../hooks/useAndroidHaptics';
 import { useRestTimer } from '../hooks/useRestTimer';
+import {
+  getExerciseFormat,
+  parseSupersetDetails,
+  parseEmomDetails,
+  parseAmrapDetails,
+  parseCircuitDetails,
+} from '../utils/workoutFormats';
 
 interface ActiveWorkoutModalProps {
   program: WorkoutProgram;
@@ -34,9 +50,201 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   );
   const effectiveLogs = pastLogs.length > 0 ? pastLogs : allLogs;
 
-  // Initialize live exercise sessions based on program with Auto-Overload and Time-based tracking
+  // Initialize live exercise sessions based on program with Format awareness (Superset, EMOM, AMRAP, Circuit, Straight)
   const [exercises, setExercises] = useState<LiveExerciseSession[]>(() => {
+    const findPrevStats = (movementName: string, fallbackWeight?: number) => {
+      for (const log of effectiveLogs) {
+        const match = log.exercises.find(
+          (e) => e.exerciseName.toLowerCase() === movementName.toLowerCase()
+        );
+        if (match && match.sets.length > 0) {
+          const lastSet = match.sets[match.sets.length - 1];
+          return {
+            prevWeightLbs: lastSet.weightLbs,
+            prevReps: lastSet.reps,
+          };
+        }
+      }
+      return {
+        prevWeightLbs: fallbackWeight,
+        prevReps: undefined,
+      };
+    };
+
     return program.exercises.map((template) => {
+      const format = getExerciseFormat(template);
+
+      if (format === 'superset') {
+        const parsedSS = parseSupersetDetails(template);
+        const rounds = Math.max(1, parsedSS.rounds || template.defaultSets || 3);
+
+        const initialSets: LiveSet[] = Array.from({ length: rounds }).map((_, roundIdx) => {
+          const entries: SupersetLiveEntry[] = parsedSS.movements.map((mov) => {
+            const overloadMov = getAutoOverloadRecommendation(
+              mov.name,
+              mov.targetReps || template.targetReps,
+              template.targetRpe,
+              effectiveLogs
+            );
+            const prev = findPrevStats(mov.name, mov.weight_lbs);
+            const parsedTargetReps = parseInt(mov.targetReps || template.targetReps || '10', 10);
+            const defaultReps = !isNaN(parsedTargetReps) ? parsedTargetReps : 10;
+            const isBodyweightMov = /push-up|pushup|pull-up|chin-up|dip|plank|inverted/i.test(mov.name);
+
+            const startWeight =
+              overloadMov.status === 'overload_applied' || overloadMov.status === 'maintain'
+                ? overloadMov.recommendedWeightLbs
+                : mov.weight_lbs !== undefined
+                ? mov.weight_lbs
+                : prev.prevWeightLbs !== undefined
+                ? prev.prevWeightLbs
+                : isBodyweightMov
+                ? 0
+                : 35;
+
+            return {
+              name: mov.name,
+              muscleGroup: mov.muscleGroup || template.muscleGroup,
+              weightLbs: startWeight,
+              reps: defaultReps,
+              targetReps: mov.targetReps || template.targetReps || '10',
+              prevWeightLbs: overloadMov.previousWeightLbs ?? prev.prevWeightLbs,
+              prevReps: overloadMov.previousReps ?? prev.prevReps ?? defaultReps,
+            };
+          });
+
+          return {
+            id: `set-${template.id}-${roundIdx + 1}`,
+            setNumber: roundIdx + 1,
+            weightLbs: entries[0]?.weightLbs || 0,
+            reps: entries[0]?.reps || 10,
+            rpe: template.targetRpe || 8,
+            completed: false,
+            restSeconds: parsedSS.restBetweenRoundsSeconds || 75,
+            isTimed: false,
+            supersetEntries: entries,
+          };
+        });
+
+        return {
+          exerciseId: template.id,
+          exerciseName: parsedSS.title || template.name,
+          muscleGroup: template.muscleGroup,
+          restPeriodSeconds: parsedSS.restBetweenRoundsSeconds || 75,
+          notes: template.notes,
+          targetReps: template.targetReps,
+          targetRpe: template.targetRpe || 8,
+          progressionRules: template.progression_rules,
+          isTimed: false,
+          format: 'superset',
+          supersetExercises: parsedSS.movements,
+          sets: initialSets,
+        };
+      }
+
+      if (format === 'emom') {
+        const parsedEmom = parseEmomDetails(template);
+        const mins = Math.max(1, parsedEmom.totalMinutes || 10);
+        const roundCount = Math.max(
+          1,
+          Math.round((mins * 60) / Math.max(30, parsedEmom.intervalSeconds || 60))
+        );
+        const initialSets: LiveSet[] = Array.from({ length: roundCount }).map((_, idx) => ({
+          id: `set-${template.id}-${idx + 1}`,
+          setNumber: idx + 1,
+          weightLbs: template.weight_lbs || 0,
+          reps: 1,
+          rpe: template.targetRpe || 8,
+          completed: false,
+          restSeconds: 0,
+          isTimed: true,
+          timeFormatted: `${Math.round((parsedEmom.intervalSeconds || 60) / 60)}:00`,
+          emomRoundsCompleted: 0,
+        }));
+
+        return {
+          exerciseId: template.id,
+          exerciseName: parsedEmom.title,
+          muscleGroup: template.muscleGroup,
+          restPeriodSeconds: template.restPeriodSeconds || 0,
+          notes: template.notes,
+          targetReps: `${parsedEmom.totalMinutes} Min EMOM (Every ${parsedEmom.intervalSeconds}s)`,
+          targetRpe: parsedEmom.targetRpe,
+          isTimed: true,
+          format: 'emom',
+          emomMinutes: parsedEmom.totalMinutes,
+          emomIntervalSeconds: parsedEmom.intervalSeconds,
+          emomMovements: parsedEmom.movements,
+          sets: initialSets,
+        };
+      }
+
+      if (format === 'amrap') {
+        const parsedAmrap = parseAmrapDetails(template);
+        const initialSets: LiveSet[] = [
+          {
+            id: `set-${template.id}-1`,
+            setNumber: 1,
+            weightLbs: template.weight_lbs || 0,
+            reps: 0,
+            rpe: parsedAmrap.targetRpe || 8.5,
+            completed: false,
+            restSeconds: template.restPeriodSeconds || 120,
+            isTimed: true,
+            timeFormatted: `${parsedAmrap.durationMinutes}:00`,
+            amrapRoundsCompleted: 0,
+            amrapExtraReps: 0,
+          },
+        ];
+
+        return {
+          exerciseId: template.id,
+          exerciseName: parsedAmrap.title,
+          muscleGroup: template.muscleGroup,
+          restPeriodSeconds: template.restPeriodSeconds || 120,
+          notes: template.notes,
+          targetReps: `${parsedAmrap.durationMinutes} Min AMRAP`,
+          targetRpe: parsedAmrap.targetRpe,
+          isTimed: true,
+          format: 'amrap',
+          amrapDurationMinutes: parsedAmrap.durationMinutes,
+          amrapMovements: parsedAmrap.movements,
+          sets: initialSets,
+        };
+      }
+
+      if (format === 'circuit') {
+        const circuit = parseCircuitDetails(template);
+        const rounds = Math.max(1, circuit.rounds || template.defaultSets || 3);
+        const initialSets: LiveSet[] = Array.from({ length: rounds }).map((_, rIdx) => ({
+          id: `set-${template.id}-${rIdx + 1}`,
+          setNumber: rIdx + 1,
+          weightLbs: template.weight_lbs || 0,
+          reps: circuit.stations.length,
+          rpe: circuit.targetRpe || 8.5,
+          completed: false,
+          restSeconds: circuit.restBetweenRoundsSeconds || 60,
+          isTimed: true,
+          timeFormatted: circuit.workRestScheme || 'Round Complete',
+        }));
+
+        return {
+          exerciseId: template.id,
+          exerciseName: circuit.circuitName,
+          muscleGroup: template.muscleGroup,
+          restPeriodSeconds: circuit.restBetweenRoundsSeconds || 60,
+          notes: template.notes || circuit.executionCue,
+          targetReps: `${rounds} Rounds (${circuit.workRestScheme})`,
+          targetRpe: circuit.targetRpe,
+          isTimed: true,
+          format: 'circuit',
+          circuitStations: circuit.stations.map((s) => s.name),
+          workSeconds: template.workSeconds,
+          restSeconds: template.restSeconds,
+          sets: initialSets,
+        };
+      }
+
       const timed = isExerciseTimed(template.name, template.type, template.targetReps);
       const overload = getAutoOverloadRecommendation(
         template.name,
@@ -46,7 +254,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       );
 
       if (timed) {
-        // Cardio / Timed exercise (Run, Sprint Intervals, Plank)
         let prevTimeFormatted: string | undefined;
         let prevDistance: number | undefined;
         let prevWeight: number | undefined = template.weight_lbs;
@@ -64,7 +271,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           }
         }
 
-        // Parse target duration string
         let defaultTime = '30:00';
         if (template.targetReps && template.targetReps.toLowerCase().includes('min')) {
           const m = template.targetReps.match(/(\d+)/);
@@ -103,25 +309,22 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           targetRpe: template.targetRpe,
           progressionRules: template.progression_rules,
           isTimed: true,
+          format: 'straight',
           distance_miles: template.distance_miles,
           autoOverload: overload,
           sets: initialSets,
         };
       } else {
-        // Compound strength & hypertrophy exercise
-        // Auto-Overload automatically inputs next week's recommended weight!
         let startingWeight = 50;
         let prevWeight = template.weight_lbs;
-        let prevReps = 8;
 
         if (overload.status === 'overload_applied' || overload.status === 'maintain') {
           startingWeight = overload.recommendedWeightLbs;
           prevWeight = overload.previousWeightLbs;
-          prevReps = overload.previousReps;
         } else if (template.weight_lbs !== undefined) {
           startingWeight = template.weight_lbs;
         } else {
-          const isBodyweight = 
+          const isBodyweight =
             template.name.toLowerCase().includes('push-up') ||
             template.name.toLowerCase().includes('pull-up') ||
             template.name.toLowerCase().includes('dip') ||
@@ -160,6 +363,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           targetRpe: template.targetRpe,
           progressionRules: template.progression_rules,
           isTimed: false,
+          format: 'straight',
           autoOverload: overload,
           sets: initialSets,
         };
@@ -245,6 +449,98 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     return () => clearInterval(timer);
   }, []);
 
+  // Live EMOM / AMRAP interactive countdown clock
+  const [blockClock, setBlockClock] = useState<{
+    exerciseId: string;
+    mode: 'emom' | 'amrap';
+    isRunning: boolean;
+    secondsRemaining: number;
+    totalSeconds: number;
+    intervalSeconds: number;
+    currentInterval: number;
+    totalIntervals: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!blockClock || !blockClock.isRunning) return;
+    const id = window.setInterval(() => {
+      setBlockClock((prev) => {
+        if (!prev || !prev.isRunning) return prev;
+        if (prev.secondsRemaining <= 1) {
+          soundManager.playRestComplete();
+          haptics.alert();
+          if (prev.mode === 'emom' && prev.currentInterval < prev.totalIntervals) {
+            return {
+              ...prev,
+              currentInterval: prev.currentInterval + 1,
+              secondsRemaining: prev.intervalSeconds,
+            };
+          }
+          return { ...prev, secondsRemaining: 0, isRunning: false };
+        }
+        const nextSec = prev.secondsRemaining - 1;
+        if (nextSec <= 3 && nextSec > 0) {
+          soundManager.playCountdownBeep(nextSec === 1);
+        }
+        return { ...prev, secondsRemaining: nextSec };
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [blockClock?.isRunning, blockClock?.exerciseId]);
+
+  const startOrToggleBlockClock = (
+    ex: LiveExerciseSession,
+    mode: 'emom' | 'amrap'
+  ) => {
+    if (blockClock && blockClock.exerciseId === ex.exerciseId && blockClock.mode === mode) {
+      if (blockClock.secondsRemaining === 0) {
+        const initSec = mode === 'emom' ? ex.emomIntervalSeconds || 60 : (ex.amrapDurationMinutes || 12) * 60;
+        setBlockClock({
+          ...blockClock,
+          isRunning: true,
+          secondsRemaining: initSec,
+          currentInterval: 1,
+        });
+      } else {
+        setBlockClock({ ...blockClock, isRunning: !blockClock.isRunning });
+      }
+      return;
+    }
+
+    if (mode === 'emom') {
+      const intervalSec = ex.emomIntervalSeconds || 60;
+      const totalIntervals = ex.sets.length || Math.max(1, Math.round(((ex.emomMinutes || 10) * 60) / intervalSec));
+      setBlockClock({
+        exerciseId: ex.exerciseId,
+        mode: 'emom',
+        isRunning: true,
+        secondsRemaining: intervalSec,
+        totalSeconds: intervalSec,
+        intervalSeconds: intervalSec,
+        currentInterval: 1,
+        totalIntervals,
+      });
+    } else {
+      const totalSec = Math.max(60, (ex.amrapDurationMinutes || 12) * 60);
+      setBlockClock({
+        exerciseId: ex.exerciseId,
+        mode: 'amrap',
+        isRunning: true,
+        secondsRemaining: totalSec,
+        totalSeconds: totalSec,
+        intervalSeconds: totalSec,
+        currentInterval: 1,
+        totalIntervals: 1,
+      });
+    }
+    soundManager.playCountdownBeep(true);
+    haptics.tap();
+  };
+
+  const resetBlockClock = () => {
+    setBlockClock(null);
+  };
+
   const formatElapsed = (totalSecs: number) => {
     const m = Math.floor(totalSecs / 60);
     const s = totalSecs % 60;
@@ -256,7 +552,16 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   const handleUpdateSet = (
     exerciseIdx: number,
     setIdx: number,
-    field: 'weightLbs' | 'reps' | 'rpe' | 'distanceMiles' | 'timeFormatted' | 'timeSeconds',
+    field:
+      | 'weightLbs'
+      | 'reps'
+      | 'rpe'
+      | 'distanceMiles'
+      | 'timeFormatted'
+      | 'timeSeconds'
+      | 'amrapRoundsCompleted'
+      | 'amrapExtraReps'
+      | 'emomRoundsCompleted',
     value: any
   ) => {
     setExercises((prev) => {
@@ -267,6 +572,37 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         ...setList[setIdx],
         [field]: value,
       };
+      ex.sets = setList;
+      copy[exerciseIdx] = ex;
+      return copy;
+    });
+  };
+
+  const handleUpdateSupersetEntry = (
+    exerciseIdx: number,
+    setIdx: number,
+    entryIdx: number,
+    field: 'weightLbs' | 'reps',
+    value: number
+  ) => {
+    setExercises((prev) => {
+      const copy = [...prev];
+      const ex = { ...copy[exerciseIdx] };
+      const setList = [...ex.sets];
+      const targetSet = { ...setList[setIdx] };
+      const entries = [...(targetSet.supersetEntries || [])];
+      if (!entries[entryIdx]) return prev;
+      entries[entryIdx] = {
+        ...entries[entryIdx],
+        [field]: value,
+      };
+      targetSet.supersetEntries = entries;
+      // Keep top-level weightLbs/reps synced to primary movement for backwards compatibility
+      if (entryIdx === 0) {
+        if (field === 'weightLbs') targetSet.weightLbs = value;
+        if (field === 'reps') targetSet.reps = value;
+      }
+      setList[setIdx] = targetSet;
       ex.sets = setList;
       copy[exerciseIdx] = ex;
       return copy;
@@ -367,6 +703,10 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         restSeconds: ex.restPeriodSeconds,
         prevWeightLbs: lastSet?.prevWeightLbs,
         prevReps: lastSet?.prevReps,
+        isTimed: ex.isTimed,
+        supersetEntries: lastSet?.supersetEntries
+          ? lastSet.supersetEntries.map((entry) => ({ ...entry }))
+          : undefined,
       };
       ex.sets = [...ex.sets, newSet];
       copy[exerciseIdx] = ex;
@@ -385,7 +725,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     });
   };
 
-  // Calculate live stats
+  // Calculate live stats (supports Superset multi-movement volume accurately)
   const totalSetsCompleted = exercises.reduce(
     (acc, ex) => acc + ex.sets.filter((s) => s.completed).length,
     0
@@ -393,6 +733,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   const totalPlannedSets = exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
 
   const totalVolumeLbs = exercises.reduce((acc, ex) => {
+    if (ex.format === 'superset') {
+      return (
+        acc +
+        ex.sets.reduce((setAcc, set) => {
+          if (!set.completed) return setAcc;
+          const roundVol = (set.supersetEntries || []).reduce(
+            (subAcc, entry) => subAcc + (entry.weightLbs || 0) * (entry.reps || 0),
+            0
+          );
+          return setAcc + roundVol;
+        }, 0)
+      );
+    }
     if (ex.isTimed) {
       return acc;
     }
@@ -404,11 +757,74 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
     );
   }, 0);
 
+  const serializeExercisesForLog = () => {
+    const exported: WorkoutSessionLog['exercises'] = [];
+    exercises.forEach((ex) => {
+      if (ex.format === 'superset') {
+        const activeSets = ex.sets.filter((s) => s.completed || (s.supersetEntries || []).some((e) => e.weightLbs > 0 || e.reps > 0));
+        const movCount = ex.sets[0]?.supersetEntries?.length || 0;
+        for (let mIdx = 0; mIdx < movCount; mIdx++) {
+          const movMeta = ex.sets[0]?.supersetEntries?.[mIdx];
+          if (!movMeta) continue;
+          exported.push({
+            exerciseName: movMeta.name,
+            muscleGroup: movMeta.muscleGroup || ex.muscleGroup,
+            isTimed: false,
+            format: 'superset',
+            supersetGroupName: ex.exerciseName,
+            sets: activeSets.map((s) => {
+              const entry = s.supersetEntries?.[mIdx];
+              const w = entry?.weightLbs || 0;
+              const r = entry?.reps || 0;
+              return {
+                setNumber: s.setNumber,
+                weightLbs: w,
+                reps: r,
+                rpe: s.rpe,
+                estimated1RM: calculate1RM(w, r),
+              };
+            }),
+          });
+        }
+        return;
+      }
+
+      exported.push({
+        exerciseName: ex.exerciseName,
+        muscleGroup: ex.muscleGroup,
+        isTimed: ex.isTimed,
+        format: ex.format,
+        sets: ex.sets
+          .filter(
+            (s) =>
+              s.completed ||
+              s.weightLbs > 0 ||
+              (s.timeFormatted && s.timeFormatted !== '00:00') ||
+              (s.distanceMiles && s.distanceMiles > 0) ||
+              (s.amrapRoundsCompleted && s.amrapRoundsCompleted > 0)
+          )
+          .map((s) => ({
+            setNumber: s.setNumber,
+            weightLbs: s.weightLbs,
+            reps: ex.format === 'amrap' ? (s.amrapRoundsCompleted || s.reps || 0) : s.reps,
+            rpe: s.rpe,
+            timeFormatted: s.timeFormatted,
+            timeSeconds: s.timeSeconds,
+            distanceMiles: s.distanceMiles,
+            amrapRoundsCompleted: s.amrapRoundsCompleted,
+            amrapExtraReps: s.amrapExtraReps,
+            emomRoundsCompleted: s.emomRoundsCompleted,
+            estimated1RM: !ex.isTimed ? calculate1RM(s.weightLbs, s.reps) : 0,
+          })),
+      });
+    });
+    return exported;
+  };
+
   const handleFinishWorkout = () => {
     const endTime = new Date();
     const durationMinutes = Math.max(1, Math.round(elapsedSeconds / 60));
 
-    // Construct the structured log
     const sessionLog: WorkoutSessionLog = {
       id: `log-${Date.now()}`,
       athleteId: currentAthlete.id,
@@ -422,24 +838,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       totalSetsCompleted,
       rating: sessionRating,
       notes: workoutNotes,
-      exercises: exercises.map((ex) => ({
-        exerciseName: ex.exerciseName,
-        muscleGroup: ex.muscleGroup,
-        isTimed: ex.isTimed,
-        sets: ex.sets
-          .filter((s) => s.completed || s.weightLbs > 0 || (s.timeFormatted && s.timeFormatted !== '00:00') || (s.distanceMiles && s.distanceMiles > 0))
-          .map((s) => ({
-            setNumber: s.setNumber,
-            weightLbs: s.weightLbs,
-            reps: s.reps,
-            rpe: s.rpe,
-            timeFormatted: s.timeFormatted,
-            timeSeconds: s.timeSeconds,
-            distanceMiles: s.distanceMiles,
-            isTimed: s.isTimed || ex.isTimed,
-            estimated1RM: !ex.isTimed ? calculate1RM(s.weightLbs, s.reps) : 0,
-          })),
-      })),
+      exercises: serializeExercisesForLog(),
     };
 
     saveWorkoutLog(sessionLog);
@@ -486,24 +885,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       totalSetsCompleted,
       rating: sessionRating,
       notes: workoutNotes ? `${workoutNotes} (Session ended early)` : 'Session ended early by athlete.',
-      exercises: exercises.map((ex) => ({
-        exerciseName: ex.exerciseName,
-        muscleGroup: ex.muscleGroup,
-        isTimed: ex.isTimed,
-        sets: ex.sets
-          .filter((s) => s.completed || s.weightLbs > 0 || (s.timeFormatted && s.timeFormatted !== '00:00'))
-          .map((s) => ({
-            setNumber: s.setNumber,
-            weightLbs: s.weightLbs,
-            reps: s.reps,
-            rpe: s.rpe,
-            timeFormatted: s.timeFormatted,
-            timeSeconds: s.timeSeconds,
-            distanceMiles: s.distanceMiles,
-            isTimed: s.isTimed || ex.isTimed,
-            estimated1RM: !ex.isTimed ? calculate1RM(s.weightLbs, s.reps) : 0,
-          })),
-      })),
+      exercises: serializeExercisesForLog(),
     };
 
     saveWorkoutLog(sessionLog);
@@ -670,11 +1052,36 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               <div className="bg-[#0b121e] border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div>
-                    {/* Clean unboxed exercise metadata */}
+                    {/* Clean unboxed exercise metadata + format badge */}
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 font-mono mb-1">
+                      {currentExercise.format && currentExercise.format !== 'straight' && (
+                        <span
+                          className={`px-2 py-0.5 rounded font-athletic font-bold uppercase tracking-wider text-[10px] border ${
+                            currentExercise.format === 'superset'
+                              ? 'bg-indigo-950/70 text-indigo-300 border-indigo-500/40'
+                              : currentExercise.format === 'emom'
+                              ? 'bg-amber-950/70 text-amber-300 border-amber-500/40'
+                              : currentExercise.format === 'amrap'
+                              ? 'bg-red-950/70 text-red-300 border-red-500/40'
+                              : 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40'
+                          }`}
+                        >
+                          {currentExercise.format === 'superset'
+                            ? 'Superset'
+                            : currentExercise.format === 'emom'
+                            ? 'EMOM'
+                            : currentExercise.format === 'amrap'
+                            ? 'AMRAP'
+                            : 'Circuit'}
+                        </span>
+                      )}
                       <span className="text-slate-300 font-bold">{currentExercise.muscleGroup}</span>
-                      <span aria-hidden="true" className="text-slate-600">·</span>
-                      <span className="text-blue-400 font-bold">Rest: {currentExercise.restPeriodSeconds}s</span>
+                      {currentExercise.restPeriodSeconds > 0 && (
+                        <>
+                          <span aria-hidden="true" className="text-slate-600">·</span>
+                          <span className="text-blue-400 font-bold">Rest: {currentExercise.restPeriodSeconds}s</span>
+                        </>
+                      )}
                       {currentExercise.targetRpe && (
                         <>
                           <span aria-hidden="true" className="text-slate-600">·</span>
@@ -684,7 +1091,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       {currentExercise.targetReps && (
                         <>
                           <span aria-hidden="true" className="text-slate-600">·</span>
-                          <span>Target Reps: {currentExercise.targetReps}</span>
+                          <span>Target: {currentExercise.targetReps}</span>
                         </>
                       )}
                     </div>
@@ -736,7 +1143,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                         </button>
                       </div>
                     ) : modalRestTimer && modalRestTimer.secondsRemaining === 0 ? (
-                      <div className="flex items-center gap-2 bg-emerald-950/90 border border-emerald-500/50 rounded-xl px-3 py-1.5 animate-pulse">
+                      <div className="flex items-center gap-2 bg-emerald-950/90 border border-emerald-500/50 rounded-xl px-3 py-1.5">
                         <span className="text-xs font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1 font-athletic">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                           Rest Complete
@@ -759,11 +1166,11 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleStartRestTimer(currentExercise.restPeriodSeconds, currentExercise.exerciseName)}
+                        onClick={() => handleStartRestTimer(currentExercise.restPeriodSeconds || 60, currentExercise.exerciseName)}
                         className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold font-athletic uppercase tracking-wider flex items-center gap-1.5 transition shadow-sm cursor-pointer active:scale-95"
                       >
                         <Clock className="w-3.5 h-3.5" />
-                        <span>Rest ({currentExercise.restPeriodSeconds}s)</span>
+                        <span>Rest ({currentExercise.restPeriodSeconds || 60}s)</span>
                       </button>
                     )}
                   </div>
@@ -792,6 +1199,146 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                   </div>
                 )}
 
+                {/* Format Movement / Station Breakdown Pills */}
+                {currentExercise.format === 'superset' && currentExercise.supersetExercises && currentExercise.supersetExercises.length > 0 && (
+                  <div className="pt-2 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {currentExercise.supersetExercises.map((subMov, subIdx) => (
+                      <div
+                        key={subIdx}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#070c14] border border-indigo-500/25 text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="px-1.5 py-0.5 rounded bg-indigo-600/30 text-indigo-300 font-mono font-bold text-[10px]">
+                            A{subIdx + 1}
+                          </span>
+                          <span className="font-semibold text-white truncate">{subMov.name}</span>
+                        </div>
+                        <span className="text-[11px] font-mono text-indigo-300 font-bold shrink-0 ml-2">
+                          {subMov.targetReps || '10'} reps
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {currentExercise.format === 'emom' && currentExercise.emomMovements && currentExercise.emomMovements.length > 0 && (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-amber-300 font-bold">
+                        Every {currentExercise.emomIntervalSeconds || 60}s × {currentExercise.sets.length} Intervals ({currentExercise.emomMinutes || 10} Min Total)
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {blockClock && blockClock.exerciseId === currentExercise.exerciseId && blockClock.mode === 'emom' && (
+                          <>
+                            <span className="px-2.5 py-1 rounded-lg bg-amber-950/60 border border-amber-500/40 font-mono text-xs font-black text-amber-200">
+                              Int {blockClock.currentInterval}/{blockClock.totalIntervals} · {formatElapsed(blockClock.secondsRemaining)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={resetBlockClock}
+                              className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer"
+                              title="Reset EMOM clock"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => startOrToggleBlockClock(currentExercise, 'emom')}
+                          className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] font-athletic uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                        >
+                          {blockClock?.exerciseId === currentExercise.exerciseId && blockClock.isRunning ? (
+                            <>
+                              <Pause className="w-3 h-3" /> Pause Clock
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3" /> Start EMOM Clock
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      {currentExercise.emomMovements.map((mov, idx) => (
+                        <div key={idx} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#070c14] border border-amber-500/20 text-xs">
+                          <span className="text-white font-medium">{mov.name}</span>
+                          {mov.targetReps && <span className="font-mono text-amber-300 font-bold ml-2">{mov.targetReps}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {currentExercise.format === 'amrap' && (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-red-300 font-bold">
+                        {currentExercise.amrapDurationMinutes || 12}-Minute Time Cap · As Many Rounds & Reps As Possible
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {blockClock && blockClock.exerciseId === currentExercise.exerciseId && blockClock.mode === 'amrap' && (
+                          <>
+                            <span className="px-2.5 py-1 rounded-lg bg-red-950/60 border border-red-500/40 font-mono text-xs font-black text-red-200">
+                              {formatElapsed(blockClock.secondsRemaining)} left
+                            </span>
+                            <button
+                              type="button"
+                              onClick={resetBlockClock}
+                              className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer"
+                              title="Reset AMRAP clock"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => startOrToggleBlockClock(currentExercise, 'amrap')}
+                          className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-black text-[11px] font-athletic uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                        >
+                          {blockClock?.exerciseId === currentExercise.exerciseId && blockClock.isRunning ? (
+                            <>
+                              <Pause className="w-3 h-3" /> Pause Cap
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3" /> Start AMRAP Clock
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    {currentExercise.amrapMovements && currentExercise.amrapMovements.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {currentExercise.amrapMovements.map((mov, idx) => (
+                          <div key={idx} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#070c14] border border-red-500/20 text-xs">
+                            <span className="text-white font-medium">{mov.name}</span>
+                            {mov.targetReps && <span className="font-mono text-red-300 font-bold ml-2">{mov.targetReps}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {currentExercise.format === 'circuit' && currentExercise.circuitStations && currentExercise.circuitStations.length > 0 && (
+                  <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-300 font-bold block">
+                      Circuit Stations ({currentExercise.circuitStations.length} Stations)
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      {currentExercise.circuitStations.map((st, idx) => (
+                        <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#070c14] border border-emerald-500/20 text-xs text-slate-200">
+                          <span className="font-mono font-bold text-emerald-400">{idx + 1}.</span>
+                          <span className="truncate">{st}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Compact, clean coaching cue (quiet unboxed guidance) */}
                 {currentExercise.notes && (
                   <div className="text-xs text-slate-300/90 leading-relaxed border-t border-slate-800/80 pt-2.5 flex items-start gap-2">
@@ -801,8 +1348,8 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                 )}
               </div>
 
-              {/* Auto-Overload Progression Banner for Strength Exercises */}
-              {currentExercise.autoOverload && !currentExercise.isTimed && (
+              {/* Auto-Overload Progression Banner for Standard Straight Strength Exercises */}
+              {currentExercise.autoOverload && !currentExercise.isTimed && (!currentExercise.format || currentExercise.format === 'straight') && (
                 <div className="px-3.5 py-2.5 rounded-xl border border-slate-800 bg-[#0a0f1d] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                   <div className="flex items-center gap-2 min-w-0">
                     <Zap className="w-4 h-4 text-blue-400 shrink-0" />
@@ -851,7 +1398,17 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       <Dumbbell className="w-4 h-4 text-blue-400" />
                     )}
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 font-athletic">
-                      {currentExercise.isTimed ? 'Conditioning & Time Log' : 'Sets & Reps'}
+                      {currentExercise.format === 'superset'
+                        ? 'Superset Rounds (Log Paired Movements)'
+                        : currentExercise.format === 'emom'
+                        ? 'EMOM Interval Log'
+                        : currentExercise.format === 'amrap'
+                        ? 'AMRAP Scoreboard Log'
+                        : currentExercise.format === 'circuit'
+                        ? 'Circuit Rounds Log'
+                        : currentExercise.isTimed
+                        ? 'Conditioning & Time Log'
+                        : 'Sets & Reps'}
                     </h4>
                   </div>
                   <div className="flex items-center gap-2">
@@ -906,34 +1463,319 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                   </div>
                 )}
 
-                {/* Table Column Headers */}
-                {currentExercise.isTimed ? (
-                  <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 items-center">
-                    <div className="col-span-1 text-center font-mono">Set</div>
-                    <div className="col-span-2 hidden sm:block">Previous</div>
-                    <div className="col-span-3 sm:col-span-3 text-center">Distance (mi)</div>
-                    <div className="col-span-4 sm:col-span-3 text-center">Time / Stopwatch</div>
-                    <div className="col-span-2 sm:col-span-2 text-center text-blue-400 font-mono">RPE</div>
-                    <div className="col-span-2 sm:col-span-1 text-center">Done</div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 items-center">
-                    <div className="col-span-1 text-center font-mono">Set</div>
-                    <div className="col-span-2 hidden sm:block">Previous</div>
-                    <div className="col-span-4 sm:col-span-3 text-center">Weight (lbs)</div>
-                    <div className="col-span-2 sm:col-span-2 text-center">Reps</div>
-                    <div className="col-span-3 sm:col-span-2 text-center text-blue-400 font-mono">RPE</div>
-                    <div className="col-span-2 sm:col-span-2 text-center">Done</div>
-                  </div>
+                {/* Table Column Headers (only for standard straight or standard timed cardio sets) */}
+                {(!currentExercise.format || currentExercise.format === 'straight') && (
+                  currentExercise.isTimed ? (
+                    <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 items-center">
+                      <div className="col-span-1 text-center font-mono">Set</div>
+                      <div className="col-span-2 hidden sm:block">Previous</div>
+                      <div className="col-span-3 sm:col-span-3 text-center">Distance (mi)</div>
+                      <div className="col-span-4 sm:col-span-3 text-center">Time / Stopwatch</div>
+                      <div className="col-span-2 sm:col-span-2 text-center text-blue-400 font-mono">RPE</div>
+                      <div className="col-span-2 sm:col-span-1 text-center">Done</div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 items-center">
+                      <div className="col-span-1 text-center font-mono">Set</div>
+                      <div className="col-span-2 hidden sm:block">Previous</div>
+                      <div className="col-span-4 sm:col-span-3 text-center">Weight (lbs)</div>
+                      <div className="col-span-2 sm:col-span-2 text-center">Reps</div>
+                      <div className="col-span-3 sm:col-span-2 text-center text-blue-400 font-mono">RPE</div>
+                      <div className="col-span-2 sm:col-span-2 text-center">Done</div>
+                    </div>
+                  )
                 )}
 
-                {/* Sets List */}
-                <div className="space-y-1.5">
+                {/* Sets / Rounds List */}
+                <div className="space-y-2">
                   {currentExercise.sets.map((set, setIdx) => {
                     const isStopwatchActive = activeSetStopwatch?.exerciseIdx === activeExerciseIndex && activeSetStopwatch?.setIdx === setIdx;
 
+                    // 1. SUPERSET ROUND CARD
+                    if (currentExercise.format === 'superset') {
+                      const subEntries = set.supersetEntries || [];
+                      return (
+                        <div
+                          key={set.id}
+                          className={`p-3 rounded-xl border transition-all space-y-2.5 ${
+                            set.completed
+                              ? 'bg-emerald-950/20 border-emerald-500/40'
+                              : 'bg-[#070c14] border-slate-800 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-800/80">
+                            <span className="text-xs font-mono font-black text-indigo-300 uppercase tracking-wider">
+                              Superset Set {set.setNumber}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
+                                <span>Round RPE</span>
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  min="1"
+                                  max="10"
+                                  placeholder="8"
+                                  value={set.rpe !== undefined ? set.rpe : ''}
+                                  onChange={(e) => {
+                                    const raw = e.target.value;
+                                    handleUpdateSet(activeExerciseIndex, setIdx, 'rpe', raw === '' ? undefined : parseFloat(raw));
+                                  }}
+                                  className="w-12 text-center font-mono font-bold text-xs bg-[#0d1424] border border-slate-700/80 rounded-lg py-1 text-white focus:outline-none focus:border-indigo-500"
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleCompleteSet(activeExerciseIndex, setIdx)}
+                                className={`px-2.5 py-1 rounded-lg flex items-center gap-1 text-xs font-bold transition-all cursor-pointer ${
+                                  set.completed
+                                    ? 'bg-emerald-500 text-slate-950 font-black shadow'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                                }`}
+                                title={set.completed ? 'Mark round incomplete' : 'Complete superset round & start rest'}
+                              >
+                                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                <span>{set.completed ? 'Logged' : 'Done'}</span>
+                              </button>
+                              {currentExercise.sets.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSet(activeExerciseIndex, setIdx)}
+                                  className="p-1 text-slate-600 hover:text-red-400 transition-colors cursor-pointer"
+                                  title="Delete superset round"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            {subEntries.map((entry, entryIdx) => (
+                              <div
+                                key={`${set.id}-sub-${entryIdx}`}
+                                className="grid grid-cols-12 gap-2 items-center bg-[#0b121e]/80 border border-slate-800/80 rounded-lg px-2.5 py-2"
+                              >
+                                <div className="col-span-12 sm:col-span-5 flex items-center gap-2 min-w-0">
+                                  <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono text-[10px] font-bold shrink-0">
+                                    A{entryIdx + 1}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-white truncate">{entry.name}</div>
+                                    <div className="text-[10px] font-mono text-slate-400">
+                                      Target: {entry.targetReps}
+                                      {entry.prevWeightLbs !== undefined
+                                        ? ` · Prev ${entry.prevWeightLbs}×${entry.prevReps || entry.reps}`
+                                        : ''}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="col-span-6 sm:col-span-4 flex items-center gap-1.5">
+                                  <span className="text-[10px] font-mono text-slate-500">LBS</span>
+                                  <input
+                                    type="number"
+                                    step="2.5"
+                                    value={entry.weightLbs || ''}
+                                    onChange={(e) =>
+                                      handleUpdateSupersetEntry(
+                                        activeExerciseIndex,
+                                        setIdx,
+                                        entryIdx,
+                                        'weightLbs',
+                                        parseFloat(e.target.value) || 0
+                                      )
+                                    }
+                                    placeholder="0"
+                                    className="w-full text-center font-mono font-bold text-xs sm:text-sm bg-[#070c14] border border-slate-700/80 rounded-lg py-1.5 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+
+                                <div className="col-span-6 sm:col-span-3 flex items-center gap-1.5">
+                                  <span className="text-[10px] font-mono text-slate-500">REPS</span>
+                                  <input
+                                    type="number"
+                                    value={entry.reps || ''}
+                                    onChange={(e) =>
+                                      handleUpdateSupersetEntry(
+                                        activeExerciseIndex,
+                                        setIdx,
+                                        entryIdx,
+                                        'reps',
+                                        parseInt(e.target.value, 10) || 0
+                                      )
+                                    }
+                                    placeholder="10"
+                                    className="w-full text-center font-mono font-bold text-xs sm:text-sm bg-[#070c14] border border-slate-700/80 rounded-lg py-1.5 text-white focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // 2. AMRAP SCOREBOARD ROW
+                    if (currentExercise.format === 'amrap') {
+                      return (
+                        <div
+                          key={set.id}
+                          className={`p-3.5 rounded-xl border transition-all space-y-3 ${
+                            set.completed
+                              ? 'bg-emerald-950/20 border-emerald-500/40'
+                              : 'bg-[#070c14] border-slate-800'
+                          }`}
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                            <div>
+                              <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                                Rounds Completed
+                              </label>
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={set.amrapRoundsCompleted ?? 0}
+                                  onChange={(e) =>
+                                    handleUpdateSet(
+                                      activeExerciseIndex,
+                                      setIdx,
+                                      'amrapRoundsCompleted',
+                                      parseInt(e.target.value, 10) || 0
+                                    )
+                                  }
+                                  className="w-full text-center font-mono font-black text-base bg-[#0d1424] border border-slate-700 rounded-lg py-2 text-white focus:outline-none focus:border-red-500"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleUpdateSet(
+                                      activeExerciseIndex,
+                                      setIdx,
+                                      'amrapRoundsCompleted',
+                                      (set.amrapRoundsCompleted || 0) + 1
+                                    );
+                                    soundManager.playSetLogged();
+                                    haptics.tap();
+                                  }}
+                                  className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white font-black text-xs rounded-lg shrink-0 cursor-pointer"
+                                >
+                                  +1 Rnd
+                                </button>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                                Extra Reps (Partial Round)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={set.amrapExtraReps ?? 0}
+                                onChange={(e) =>
+                                  handleUpdateSet(
+                                    activeExerciseIndex,
+                                    setIdx,
+                                    'amrapExtraReps',
+                                    parseInt(e.target.value, 10) || 0
+                                  )
+                                }
+                                className="w-full text-center font-mono font-black text-base bg-[#0d1424] border border-slate-700 rounded-lg py-2 text-white focus:outline-none focus:border-red-500"
+                              />
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                                  Session RPE
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  min="1"
+                                  max="10"
+                                  value={set.rpe !== undefined ? set.rpe : ''}
+                                  onChange={(e) => {
+                                    const raw = e.target.value;
+                                    handleUpdateSet(activeExerciseIndex, setIdx, 'rpe', raw === '' ? undefined : parseFloat(raw));
+                                  }}
+                                  className="w-full text-center font-mono font-bold text-sm bg-[#0d1424] border border-slate-700 rounded-lg py-2 text-white focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleCompleteSet(activeExerciseIndex, setIdx)}
+                                className={`mt-5 px-4 py-2 rounded-lg flex items-center gap-1.5 font-bold text-xs cursor-pointer ${
+                                  set.completed
+                                    ? 'bg-emerald-500 text-slate-950 font-black'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                                }`}
+                              >
+                                <Check className="w-4 h-4 stroke-[2.5]" />
+                                <span>{set.completed ? 'Logged' : 'Finish'}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // 3. EMOM OR CIRCUIT ROUND ROW
+                    if (currentExercise.format === 'emom' || currentExercise.format === 'circuit') {
+                      const isEmom = currentExercise.format === 'emom';
+                      return (
+                        <div
+                          key={set.id}
+                          className={`grid grid-cols-12 gap-2 items-center p-2.5 rounded-xl border transition-all ${
+                            set.completed
+                              ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-200'
+                              : 'bg-[#070c14] border-slate-800 hover:border-slate-700 text-slate-200'
+                          }`}
+                        >
+                          <div className="col-span-3 sm:col-span-2 font-mono font-bold text-xs text-slate-300">
+                            {isEmom ? `Min ${set.setNumber}` : `Round ${set.setNumber}`}
+                          </div>
+                          <div className="col-span-4 sm:col-span-5 text-xs font-mono text-slate-400 truncate">
+                            {isEmom
+                              ? `${currentExercise.emomIntervalSeconds || 60}s Interval Work`
+                              : set.timeFormatted || 'Complete All Stations'}
+                          </div>
+                          <div className="col-span-3 sm:col-span-3 flex items-center justify-center gap-1">
+                            <span className="text-[10px] font-mono text-slate-500">RPE</span>
+                            <input
+                              type="number"
+                              step="0.5"
+                              min="1"
+                              max="10"
+                              value={set.rpe !== undefined ? set.rpe : ''}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                handleUpdateSet(activeExerciseIndex, setIdx, 'rpe', raw === '' ? undefined : parseFloat(raw));
+                              }}
+                              className="w-12 text-center font-mono font-bold text-xs bg-[#0d1424] border border-slate-700/80 rounded-lg py-1 text-white focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                          <div className="col-span-2 flex items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCompleteSet(activeExerciseIndex, setIdx)}
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer ${
+                                set.completed
+                                  ? 'bg-emerald-500 text-slate-950 font-black shadow'
+                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700'
+                              }`}
+                            >
+                              <Check className="w-4 h-4 stroke-[2.5]" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     if (currentExercise.isTimed) {
-                      // TIMED / CARDIO SET ROW
+                      // STANDARD TIMED / CARDIO SET ROW
                       return (
                         <div
                           key={set.id}
@@ -944,12 +1786,10 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                           }`}
                         >
                           <div className="grid grid-cols-12 gap-2 items-center">
-                            {/* Set # */}
                             <div className="col-span-1 text-center font-bold font-mono text-sm text-slate-400">
                               {set.setNumber}
                             </div>
 
-                            {/* Previous (Desktop) */}
                             <div className="col-span-2 hidden sm:block text-xs text-slate-400 truncate font-mono">
                               {set.prevTimeFormatted ? (
                                 <span>
@@ -961,7 +1801,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                               )}
                             </div>
 
-                            {/* Distance Input */}
                             <div className="col-span-3 sm:col-span-3 flex items-center justify-center">
                               <input
                                 type="number"
@@ -976,7 +1815,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                               />
                             </div>
 
-                            {/* Time / Duration Input + Live Stopwatch */}
                             <div className="col-span-4 sm:col-span-3 flex items-center justify-center gap-1.5">
                               <input
                                 type="text"
@@ -991,7 +1829,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                 }
                                 className={`w-full max-w-[5rem] text-center font-mono font-bold text-xs sm:text-sm border rounded-lg py-1.5 text-white focus:outline-none focus:border-blue-500 ${
                                   isStopwatchActive
-                                    ? 'bg-blue-950/70 border-blue-500 text-blue-300 animate-pulse'
+                                    ? 'bg-blue-950/70 border-blue-500 text-blue-300'
                                     : 'bg-[#0d1424] border-slate-700/80'
                                 }`}
                               />
@@ -1001,7 +1839,7 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                                 onClick={() => handleToggleSetStopwatch(activeExerciseIndex, setIdx)}
                                 className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                                   isStopwatchActive
-                                    ? 'bg-blue-600 text-white font-black border-blue-500 animate-pulse'
+                                    ? 'bg-blue-600 text-white font-black border-blue-500'
                                     : 'bg-slate-800 hover:bg-slate-700 text-blue-400 border-slate-700'
                                 }`}
                                 title={isStopwatchActive ? 'Stop stopwatch' : 'Start live set stopwatch'}
@@ -1014,7 +1852,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                               </button>
                             </div>
 
-                            {/* RPE Input */}
                             <div className="col-span-2 sm:col-span-2 flex items-center justify-center">
                               <input
                                 type="number"
@@ -1031,7 +1868,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                               />
                             </div>
 
-                            {/* Complete Checkmark */}
                             <div className="col-span-2 sm:col-span-1 flex items-center justify-center">
                               <button
                                 type="button"
@@ -1061,12 +1897,10 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                             : 'bg-[#070c14] border-slate-800 hover:border-slate-700 text-slate-200'
                         }`}
                       >
-                        {/* Set # */}
                         <div className="col-span-1 text-center font-bold font-mono text-sm text-slate-400">
                           {set.setNumber}
                         </div>
 
-                        {/* Previous weight & reps (Desktop) */}
                         <div className="col-span-2 hidden sm:block text-xs text-slate-400 truncate font-mono">
                           {set.prevWeightLbs ? (
                             <span>
@@ -1077,7 +1911,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                           )}
                         </div>
 
-                        {/* Weight Input */}
                         <div className="col-span-4 sm:col-span-3 flex flex-col items-center justify-center">
                           <input
                             type="number"
@@ -1100,7 +1933,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                           ) : null}
                         </div>
 
-                        {/* Reps Input */}
                         <div className="col-span-2 sm:col-span-2 flex items-center justify-center">
                           <input
                             type="number"
@@ -1117,7 +1949,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                           />
                         </div>
 
-                        {/* RPE Input */}
                         <div className="col-span-3 sm:col-span-2 flex items-center justify-center">
                           <input
                             type="number"
@@ -1136,7 +1967,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                           />
                         </div>
 
-                        {/* Checkmark Button & Trash */}
                         <div className="col-span-2 sm:col-span-2 flex items-center justify-center gap-1.5">
                           <button
                             type="button"
@@ -1169,16 +1999,22 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
                 {/* Set Actions & Peak 1RM Summary */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2.5 border-t border-slate-800/80">
-                  <button
-                    type="button"
-                    onClick={() => handleAddSet(activeExerciseIndex)}
-                    className="w-full sm:w-auto px-3.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 border border-slate-700/70 transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Add Set</span>
-                  </button>
+                  {currentExercise.format !== 'amrap' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleAddSet(activeExerciseIndex)}
+                      className="w-full sm:w-auto px-3.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 border border-slate-700/70 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-blue-400" />
+                      <span>{currentExercise.format === 'superset' || currentExercise.format === 'circuit' ? 'Add Round' : 'Add Set'}</span>
+                    </button>
+                  ) : (
+                    <div className="text-[11px] font-mono text-slate-400">
+                      Log rounds + extra reps at time cap.
+                    </div>
+                  )}
 
-                  {/* Calculated 1RM and Avg RPE */}
+                  {/* Calculated 1RM / Volume and Avg RPE */}
                   {(() => {
                     const currentExCompletedSets = currentExercise.sets.filter((s) => s.completed);
                     const currentExRpeSets = currentExCompletedSets.filter(
@@ -1192,23 +2028,40 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                           ).toFixed(1)
                         : null;
 
+                    const supersetPeak1RM =
+                      currentExercise.format === 'superset'
+                        ? Math.max(
+                            0,
+                            ...currentExercise.sets.flatMap((s) =>
+                              (s.supersetEntries || []).map((entry) => calculate1RM(entry.weightLbs, entry.reps))
+                            )
+                          )
+                        : 0;
+
                     return (
                       <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2.5 font-mono">
-                        {!currentExercise.isTimed && (
+                        {currentExercise.format === 'superset' ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="text-slate-500">Peak 1RM:</span>
-                            <span className="font-bold text-blue-400">
-                              {Math.max(
-                                0,
-                                ...currentExercise.sets.map((s) => calculate1RM(s.weightLbs, s.reps))
-                              )}{' '}
-                              lbs
-                            </span>
+                            <span className="text-slate-500">Peak 1RM (SS):</span>
+                            <span className="font-bold text-indigo-400">{supersetPeak1RM} lbs</span>
                           </div>
+                        ) : (
+                          !currentExercise.isTimed && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-500">Peak 1RM:</span>
+                              <span className="font-bold text-blue-400">
+                                {Math.max(
+                                  0,
+                                  ...currentExercise.sets.map((s) => calculate1RM(s.weightLbs, s.reps))
+                                )}{' '}
+                                lbs
+                              </span>
+                            </div>
+                          )
                         )}
                         {currentExAvgRpe && (
                           <div className="flex items-center gap-1.5">
-                            {!currentExercise.isTimed && <span className="text-slate-700">·</span>}
+                            {(!currentExercise.isTimed || currentExercise.format === 'superset') && <span className="text-slate-700">·</span>}
                             <span className="text-slate-500">Avg RPE:</span>
                             <span className="font-bold text-blue-400">
                               {currentExAvgRpe}

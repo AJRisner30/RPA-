@@ -1,4 +1,11 @@
-import { ProgramKey, MuscleGroup } from '../types';
+import {
+  ProgramKey,
+  MuscleGroup,
+  WorkoutProgram,
+  ExerciseTemplate,
+  SupersetMovementItem,
+  BlockMovementItem,
+} from '../types';
 import {
   PROTOCOL_DATA,
   ProtocolDay,
@@ -14,6 +21,13 @@ import {
   getDistinctCircuitForDay,
   sanitizeExerciseList,
 } from './tacticalExerciseEngine';
+import {
+  getExerciseFormat,
+  parseSupersetDetails,
+  parseEmomDetails,
+  parseAmrapDetails,
+  inferMovementMuscleGroup,
+} from './workoutFormats';
 import {
   GeneratedWorkoutPlan,
   GeneratedDay,
@@ -503,7 +517,7 @@ function getMasterPhaseForWeek(baseKey: ProgramKey, weekNum: number, totalWeeksR
 }
 
 export interface AdaptationSummaryStats {
-  baseProgramKey: ProgramKey;
+  baseProgramKey: ProgramKey | string;
   baseProgramTitle: string;
   totalWeeks: number;
   totalDays: number;
@@ -516,11 +530,431 @@ export interface AdaptationSummaryStats {
 }
 
 /**
+ * Helper to run both equipment & injury substitution on a single movement name.
+ */
+function adaptSingleMovement(
+  rawName: string,
+  mg: MuscleGroup,
+  notes: string | undefined,
+  equipmentList: string[],
+  bannedRules: BannedLimitation[]
+): {
+  name: string;
+  eqSwapped: boolean;
+  clinicalSwapped: boolean;
+  reason?: string;
+} {
+  const eqResult = adaptExerciseForEquipment(rawName, equipmentList);
+  let workingName = eqResult.name;
+  let reason = eqResult.reason;
+  let clinicalSwapped = false;
+
+  if (bannedRules.length > 0) {
+    const sanitizedArr = sanitizeExerciseList(
+      [{ name: workingName, muscleGroup: mg, notes }],
+      bannedRules
+    );
+    const afterSanitize = sanitizedArr[0];
+    if (afterSanitize.name !== workingName) {
+      workingName = afterSanitize.name;
+      reason = `Clinically swapped from "${rawName}" (${bannedRules.map((b) => b.label).join(', ')})`;
+      clinicalSwapped = true;
+    }
+  }
+
+  return {
+    name: workingName,
+    eqSwapped: eqResult.adapted,
+    clinicalSwapped,
+    reason,
+  };
+}
+
+/**
+ * Adapts a Coach-published custom program or standalone single workout across injuries, equipment & ability level
+ * while faithfully preserving Straight Sets, Supersets, EMOMs, AMRAPs, and Circuits.
+ */
+export function adaptCustomCoachProgram(params: WorkoutGenerationRequest): GeneratedWorkoutPlan {
+  const customProg = params.customProgram!;
+  const fitnessLevel = params.fitnessLevel || 'Intermediate';
+  const levelLower = fitnessLevel.toLowerCase();
+  const isSingleWorkout = customProg.programKind === 'single_workout';
+
+  const weeksCount = isSingleWorkout
+    ? 1
+    : typeof params.scheduleWeeks === 'number' && params.scheduleWeeks >= 1 && params.scheduleWeeks <= 12
+    ? Math.round(params.scheduleWeeks)
+    : 4;
+
+  const rawLimitations = [
+    ...(params.injuries || []),
+    params.injuryNotes || '',
+    params.notes || '',
+  ].join(' ');
+  const bannedRules = extractBannedMovements(rawLimitations, params.injuries || []);
+
+  const templateDays =
+    customProg.schedule && customProg.schedule.length > 0
+      ? customProg.schedule
+      : [
+          {
+            day: 1,
+            focus: customProg.title,
+            isRestDay: false,
+            exercises: customProg.exercises || [],
+          },
+        ];
+
+  const schedule: GeneratedDay[] = [];
+  let clinicalSwapsCount = 0;
+  let equipmentSwapsCount = 0;
+  let scaledExercisesCount = 0;
+  let conditioningAdaptationsCount = 0;
+
+  let globalDayCounter = 0;
+
+  for (let weekNum = 1; weekNum <= weeksCount; weekNum++) {
+    const isDeloadWeek = !isSingleWorkout && (weekNum === 4 || weekNum === 8 || weekNum === 12);
+    const isPeakWeek = !isSingleWorkout && weekNum === weeksCount && weeksCount >= 4 && !isDeloadWeek;
+
+    templateDays.forEach((srcDay, dayIdx) => {
+      globalDayCounter += 1;
+      const srcExercises = srcDay.exercises || [];
+
+      if (srcDay.isRestDay || srcExercises.length === 0) {
+        schedule.push({
+          day: globalDayCounter,
+          focus: isSingleWorkout
+            ? srcDay.focus
+            : `Week ${weekNum} • Day ${dayIdx + 1}: ${srcDay.focus}`,
+          isRestDay: true,
+          warmup: srcDay.warmup,
+          exercises: [],
+        });
+        return;
+      }
+
+      const adaptedExercises: GeneratedExercise[] = srcExercises.map((tmpl: ExerciseTemplate, exIdx: number) => {
+        const format = getExerciseFormat(tmpl);
+        const uid = `adapt-coach-w${weekNum}-d${dayIdx + 1}-b${exIdx + 1}`;
+
+        // 1. SUPERSET BLOCK
+        if (format === 'superset') {
+          const parsedSS = parseSupersetDetails(tmpl);
+          const adaptedMovements: SupersetMovementItem[] = parsedSS.movements.map((mov) => {
+            const movMg = mov.muscleGroup || inferMovementMuscleGroup(mov.name);
+            const res = adaptSingleMovement(mov.name, movMg, mov.notes || tmpl.notes, params.equipment || [], bannedRules);
+            if (res.eqSwapped) equipmentSwapsCount++;
+            if (res.clinicalSwapped) clinicalSwapsCount++;
+
+            const scaledMov = scalePrescriptionForAbility(
+              tmpl.defaultSets || parsedSS.rounds,
+              mov.targetReps || '10',
+              tmpl.restPeriodSeconds || 75,
+              fitnessLevel,
+              false,
+              isDeloadWeek,
+              isPeakWeek,
+              weekNum
+            );
+
+            return {
+              ...mov,
+              name: res.name,
+              muscleGroup: movMg,
+              targetReps: scaledMov.reps,
+              originalExerciseName: res.name !== mov.name ? mov.name : undefined,
+              adaptationReason: res.reason,
+            };
+          });
+
+          const scaledRounds = scalePrescriptionForAbility(
+            tmpl.defaultSets || parsedSS.rounds || 3,
+            tmpl.targetReps || '10',
+            tmpl.restPeriodSeconds || 75,
+            fitnessLevel,
+            exIdx === 0,
+            isDeloadWeek,
+            isPeakWeek,
+            weekNum
+          );
+          scaledExercisesCount++;
+
+          const anySwap = adaptedMovements.find((m) => m.originalExerciseName);
+          return {
+            id: uid,
+            name: adaptedMovements.map((m) => m.name).join(' + '),
+            muscleGroup: tmpl.muscleGroup || 'Full Body',
+            type: 'superset',
+            format: 'superset',
+            defaultSets: scaledRounds.sets,
+            targetReps: adaptedMovements.map((m) => m.targetReps).join(' / '),
+            restPeriodSeconds: scaledRounds.rest,
+            targetRpe: scaledRounds.rpe,
+            supersetExercises: adaptedMovements,
+            originalExerciseName: anySwap ? parsedSS.title : undefined,
+            adaptationReason: anySwap?.adaptationReason,
+            scalingNote: scaledRounds.scalingSummary,
+            notes: [
+              anySwap ? `[ADAPTED: ${anySwap.adaptationReason}]` : '',
+              scaledRounds.scalingSummary ? `[${fitnessLevel} Scaling: ${scaledRounds.scalingSummary}]` : '',
+              tmpl.notes || '',
+            ]
+              .filter(Boolean)
+              .join(' • '),
+          };
+        }
+
+        // 2. EMOM BLOCK
+        if (format === 'emom') {
+          const parsedEmom = parseEmomDetails(tmpl);
+          const adaptedMovements: BlockMovementItem[] = parsedEmom.movements.map((mov) => {
+            const movMg = mov.muscleGroup || inferMovementMuscleGroup(mov.name);
+            const res = adaptSingleMovement(mov.name, movMg, tmpl.notes, params.equipment || [], bannedRules);
+            if (res.eqSwapped) equipmentSwapsCount++;
+            if (res.clinicalSwapped) clinicalSwapsCount++;
+            return {
+              ...mov,
+              name: res.name,
+              muscleGroup: movMg,
+              originalExerciseName: res.name !== mov.name ? mov.name : undefined,
+              adaptationReason: res.reason,
+            };
+          });
+
+          const origMins = parsedEmom.totalMinutes || 10;
+          const scaledMins = levelLower.includes('beginner')
+            ? Math.max(6, Math.round(origMins * 0.75))
+            : levelLower.includes('elite')
+            ? origMins + 2
+            : isDeloadWeek
+            ? Math.max(6, Math.round(origMins * 0.7))
+            : origMins;
+
+          const intervalSec = parsedEmom.intervalSeconds || 60;
+          const roundCount = Math.max(1, Math.round((scaledMins * 60) / intervalSec));
+          const targetRpe = levelLower.includes('beginner') ? 7 : levelLower.includes('elite') ? 9 : isDeloadWeek ? 6.5 : 8.5;
+          conditioningAdaptationsCount++;
+
+          const anySwap = adaptedMovements.find((m) => m.originalExerciseName);
+          return {
+            id: uid,
+            name: tmpl.name,
+            muscleGroup: tmpl.muscleGroup || 'Full Body',
+            type: 'emom',
+            format: 'emom',
+            defaultSets: roundCount,
+            targetReps: `${scaledMins} Min EMOM (Every ${intervalSec}s)`,
+            restPeriodSeconds: 0,
+            targetRpe,
+            emomMinutes: scaledMins,
+            emomIntervalSeconds: intervalSec,
+            emomMovements: adaptedMovements,
+            originalExerciseName: anySwap ? tmpl.name : undefined,
+            adaptationReason: anySwap?.adaptationReason || (scaledMins !== origMins ? `Scaled EMOM from ${origMins}m to ${scaledMins}m for ${fitnessLevel}` : undefined),
+            scalingNote: `${scaledMins}m @ RPE ${targetRpe}`,
+            notes: tmpl.notes || 'Complete work cleanly inside each interval.',
+          };
+        }
+
+        // 3. AMRAP BLOCK
+        if (format === 'amrap') {
+          const parsedAmrap = parseAmrapDetails(tmpl);
+          const adaptedMovements: BlockMovementItem[] = parsedAmrap.movements.map((mov) => {
+            const movMg = mov.muscleGroup || inferMovementMuscleGroup(mov.name);
+            const res = adaptSingleMovement(mov.name, movMg, tmpl.notes, params.equipment || [], bannedRules);
+            if (res.eqSwapped) equipmentSwapsCount++;
+            if (res.clinicalSwapped) clinicalSwapsCount++;
+            return {
+              ...mov,
+              name: res.name,
+              muscleGroup: movMg,
+              originalExerciseName: res.name !== mov.name ? mov.name : undefined,
+              adaptationReason: res.reason,
+            };
+          });
+
+          const origMins = parsedAmrap.durationMinutes || 12;
+          const scaledMins = levelLower.includes('beginner')
+            ? Math.max(6, Math.round(origMins * 0.75))
+            : levelLower.includes('elite')
+            ? origMins + 3
+            : isDeloadWeek
+            ? Math.max(6, Math.round(origMins * 0.7))
+            : origMins;
+          const targetRpe = levelLower.includes('beginner') ? 7.5 : levelLower.includes('elite') ? 9 : isDeloadWeek ? 6.5 : 8.5;
+          conditioningAdaptationsCount++;
+
+          const anySwap = adaptedMovements.find((m) => m.originalExerciseName);
+          return {
+            id: uid,
+            name: tmpl.name,
+            muscleGroup: tmpl.muscleGroup || 'Full Body',
+            type: 'amrap',
+            format: 'amrap',
+            defaultSets: 1,
+            targetReps: `${scaledMins} Min AMRAP`,
+            restPeriodSeconds: tmpl.restPeriodSeconds || 120,
+            targetRpe,
+            amrapDurationMinutes: scaledMins,
+            amrapMovements: adaptedMovements,
+            originalExerciseName: anySwap ? tmpl.name : undefined,
+            adaptationReason: anySwap?.adaptationReason || (scaledMins !== origMins ? `Scaled time cap from ${origMins}m to ${scaledMins}m for ${fitnessLevel}` : undefined),
+            scalingNote: `${scaledMins}m Cap @ RPE ${targetRpe}`,
+            notes: tmpl.notes || 'Steady sustained effort across full duration.',
+          };
+        }
+
+        // 4. CIRCUIT BLOCK
+        if (format === 'circuit') {
+          const origStations = tmpl.circuitStations || [];
+          const adaptedStations = origStations.map((st) => {
+            const res = adaptSingleMovement(st, inferMovementMuscleGroup(st), tmpl.notes, params.equipment || [], bannedRules);
+            if (res.eqSwapped) equipmentSwapsCount++;
+            if (res.clinicalSwapped) clinicalSwapsCount++;
+            return res.name;
+          });
+
+          const origRounds = tmpl.defaultSets || 4;
+          const scaledRounds = levelLower.includes('beginner')
+            ? Math.max(2, origRounds - 1)
+            : levelLower.includes('elite')
+            ? origRounds + 1
+            : isDeloadWeek
+            ? Math.max(2, origRounds - 1)
+            : origRounds;
+          const workSec = levelLower.includes('beginner') ? Math.max(25, (tmpl.workSeconds || 40) - 10) : (tmpl.workSeconds || 40);
+          const restSec = levelLower.includes('beginner') ? (tmpl.restSeconds || 20) + 10 : (tmpl.restSeconds || 20);
+          conditioningAdaptationsCount++;
+
+          return {
+            id: uid,
+            name: tmpl.name,
+            muscleGroup: tmpl.muscleGroup || 'Full Body',
+            type: 'circuit',
+            format: 'circuit',
+            defaultSets: scaledRounds,
+            targetReps: `${scaledRounds} Rounds (${workSec}s Work / ${restSec}s Rest)`,
+            restPeriodSeconds: tmpl.restPeriodSeconds || 60,
+            targetRpe: levelLower.includes('beginner') ? 7.5 : levelLower.includes('elite') ? 9 : 8.5,
+            circuitStations: adaptedStations,
+            workSeconds: workSec,
+            restSeconds: restSec,
+            scalingNote: `${scaledRounds} Rounds • ${workSec}s/${restSec}s`,
+            notes: tmpl.notes || '',
+          };
+        }
+
+        // 5. STRAIGHT SETS / CARDIO BLOCK
+        const res = adaptSingleMovement(
+          tmpl.name,
+          tmpl.muscleGroup || inferMovementMuscleGroup(tmpl.name),
+          tmpl.notes,
+          params.equipment || [],
+          bannedRules
+        );
+        if (res.eqSwapped) equipmentSwapsCount++;
+        if (res.clinicalSwapped) clinicalSwapsCount++;
+
+        const isCompound = exIdx <= 1 || (tmpl.restPeriodSeconds || 90) >= 120;
+        const scaled = scalePrescriptionForAbility(
+          tmpl.defaultSets || 3,
+          tmpl.targetReps || '8-10',
+          tmpl.restPeriodSeconds || 90,
+          fitnessLevel,
+          isCompound,
+          isDeloadWeek,
+          isPeakWeek,
+          weekNum
+        );
+        scaledExercisesCount++;
+
+        return {
+          id: uid,
+          name: res.name,
+          muscleGroup: tmpl.muscleGroup || inferMovementMuscleGroup(res.name),
+          type: tmpl.type || 'strength',
+          format: 'straight',
+          defaultSets: scaled.sets,
+          targetReps: scaled.reps,
+          restPeriodSeconds: scaled.rest,
+          targetRpe: scaled.rpe,
+          originalExerciseName: res.name !== tmpl.name ? tmpl.name : undefined,
+          adaptationReason: res.reason,
+          scalingNote: scaled.scalingSummary,
+          notes: [
+            res.reason ? `[ADAPTED: ${res.reason}]` : '',
+            scaled.scalingSummary ? `[${fitnessLevel} Scaling: ${scaled.scalingSummary}]` : '',
+            tmpl.notes || '',
+          ]
+            .filter(Boolean)
+            .join(' • '),
+        };
+      });
+
+      schedule.push({
+        day: globalDayCounter,
+        focus: isSingleWorkout
+          ? `${srcDay.focus} (${fitnessLevel} Adapted)`
+          : `Week ${weekNum} • Day ${dayIdx + 1}: ${srcDay.focus}`,
+        isRestDay: false,
+        warmup: srcDay.warmup,
+        conditioning: srcDay.conditioning,
+        exercises: adaptedExercises,
+      });
+    });
+  }
+
+  const activeInjuryLabels = bannedRules.map((r) => r.label);
+  const adaptationStats: AdaptationSummaryStats = {
+    baseProgramKey: customProg.id,
+    baseProgramTitle: customProg.title,
+    totalWeeks: weeksCount,
+    totalDays: schedule.length,
+    fitnessLevel,
+    clinicalSwapsCount,
+    equipmentSwapsCount,
+    scaledExercisesCount,
+    conditioningAdaptationsCount,
+    activeInjuryGuardrails: activeInjuryLabels,
+  };
+
+  return {
+    title: `${customProg.title} (${fitnessLevel} Adapted)`,
+    subtitle: `Coach Risner Custom Blueprint • ${isSingleWorkout ? 'Single Session' : `${weeksCount} Weeks`} • ${fitnessLevel}`,
+    category: customProg.category || 'Hybrid',
+    frequency: customProg.frequency || (isSingleWorkout ? 'Single Workout Session' : `${templateDays.length} Days / Week`),
+    scheduleDuration: isSingleWorkout
+      ? 'Adapted Single Workout Session'
+      : `${weeksCount}-Week Adapted Custom Program`,
+    estimatedDurationMinutes: customProg.estimatedDurationMinutes || params.sessionDurationMinutes || 60,
+    description: `Adapted from Coach Risner's custom blueprint "${customProg.title}" preserving Straight Sets, Supersets, EMOM, AMRAP, and Circuit structures calibrated for ${fitnessLevel} ability.`,
+    coachingPhilosophy: `Format-Aware Coach Adaptation: Every paired Superset, EMOM interval, AMRAP time cap, and Circuit station keeps its intended metabolic stimulus while movements, volume, and RPE adapt around your injuries and gear.`,
+    weeklyProgressionTips: [
+      `Follow target RPE caps across Straight Sets and Supersets before increasing external load.`,
+      activeInjuryLabels.length > 0
+        ? `Joint Guardrails Active: ${clinicalSwapsCount} movement(s) inside Coach's template were safely swapped (${activeInjuryLabels.join(', ')}).`
+        : `Ability Calibration (${fitnessLevel}): Sets, interval lengths, and RPE match your recovery profile.`,
+    ],
+    nutritionAdvice:
+      'Consume 1.0g protein per lb lean body weight daily and prioritize hydration + electrolytes around conditioning blocks.',
+    schedule,
+    source: 'coach-custom-program-adapter',
+    baseProgramKey: customProg.id,
+    programKind: customProg.programKind || (isSingleWorkout ? 'single_workout' : 'program'),
+    adaptationStats,
+  };
+}
+
+/**
  * Core Master Program Adaptation Engine:
- * Takes Coach Risner's authentic master programs and alters exercises, sets, reps,
- * RPE, and conditioning based on the athlete's injuries, ability level, and equipment.
+ * Takes Coach Risner's authentic master programs (or published custom programs/workouts)
+ * and alters exercises, sets, reps, RPE, and conditioning based on injuries, ability level, and equipment.
  */
 export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedWorkoutPlan {
+  if (params.customProgram) {
+    return adaptCustomCoachProgram(params);
+  }
   const baseKey: ProgramKey = (params.baseProgramKey as ProgramKey) || 'apex_protocol';
   const meta = getMasterProgramMetadata(baseKey);
   const fitnessLevel = params.fitnessLevel || 'Intermediate';

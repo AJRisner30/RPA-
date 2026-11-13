@@ -129,6 +129,30 @@
         "updatedAt": { "type": "string", "description": "Last update timestamp" }
       },
       "required": ["id", "officerUserId", "programTitle", "category"]
+    },
+    "CoachProgram": {
+      "title": "CoachProgram",
+      "description": "Shared custom workout programs and standalone single workouts published exclusively by Coach Aryan Risner (risneraryan@gmail.com) supporting Straight Sets, Supersets, EMOM, AMRAP, and Circuits.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the coach program or workout" },
+        "title": { "type": "string", "maxLength": 150, "description": "Program or workout title" },
+        "subtitle": { "type": "string", "maxLength": 300, "description": "Focus or subtitle" },
+        "category": { "type": "string", "maxLength": 80, "description": "Training category" },
+        "programKind": { "type": "string", "enum": ["program", "single_workout"], "description": "Whether this is a multi-day program or a single workout" },
+        "frequency": { "type": "string", "maxLength": 100, "description": "Weekly frequency" },
+        "estimatedDurationMinutes": { "type": "number", "description": "Estimated session duration" },
+        "description": { "type": "string", "maxLength": 5000, "description": "Program intent and overview" },
+        "exercises": { "type": "array", "description": "Day 1 or single-session template blocks" },
+        "schedule": { "type": "array", "description": "Multi-day training schedule blocks" },
+        "isPublished": { "type": "boolean", "description": "True when published for all authenticated users" },
+        "isCoachPublished": { "type": "boolean", "description": "Coach publication flag" },
+        "allowAiAdaptation": { "type": "boolean", "description": "Allow athletes to adapt via AI Adaptation Engine" },
+        "createdByEmail": { "type": "string", "maxLength": 150, "description": "Author coach email (risneraryan@gmail.com)" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["id", "title", "category", "exercises", "isPublished", "createdByEmail"]
     }
   },
   "firestore": {
@@ -151,6 +175,10 @@
     "/officerPrograms/{programId}": {
       "schema": "OfficerProgram",
       "description": "Private individualized officer programs uploaded specifically to one officer account and inaccessible to any other officer."
+    },
+    "/coachPrograms/{programId}": {
+      "schema": "CoachProgram",
+      "description": "Shared custom programs and standalone workouts created exclusively by Coach Aryan Risner and readable by all signed-in athletes when published."
     }
   }
 }

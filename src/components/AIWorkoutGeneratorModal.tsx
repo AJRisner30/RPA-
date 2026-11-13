@@ -27,6 +27,8 @@ interface AIWorkoutGeneratorModalProps {
   currentAthlete?: AthleteProfile;
   userEmail?: string;
   initialBaseProgramKey?: ProgramKey;
+  coachPublishedPrograms?: WorkoutProgram[];
+  initialCustomProgram?: WorkoutProgram | null;
 }
 
 export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = ({
@@ -39,14 +41,32 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   currentAthlete,
   userEmail,
   initialBaseProgramKey,
+  coachPublishedPrograms = [],
+  initialCustomProgram = null,
 }) => {
-  // Base Master Program to Adapt
+  // Base Master Program OR Coach Custom Program to Adapt
   const [baseProgramKey, setBaseProgramKey] = useState<ProgramKey>(
     initialBaseProgramKey || currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol'
   );
+  const [selectedCustomProgram, setSelectedCustomProgram] = useState<WorkoutProgram | null>(
+    initialCustomProgram || null
+  );
 
-  // Sync when modal opens with a specific program requested from WorkoutsTab
+  // Sync when modal opens with a specific program or Coach custom program requested from WorkoutsTab
   useEffect(() => {
+    if (!isOpen) return;
+    if (initialCustomProgram) {
+      setSelectedCustomProgram(initialCustomProgram);
+      const isSingle = initialCustomProgram.programKind === 'single_workout';
+      const defaultWks = isSingle ? 1 : 4;
+      setScheduleWeeks(defaultWks);
+      setScheduleDuration(isSingle ? 'weekly' : 'monthly');
+      setFrequency(initialCustomProgram.frequency || '4 Days / Week');
+      setGeneratedPlan(null);
+      return;
+    }
+
+    setSelectedCustomProgram(null);
     if (initialBaseProgramKey) {
       setBaseProgramKey(initialBaseProgramKey);
       const meta = getMasterProgramMetadata(initialBaseProgramKey);
@@ -55,9 +75,10 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       setScheduleDuration(`${defaultWks}weeks`);
       setFrequency(meta.frequency);
     }
-  }, [initialBaseProgramKey, isOpen]);
+  }, [initialBaseProgramKey, initialCustomProgram, isOpen]);
 
   const handleSelectBaseProgram = (progKey: ProgramKey) => {
+    setSelectedCustomProgram(null);
     setBaseProgramKey(progKey);
     const meta = getMasterProgramMetadata(progKey);
     const defaultWks = progKey === 'tactical_hypertrophy' ? 6 : progKey === 'universal_pat' ? 8 : 12;
@@ -67,6 +88,15 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     if (progKey === 'hybrid_db') {
       setEquipment(['Dumbbells & Adjustable Bench Only', 'Bodyweight & Pull-Up Bar Only']);
     }
+  };
+
+  const handleSelectCustomProgram = (prog: WorkoutProgram) => {
+    setSelectedCustomProgram(prog);
+    const isSingle = prog.programKind === 'single_workout';
+    const wks = isSingle ? 1 : 4;
+    setScheduleWeeks(wks);
+    setScheduleDuration(isSingle ? 'weekly' : 'monthly');
+    setFrequency(prog.frequency || '4 Days / Week');
   };
 
   // Intake state
@@ -172,7 +202,20 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
   if (!isOpen) return null;
 
-  const selectedMasterMeta = getMasterProgramMetadata(baseProgramKey);
+  const selectedMasterMeta = selectedCustomProgram
+    ? {
+        key: selectedCustomProgram.id as any,
+        title: selectedCustomProgram.title,
+        shortTitle: selectedCustomProgram.title,
+        subtitle: selectedCustomProgram.subtitle || 'Coach Custom Blueprint',
+        nativeWeeks: selectedCustomProgram.programKind === 'single_workout' ? 1 : 4,
+        recommendedWeeksOptions: selectedCustomProgram.programKind === 'single_workout' ? [1] : [4, 8, 12],
+        frequency: selectedCustomProgram.frequency || '4 Days / Week',
+        category: selectedCustomProgram.category || 'Hybrid',
+        summary: selectedCustomProgram.description || '',
+        defaultEquipment: 'Coach Prescribed Blueprint',
+      }
+    : getMasterProgramMetadata(baseProgramKey);
 
   const fitnessLevelOptions = [
     {
@@ -265,7 +308,8 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
     try {
       const plan = await generateWorkoutPlanClient({
-        baseProgramKey,
+        baseProgramKey: selectedCustomProgram ? selectedCustomProgram.id : baseProgramKey,
+        customProgram: selectedCustomProgram || undefined,
         goals: selectedGoals,
         fitnessLevel,
         frequency: selectedMasterMeta.frequency,
@@ -300,28 +344,52 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     }
   };
 
-  // Convert adapted plan to a valid app WorkoutProgram object, preserving all adaptation badges
+  // Convert adapted plan to a valid app WorkoutProgram object, preserving all adaptation & multi-format fields
+  const mapGeneratedExercise = (ex: any, fallbackId: string): ExerciseTemplate => {
+    const rawRest = ex.restPeriodSeconds;
+    const parsedRest = parseInt(String(rawRest), 10);
+    const cleanRest = rawRest === 0 ? 0 : !isNaN(parsedRest) && parsedRest > 0 ? parsedRest : 90;
+    return {
+      id: ex.id || fallbackId,
+      name: ex.name,
+      muscleGroup: ex.muscleGroup || 'Full Body',
+      type:
+        ex.type ||
+        (ex.name.toLowerCase().includes('run') || ex.name.toLowerCase().includes('circuit')
+          ? 'cardio'
+          : 'strength'),
+      format: ex.format,
+      supersetExercises: ex.supersetExercises,
+      emomMinutes: ex.emomMinutes,
+      emomIntervalSeconds: ex.emomIntervalSeconds,
+      emomMovements: ex.emomMovements,
+      amrapDurationMinutes: ex.amrapDurationMinutes,
+      amrapMovements: ex.amrapMovements,
+      circuitStations: ex.circuitStations,
+      workSeconds: ex.workSeconds,
+      restSeconds: ex.restSeconds,
+      defaultSets: ex.defaultSets || 3,
+      targetReps: ex.targetReps || '8-10 reps',
+      restPeriodSeconds: cleanRest,
+      targetRpe: ex.targetRpe || 8,
+      notes: ex.notes || '',
+      originalExerciseName: ex.originalExerciseName,
+      adaptationReason: ex.adaptationReason,
+      scalingNote: ex.scalingNote,
+    };
+  };
+
   const buildAppWorkoutProgram = (planData: GeneratedWorkoutPlan): WorkoutProgram => {
     const rawExercises: ExerciseTemplate[] = [];
     (planData.schedule || []).forEach((day: any) => {
       (day.exercises || []).forEach((ex: any) => {
         if (!rawExercises.some((e) => e.name === ex.name)) {
-          const restVal = parseInt(String(ex.restPeriodSeconds), 10);
-          const cleanRest = (!isNaN(restVal) && restVal > 0) ? restVal : 90;
-          rawExercises.push({
-            id: ex.id || `ai-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            name: ex.name,
-            muscleGroup: ex.muscleGroup || 'Full Body',
-            type: ex.type || (ex.name.toLowerCase().includes('run') || ex.name.toLowerCase().includes('circuit') ? 'cardio' : 'strength'),
-            defaultSets: ex.defaultSets || 3,
-            targetReps: ex.targetReps || '8-10 reps',
-            restPeriodSeconds: cleanRest,
-            targetRpe: ex.targetRpe || 8,
-            notes: ex.notes || '',
-            originalExerciseName: ex.originalExerciseName,
-            adaptationReason: ex.adaptationReason,
-            scalingNote: ex.scalingNote,
-          });
+          rawExercises.push(
+            mapGeneratedExercise(
+              ex,
+              `ai-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
+            )
+          );
         }
       });
     });
@@ -329,24 +397,12 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     const programSchedule = (planData.schedule || []).map((day: any, idx: number) => ({
       day: day.day || idx + 1,
       focus: day.focus || `Day ${day.day || idx + 1}`,
-      exercises: (day.exercises || []).map((ex: any, exIdx: number) => {
-        const restVal = parseInt(String(ex.restPeriodSeconds), 10);
-        const cleanRest = (!isNaN(restVal) && restVal > 0) ? restVal : 90;
-        return {
-          id: ex.id || `ai-day-${day.day || idx + 1}-${exIdx}`,
-          name: ex.name,
-          muscleGroup: ex.muscleGroup || 'Full Body',
-          type: ex.type || (ex.name.toLowerCase().includes('run') || ex.name.toLowerCase().includes('circuit') ? 'cardio' : 'strength'),
-          defaultSets: ex.defaultSets || 3,
-          targetReps: ex.targetReps || '8-10 reps',
-          restPeriodSeconds: cleanRest,
-          targetRpe: ex.targetRpe || 8,
-          notes: ex.notes || '',
-          originalExerciseName: ex.originalExerciseName,
-          adaptationReason: ex.adaptationReason,
-          scalingNote: ex.scalingNote,
-        };
-      }),
+      warmup: day.warmup,
+      conditioning: day.conditioning,
+      isRestDay: Boolean(day.isRestDay),
+      exercises: (day.exercises || []).map((ex: any, exIdx: number) =>
+        mapGeneratedExercise(ex, `ai-day-${day.day || idx + 1}-${exIdx}`)
+      ),
     }));
 
     const programId = `ai-prog-${Date.now().toString(36)}`;
@@ -360,6 +416,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       estimatedDurationMinutes: planData.estimatedDurationMinutes || sessionDurationMinutes,
       description: planData.description || `Adapted from ${selectedMasterMeta.title} for ${fitnessLevel} ability and clinical joint guardrails.`,
       baseProgramKey: planData.baseProgramKey || baseProgramKey,
+      programKind: planData.programKind,
       exercises: rawExercises.length > 0 ? rawExercises : (programSchedule[0]?.exercises || []),
       schedule: programSchedule,
     };
@@ -895,6 +952,11 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                                 </span>
                               </div>
                               <div className="flex flex-wrap items-center gap-1.5 ml-7 mt-1">
+                                {ex.format && ex.format !== 'straight' && (
+                                  <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/40">
+                                    {ex.format}
+                                  </span>
+                                )}
                                 <span className="text-[10px] text-blue-400 font-mono">
                                   {ex.muscleGroup || 'Full Body'}
                                 </span>
@@ -910,6 +972,26 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                                   </span>
                                 )}
                               </div>
+                              {ex.format === 'superset' && ex.supersetExercises && ex.supersetExercises.length > 0 && (
+                                <div className="ml-7 mt-1.5 space-y-1">
+                                  {ex.supersetExercises.map((sub: any, sIdx: number) => (
+                                    <div key={sIdx} className="text-[11px] font-mono text-indigo-200 flex items-center gap-1.5">
+                                      <span className="text-indigo-400 font-bold">A{sIdx + 1}:</span>
+                                      <span>{sub.name}</span>
+                                      <span className="text-slate-400">({sub.targetReps})</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {(ex.emomMovements || ex.amrapMovements) && (
+                                <div className="ml-7 mt-1.5 space-y-0.5">
+                                  {(ex.emomMovements || ex.amrapMovements || []).map((mov: any, mIdx: number) => (
+                                    <div key={mIdx} className="text-[11px] font-mono text-slate-300">
+                                      • {mov.name} {mov.targetReps ? `(${mov.targetReps})` : ''}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
 
                             {/* Sets x Reps */}
@@ -1158,7 +1240,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {MASTER_PROGRAMS_CATALOG.map((prog) => {
-                    const isSelected = baseProgramKey === prog.key;
+                    const isSelected = !selectedCustomProgram && baseProgramKey === prog.key;
                     return (
                       <button
                         key={prog.key}
@@ -1194,37 +1276,83 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                       </button>
                     );
                   })}
+
+                  {/* Coach Published Custom Programs & Single Workouts enabled for AI Adaptation */}
+                  {coachPublishedPrograms
+                    .filter((cp) => cp.allowAiAdaptation !== false && cp.isPublished !== false)
+                    .map((cp) => {
+                      const isSelected = selectedCustomProgram?.id === cp.id;
+                      const isSingle = cp.programKind === 'single_workout';
+                      return (
+                        <button
+                          key={cp.id}
+                          type="button"
+                          onClick={() => handleSelectCustomProgram(cp)}
+                          className={`p-3.5 rounded-2xl text-left border transition cursor-pointer flex flex-col justify-between gap-2 ${
+                            isSelected
+                              ? 'bg-indigo-950/80 border-indigo-400 text-white shadow-lg ring-1 ring-indigo-400/50'
+                              : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <span className="font-black text-xs sm:text-sm uppercase tracking-wide font-athletic text-white">
+                                {cp.title}
+                              </span>
+                              <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded shrink-0 ${
+                                isSelected ? 'bg-indigo-500 text-white' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              }`}>
+                                {isSingle ? 'COACH SINGLE' : 'COACH CUSTOM'}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">
+                              {cp.description || cp.subtitle}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[10px] font-mono text-indigo-300">
+                            <span>{cp.frequency}</span>
+                            <span>•</span>
+                            <span>{cp.category}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
                 </div>
 
                 {/* Adaptation Horizon Selector */}
                 <div className="p-3 rounded-xl bg-[#080d19] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <span className="text-xs font-bold text-white uppercase font-athletic block">
-                      Program Horizon to Generate: <span className="text-amber-400">{scheduleWeeks} Weeks ({scheduleWeeks * 7} Days)</span>
+                      Program Horizon to Generate: <span className="text-amber-400">{scheduleWeeks === 1 && selectedCustomProgram?.programKind === 'single_workout' ? '1 Single Adapted Workout' : `${scheduleWeeks} Weeks (${scheduleWeeks * 7} Days)`}</span>
                     </span>
                     <span className="text-[11px] text-slate-400">
-                      Includes built-in Week 4 &amp; Week 8 deloads and progressive mesocycle transitions from {selectedMasterMeta.shortTitle}.
+                      {selectedCustomProgram?.programKind === 'single_workout'
+                        ? 'Adapts every movement, superset, EMOM, AMRAP, and circuit in Coach’s standalone session.'
+                        : `Includes built-in Week 4 & Week 8 deloads and progressive transitions from ${selectedMasterMeta.shortTitle}.`}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {availableWeekOptions.map((wk) => (
-                      <button
-                        key={wk}
-                        type="button"
-                        onClick={() => {
-                          setScheduleWeeks(wk);
-                          setScheduleDuration(wk === 4 ? 'monthly' : `${wk}weeks`);
-                        }}
-                        className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition cursor-pointer border ${
-                          scheduleWeeks === wk
-                            ? 'bg-blue-600 text-white border-blue-400 shadow'
-                            : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
-                        }`}
-                      >
-                        {wk}W
-                      </button>
-                    ))}
-                  </div>
+                  {!(selectedCustomProgram?.programKind === 'single_workout') && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {(selectedCustomProgram ? [4, 8, 12] : availableWeekOptions).map((wk) => (
+                        <button
+                          key={wk}
+                          type="button"
+                          onClick={() => {
+                            setScheduleWeeks(wk);
+                            setScheduleDuration(wk === 4 ? 'monthly' : `${wk}weeks`);
+                          }}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition cursor-pointer border ${
+                            scheduleWeeks === wk
+                              ? 'bg-blue-600 text-white border-blue-400 shadow'
+                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          {wk}W
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

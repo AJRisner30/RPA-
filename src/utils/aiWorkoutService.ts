@@ -1,4 +1,12 @@
-import { WorkoutProgram, ExerciseTemplate, MuscleGroup, ProgramKey } from '../types';
+import {
+  WorkoutProgram,
+  ExerciseTemplate,
+  MuscleGroup,
+  ProgramKey,
+  WorkoutFormat,
+  SupersetMovementItem,
+  BlockMovementItem,
+} from '../types';
 import {
   buildDynamicCalibratedPlan,
   extractBannedMovements,
@@ -13,6 +21,7 @@ import {
 
 export interface WorkoutGenerationRequest {
   baseProgramKey?: ProgramKey | string;
+  customProgram?: WorkoutProgram;
   goals: string[];
   fitnessLevel: string;
   frequency: string;
@@ -39,8 +48,17 @@ export interface GeneratedExercise {
   restPeriodSeconds: number;
   targetRpe: number;
   notes: string;
-  type?: 'strength' | 'cardio' | 'core' | 'circuit';
+  type?: 'strength' | 'cardio' | 'core' | 'circuit' | 'superset' | 'emom' | 'amrap';
+  format?: WorkoutFormat;
+  supersetExercises?: SupersetMovementItem[];
+  emomMinutes?: number;
+  emomIntervalSeconds?: number;
+  emomMovements?: BlockMovementItem[];
+  amrapDurationMinutes?: number;
+  amrapMovements?: BlockMovementItem[];
   circuitStations?: string[];
+  workSeconds?: number;
+  restSeconds?: number;
   originalExerciseName?: string;
   adaptationReason?: string;
   scalingNote?: string;
@@ -69,6 +87,7 @@ export interface GeneratedWorkoutPlan {
   schedule: GeneratedDay[];
   source?: string;
   baseProgramKey?: ProgramKey | string;
+  programKind?: 'program' | 'single_workout';
   adaptationStats?: AdaptationSummaryStats;
 }
 

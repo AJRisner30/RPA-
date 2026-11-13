@@ -5,9 +5,10 @@ import {
   ChevronUp, Timer, TrendingUp, Calendar, 
   ChevronLeft, ChevronRight, CheckCircle2,
   SlidersHorizontal, ArrowRight, Activity, Award, RotateCcw,
-  LogOut, RefreshCw, BatteryCharging, Compass
+  LogOut, RefreshCw, BatteryCharging, Compass,
+  Layers, Edit3, Trash2, EyeOff, Plus, Sparkles
 } from 'lucide-react';
-import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey, WorkoutSessionLog } from '../types';
+import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile, ProgramKey, WorkoutSessionLog, WorkoutFormat } from '../types';
 import { PROTOCOL_DATA, COACH_RULES, ProtocolDay, getDefaultRestPeriod, parseExerciseString, getApexWeekData, getTacticalHypertrophyWeekData, getUniversalPatWeekData } from '../data/protocolData';
 import { soundManager } from '../utils/audio';
 import { useRestTimer } from '../hooks/useRestTimer';
@@ -18,6 +19,15 @@ import { isMasterExemptAccount, isCoachSession } from '../utils/athleteAuth';
 import { auth } from '../firebase';
 import { isCircuitExercise } from '../utils/circuitParser';
 import { TacticalCircuitCard } from './TacticalCircuitCard';
+import {
+  getExerciseFormat,
+  getFormatLabel,
+  isSupersetExercise,
+  parseSupersetDetails,
+  parseEmomDetails,
+  parseAmrapDetails,
+  parseCircuitDetails,
+} from '../utils/workoutFormats';
 
 // Custom Running Shoe SVG icon
 const ShoeIcon = () => (
@@ -57,6 +67,10 @@ interface WorkoutsTabProps {
   readinessTier?: string;
   latestCoachLog?: WorkoutSessionLog | null;
   onNavigateToLogs?: () => void;
+  coachPublishedPrograms?: WorkoutProgram[];
+  onAdaptCustomProgram?: (program: WorkoutProgram) => void;
+  onOpenCoachBuilder?: (programToEdit?: WorkoutProgram | null) => void;
+  onDeleteCoachProgram?: (programId: string) => Promise<void>;
 }
 
 export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
@@ -76,6 +90,10 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   readinessTier,
   latestCoachLog,
   onNavigateToLogs,
+  coachPublishedPrograms = [],
+  onAdaptCustomProgram,
+  onOpenCoachBuilder,
+  onDeleteCoachProgram,
 }) => {
   const isMasterExempt = Boolean(
     (currentAthlete?.email && isMasterExemptAccount(currentAthlete.email)) ||
@@ -145,6 +163,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   const [showOverloadRules, setShowOverloadRules] = useState<boolean>(false);
   const [dayViewMode, setDayViewMode] = useState<number | 'all'>('all');
   const [customAiWeekFilter, setCustomAiWeekFilter] = useState<number | 'all'>('all');
+  const [coachDaySelection, setCoachDaySelection] = useState<Record<string, number>>({});
+  const [confirmDeleteCoachId, setConfirmDeleteCoachId] = useState<string | null>(null);
+  const [deletingCoachId, setDeletingCoachId] = useState<string | null>(null);
 
   // Inline exercise countdown timer (synchronized with wall clock via useRestTimer)
   const {
@@ -534,8 +555,11 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         }
 
         const configuredRest = getExerciseRest(str);
+        const rawNotes = parsed.notes
+          ? parsed.notes
+          : `Patrol Ready Protocol (${day.day} - ${day.focus}). Target Rest: ${configuredRest}s.`;
 
-        return {
+        const candidateTemplate: ExerciseTemplate = {
           id: `proto-ex-${idx}-${Date.now()}`,
           name,
           muscleGroup,
@@ -545,10 +569,58 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           weight_lbs: defaultWeightLbs,
           restPeriodSeconds: configuredRest,
           progression_rules: progressionRuleObj,
-          notes: parsed.notes
-            ? parsed.notes
-            : `Patrol Ready Protocol (${day.day} - ${day.focus}). Target Rest: ${configuredRest}s.`
+          notes: rawNotes,
         };
+
+        const detectedFormat = getExerciseFormat(candidateTemplate);
+        if (detectedFormat === 'superset') {
+          const ss = parseSupersetDetails(candidateTemplate);
+          return {
+            ...candidateTemplate,
+            format: 'superset',
+            type: 'superset',
+            defaultSets: ss.rounds,
+            supersetExercises: ss.movements,
+          };
+        }
+        if (detectedFormat === 'emom') {
+          const emom = parseEmomDetails(candidateTemplate);
+          return {
+            ...candidateTemplate,
+            format: 'emom',
+            type: 'emom',
+            emomMinutes: emom.totalMinutes,
+            emomIntervalSeconds: emom.intervalSeconds,
+            emomMovements: emom.movements,
+          };
+        }
+        if (detectedFormat === 'amrap') {
+          const amrap = parseAmrapDetails(candidateTemplate);
+          return {
+            ...candidateTemplate,
+            format: 'amrap',
+            type: 'amrap',
+            amrapDurationMinutes: amrap.durationMinutes,
+            amrapMovements: amrap.movements,
+          };
+        }
+        if (detectedFormat === 'circuit') {
+          const cir = parseCircuitDetails(candidateTemplate);
+          return {
+            ...candidateTemplate,
+            format: 'circuit',
+            type: 'circuit',
+            defaultSets: cir.rounds,
+            restPeriodSeconds: cir.restBetweenRoundsSeconds,
+            circuitExercises: cir.stations.map((st) => ({
+              name: st.name,
+              targetReps: st.detail || 'Prescribed',
+              muscleGroup: 'Full Body' as MuscleGroup,
+            })),
+          };
+        }
+
+        return candidateTemplate;
       });
 
     // If day has conditioning (run / pursuit / sprints) and is not rest, append as trackable cardio
@@ -777,9 +849,346 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     ? currentPhase.days 
     : [currentPhase.days[dayViewMode] || currentPhase.days[0]];
 
+  const getProgramDetectedFormats = (prog: WorkoutProgram): WorkoutFormat[] => {
+    const allExercises: ExerciseTemplate[] = [
+      ...(prog.exercises || []),
+      ...((prog.schedule || []).flatMap((d) => d.exercises || [])),
+    ];
+    const set = new Set<WorkoutFormat>();
+    allExercises.forEach((ex) => {
+      set.add(getExerciseFormat(ex));
+    });
+    return Array.from(set);
+  };
+
+  const renderCoachLibrarySection = () => {
+    const visiblePrograms = coachPublishedPrograms.filter(
+      (p) => isMasterExempt || p.isPublished !== false
+    );
+    if (visiblePrograms.length === 0 && !isMasterExempt) {
+      return null;
+    }
+
+    return (
+      <div className="bg-gradient-to-br from-[#0b1526] via-[#0e1b31] to-[#091220] border-2 border-indigo-500/40 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shrink-0 shadow">
+              <Layers className="w-5 h-5 text-indigo-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-indigo-300 font-black px-2 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/40">
+                  Coach Custom Drops
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  Straight • Superset • EMOM • AMRAP • Circuit
+                </span>
+              </div>
+              <h2 className="text-base sm:text-lg font-black text-white font-athletic uppercase tracking-wide mt-0.5">
+                Coach Risner&apos;s Custom Programs &amp; Single Workouts
+              </h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Launch custom Coach AJ workouts directly or run them through the Adaptive AI Engine to fit your injuries, gear, and ability level.
+              </p>
+            </div>
+          </div>
+
+          {isMasterExempt && onOpenCoachBuilder && (
+            <button
+              type="button"
+              onClick={() => onOpenCoachBuilder(null)}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-400 hover:to-blue-500 text-white font-black uppercase text-xs font-athletic tracking-wider shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 self-start sm:self-auto"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Custom Program / Workout</span>
+            </button>
+          )}
+        </div>
+
+        {visiblePrograms.length === 0 ? (
+          <div className="p-6 rounded-xl bg-[#08101e] border border-dashed border-slate-700 text-center space-y-2">
+            <p className="text-xs sm:text-sm text-slate-300 font-medium">
+              No custom Coach programs or workouts published yet.
+            </p>
+            {isMasterExempt && onOpenCoachBuilder && (
+              <button
+                type="button"
+                onClick={() => onOpenCoachBuilder(null)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Build Your First Custom Program</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {visiblePrograms.map((prog) => {
+              const schedule = prog.schedule && prog.schedule.length > 0 ? prog.schedule : [];
+              const selectedDayIdx = Math.min(
+                coachDaySelection[prog.id] ?? 0,
+                Math.max(0, schedule.length - 1)
+              );
+              const activeScheduleDay = schedule[selectedDayIdx];
+              const dayExercises = activeScheduleDay
+                ? activeScheduleDay.exercises || []
+                : prog.exercises || [];
+              const isSelectedDayRest =
+                schedule.length > 0 &&
+                (activeScheduleDay?.isRestDay || dayExercises.length === 0);
+              const detectedFormats = getProgramDetectedFormats(prog);
+              const isSingleWorkout = prog.programKind === 'single_workout' || schedule.length <= 1;
+
+              return (
+                <div
+                  key={prog.id}
+                  className={`rounded-2xl border p-4 flex flex-col justify-between gap-3.5 transition-all ${
+                    prog.isPublished === false
+                      ? 'bg-[#0a101d] border-amber-500/40'
+                      : 'bg-[#08101e] border-slate-800 hover:border-indigo-500/50'
+                  }`}
+                >
+                  <div className="space-y-2.5">
+                    {/* Badges & Admin Controls Row */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded border ${
+                            isSingleWorkout
+                              ? 'bg-sky-500/15 text-sky-300 border-sky-500/40'
+                              : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                          }`}
+                        >
+                          {isSingleWorkout ? 'Single Workout' : `${schedule.length}-Day Program`}
+                        </span>
+
+                        {isMasterExempt && prog.isPublished === false && (
+                          <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                            <EyeOff className="w-3 h-3" />
+                            <span>Draft (Coach Only)</span>
+                          </span>
+                        )}
+
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                          {prog.category}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {prog.estimatedDurationMinutes || 45}m
+                        </span>
+                      </div>
+
+                      {isMasterExempt && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          {onOpenCoachBuilder && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenCoachBuilder(prog)}
+                              className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-indigo-600/30 text-slate-300 hover:text-indigo-200 border border-slate-700 transition cursor-pointer"
+                              title="Edit custom program"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {onDeleteCoachProgram && (
+                            confirmDeleteCoachId === prog.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  disabled={deletingCoachId === prog.id}
+                                  onClick={async () => {
+                                    setDeletingCoachId(prog.id);
+                                    try {
+                                      await onDeleteCoachProgram(prog.id);
+                                    } finally {
+                                      setDeletingCoachId(null);
+                                      setConfirmDeleteCoachId(null);
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase cursor-pointer"
+                                >
+                                  {deletingCoachId === prog.id ? '...' : 'Confirm'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteCoachId(null)}
+                                  className="px-1.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteCoachId(prog.id)}
+                                className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-red-900/40 text-slate-400 hover:text-red-300 border border-slate-700 transition cursor-pointer"
+                                title="Delete custom program"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-white font-athletic uppercase tracking-wide">
+                        {prog.title}
+                      </h3>
+                      {prog.subtitle && (
+                        <p className="text-[11px] text-indigo-300 font-semibold mt-0.5">
+                          {prog.subtitle}
+                        </p>
+                      )}
+                      {prog.description && (
+                        <p className="text-xs text-slate-400 line-clamp-2 mt-1">
+                          {prog.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Format Badges */}
+                    {detectedFormats.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {detectedFormats.map((fmt) => (
+                          <span
+                            key={fmt}
+                            className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
+                              fmt === 'superset'
+                                ? 'bg-purple-500/15 text-purple-300 border-purple-500/40'
+                                : fmt === 'emom'
+                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                                : fmt === 'amrap'
+                                ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                                : fmt === 'circuit'
+                                ? 'bg-orange-500/15 text-orange-300 border-orange-500/40'
+                                : 'bg-blue-500/15 text-blue-300 border-blue-500/40'
+                            }`}
+                          >
+                            {getFormatLabel(fmt)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Day selector for multi-day Coach custom programs */}
+                    {schedule.length > 1 && (
+                      <div className="pt-1">
+                        <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+                          Select Training Day to Preview / Launch
+                        </label>
+                        <select
+                          value={selectedDayIdx}
+                          onChange={(e) =>
+                            setCoachDaySelection((prev) => ({
+                              ...prev,
+                              [prog.id]: Number(e.target.value),
+                            }))
+                          }
+                          className="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white font-semibold focus:outline-none focus:border-indigo-400"
+                        >
+                          {schedule.map((d, dIdx) => (
+                            <option key={dIdx} value={dIdx}>
+                              Day {d.day || dIdx + 1}: {d.focus} {d.isRestDay || (d.exercises?.length || 0) === 0 ? '(Rest)' : `(${d.exercises?.length || 0} blocks)`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Compact Block Preview */}
+                    <div className="bg-[#0b1322] border border-slate-800/80 rounded-xl p-2.5 space-y-1.5">
+                      {isSelectedDayRest ? (
+                        <p className="text-[11px] text-slate-400 italic">
+                          Active Rest / Recovery Day
+                        </p>
+                      ) : dayExercises.length === 0 ? (
+                        <p className="text-[11px] text-slate-400 italic">
+                          No exercise blocks configured yet.
+                        </p>
+                      ) : (
+                        dayExercises.slice(0, 4).map((blk, bIdx) => {
+                          const blkFormat = getExerciseFormat(blk);
+                          return (
+                            <div key={blk.id || bIdx} className="flex items-center justify-between gap-2 text-[11px]">
+                              <span className="text-slate-200 font-semibold truncate">
+                                <span className="text-indigo-400 font-mono mr-1">{bIdx + 1}.</span>
+                                {blk.name}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                                {blkFormat === 'superset'
+                                  ? `${blk.supersetExercises?.length || 2} mvts × ${blk.defaultSets}`
+                                  : blkFormat === 'emom'
+                                  ? `${blk.emomMinutes || blk.defaultSets}m EMOM`
+                                  : blkFormat === 'amrap'
+                                  ? `${blk.amrapDurationMinutes || 12}m AMRAP`
+                                  : blkFormat === 'circuit'
+                                  ? `${blk.defaultSets} rds`
+                                  : `${blk.defaultSets}×${blk.targetReps}`}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+                      {dayExercises.length > 4 && (
+                        <span className="text-[10px] font-mono text-indigo-300 block">
+                          +{dayExercises.length - 4} more blocks
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Card CTAs */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={isSelectedDayRest || dayExercises.length === 0}
+                      onClick={() => {
+                        const launchTitle =
+                          schedule.length > 1 && activeScheduleDay
+                            ? `${prog.title} — Day ${activeScheduleDay.day || selectedDayIdx + 1}: ${activeScheduleDay.focus}`
+                            : prog.title;
+                        onStartWorkout({
+                          ...prog,
+                          title: launchTitle,
+                          exercises: dayExercises,
+                        });
+                      }}
+                      className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black uppercase text-xs font-athletic tracking-wider flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-white" />
+                      <span>{schedule.length > 1 ? `Start Day ${selectedDayIdx + 1}` : 'Start Workout'}</span>
+                    </button>
+
+                    {prog.allowAiAdaptation !== false && onAdaptCustomProgram && (
+                      <button
+                        type="button"
+                        onClick={() => onAdaptCustomProgram(prog)}
+                        className="py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 font-black uppercase text-xs font-athletic tracking-wider flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shrink-0"
+                        title="Adapt this Coach program for injuries, equipment, and ability level"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Adapt With AI</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (!hasCompletedQuestionnaire && !isMasterExempt) {
     return (
       <div className="space-y-6">
+        {/* COACH CUSTOM PROGRAMS & WORKOUTS */}
+        {renderCoachLibrarySection()}
+
         {/* COACH AJ'S LATEST DUTY WORKOUT SPOTLIGHT CARD - VISIBLE TO EVERY ATHLETE */}
         {latestCoachLog && (
           <div className="bg-gradient-to-r from-[#0b172a] via-[#0e1d35] to-[#0b172a] border-2 border-amber-500/40 hover:border-amber-500/60 rounded-2xl p-4 shadow-xl relative overflow-hidden transition-all">
@@ -1449,6 +1858,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         )}
       </div>
 
+      {/* COACH CUSTOM PROGRAMS & WORKOUTS LIBRARY */}
+      {renderCoachLibrarySection()}
+
       {/* Dynamic Program Content - Smooth CSS Fade-in Transition When Switching Programs */}
       <div key={`${selectedProgram}-${activeApexPhaseKey}-${activeApexWeek}-${activeTacticalWeek}-${activePatWeek}`} className="animate-tab-fade space-y-6">
         {selectedProgram === 'custom_ai' ? (
@@ -1735,16 +2147,26 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
                             const cleanExerciseName = ex.name.replace(/\[.*?\]/g, '').trim();
                             const currentRest = exerciseRestTimes[cleanExerciseName] || ex.restPeriodSeconds || 90;
+                            const exFormat = getExerciseFormat(ex);
+                            const ssDetails = exFormat === 'superset' ? parseSupersetDetails(ex) : null;
+                            const emomDetails = exFormat === 'emom' ? parseEmomDetails(ex) : null;
+                            const amrapDetails = exFormat === 'amrap' ? parseAmrapDetails(ex) : null;
                             return (
                               <div
                                 key={ex.id || exIdx}
                                 className={`p-3.5 rounded-xl bg-[#0a0f1d] border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                                   ex.originalExerciseName
                                     ? 'border-amber-500/50 hover:border-amber-400'
+                                    : exFormat === 'superset'
+                                    ? 'border-purple-500/40 hover:border-purple-400'
+                                    : exFormat === 'emom'
+                                    ? 'border-emerald-500/40 hover:border-emerald-400'
+                                    : exFormat === 'amrap'
+                                    ? 'border-amber-500/40 hover:border-amber-400'
                                     : 'border-slate-800 hover:border-blue-500/40'
                                 }`}
                               >
-                                <div>
+                                <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className="w-5 h-5 rounded-md bg-blue-500/20 text-blue-300 font-mono text-xs font-black flex items-center justify-center shrink-0">
                                       {exIdx + 1}
@@ -1752,6 +2174,19 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                     <h4 className="font-bold text-white text-xs sm:text-sm font-athletic">
                                       {ex.name}
                                     </h4>
+                                    {exFormat !== 'straight' && (
+                                      <span
+                                        className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded border ${
+                                          exFormat === 'superset'
+                                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                                            : exFormat === 'emom'
+                                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                            : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                        }`}
+                                      >
+                                        {getFormatLabel(exFormat)}
+                                      </span>
+                                    )}
                                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-500/30">
                                       {ex.muscleGroup}
                                     </span>
@@ -1767,6 +2202,45 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                                       </span>
                                     )}
                                   </div>
+
+                                  {ssDetails && ssDetails.movements.length > 0 && (
+                                    <div className="mt-2 ml-7 space-y-1">
+                                      {ssDetails.movements.map((m, mIdx) => (
+                                        <div key={mIdx} className="flex items-center gap-2 text-[11px]">
+                                          <span className="font-mono font-black text-purple-300 bg-purple-950/70 border border-purple-500/30 px-1.5 py-0.5 rounded">
+                                            A{mIdx + 1}
+                                          </span>
+                                          <span className="text-slate-200 font-semibold">{m.name}</span>
+                                          <span className="text-slate-400 font-mono">({m.targetReps})</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {emomDetails && emomDetails.movements.length > 0 && (
+                                    <div className="mt-2 ml-7 space-y-1">
+                                      {emomDetails.movements.map((m, mIdx) => (
+                                        <div key={mIdx} className="flex items-center gap-2 text-[11px]">
+                                          <span className="font-mono font-bold text-emerald-300">•</span>
+                                          <span className="text-slate-200 font-semibold">{m.name}</span>
+                                          <span className="text-slate-400 font-mono">({m.targetReps})</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {amrapDetails && amrapDetails.isMultiMovementBlock && amrapDetails.movements.length > 0 && (
+                                    <div className="mt-2 ml-7 space-y-1">
+                                      {amrapDetails.movements.map((m, mIdx) => (
+                                        <div key={mIdx} className="flex items-center gap-2 text-[11px]">
+                                          <span className="font-mono font-bold text-amber-300">•</span>
+                                          <span className="text-slate-200 font-semibold">{m.name}</span>
+                                          <span className="text-slate-400 font-mono">({m.targetReps})</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
                                   {ex.notes && (
                                     <p className="text-[11px] text-slate-400 mt-1 ml-7 italic">
                                       {ex.notes}
@@ -2589,11 +3063,18 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                         const currentRest = getExerciseRest(exerciseStr);
                         const overloadMatch = exerciseStr.match(/\[(Overload:.*?)\]/);
                         const cleanExerciseName = exerciseStr.replace(/\[.*?\]/g, '').trim();
+                        const protoSuperset = isSupersetExercise({ name: cleanExerciseName, notes: exerciseStr })
+                          ? parseSupersetDetails({ name: cleanExerciseName, notes: exerciseStr })
+                          : null;
 
                         return (
                           <div
                             key={i}
-                            className="bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all"
+                            className={`bg-zinc-950/80 border rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+                              protoSuperset
+                                ? 'border-purple-500/40 hover:border-purple-400/70'
+                                : 'border-zinc-800/80 hover:border-zinc-700/80'
+                            }`}
                           >
                             {/* Exercise Details */}
                             <div className="flex items-start gap-2.5 min-w-0">
@@ -2602,9 +3083,27 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                               </span>
 
                               <div>
-                                <span className="font-bold text-white text-sm tracking-wide block">
-                                  {cleanExerciseName}
-                                </span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-white text-sm tracking-wide">
+                                    {cleanExerciseName}
+                                  </span>
+                                  {protoSuperset && (
+                                    <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                                      Superset
+                                    </span>
+                                  )}
+                                </div>
+
+                                {protoSuperset && protoSuperset.movements.length >= 2 && (
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    {protoSuperset.movements.map((m, mIdx) => (
+                                      <span key={mIdx} className="text-[11px] text-slate-300 inline-flex items-center gap-1">
+                                        <span className="font-mono font-bold text-purple-300">A{mIdx + 1}:</span>
+                                        <span>{m.name}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
 
                                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                   {overloadMatch && (

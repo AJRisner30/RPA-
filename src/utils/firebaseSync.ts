@@ -665,5 +665,121 @@ export async function deleteCustomProgramFromFirestore(programId: string): Promi
   }
 }
 
+/**
+ * Subscribes in real-time to custom programs & single workouts created by Coach Aryan Risner.
+ * Regular signed-in users receive published items only (matching Firestore list rules).
+ * Coach admin (risneraryan@gmail.com) receives both published and draft items.
+ */
+export function subscribeToCoachPublishedPrograms(
+  isAdminUser: boolean,
+  onPrograms: (programs: WorkoutProgram[]) => void
+): Unsubscribe {
+  const path = 'coachPrograms';
+  try {
+    const q = isAdminUser
+      ? collection(db, path)
+      : query(collection(db, path), where('isPublished', '==', true));
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const list: WorkoutProgram[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            title: data.title || 'Coach Custom Program',
+            subtitle: data.subtitle || '',
+            category: data.category || 'Hybrid',
+            frequency: data.frequency || '4 Days / Week',
+            estimatedDurationMinutes: data.estimatedDurationMinutes || 60,
+            description: data.description || '',
+            exercises: data.exercises || [],
+            schedule: data.schedule || [],
+            programKind: data.programKind || 'program',
+            isCoachPublished: data.isCoachPublished !== false,
+            isPublished: data.isPublished !== false,
+            allowAiAdaptation: data.allowAiAdaptation !== false,
+            createdByEmail: data.createdByEmail || 'risneraryan@gmail.com',
+            createdAt: data.createdAt || '',
+            updatedAt: data.updatedAt || '',
+          });
+        });
+
+        list.sort((a, b) => (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || ''));
+        onPrograms(list);
+      },
+      (error) => {
+        console.warn('[Firebase] coachPrograms subscription notice:', error);
+        onPrograms([]);
+      }
+    );
+  } catch (error) {
+    console.warn('[Firebase] Error creating coachPrograms subscription:', error);
+    onPrograms([]);
+    return () => {};
+  }
+}
+
+/**
+ * Saves or updates a Coach-authored shared custom program or single workout in Firestore.
+ * Restricted strictly to risneraryan@gmail.com by security rules and client check.
+ */
+export async function saveCoachProgramToFirestore(
+  program: WorkoutProgram
+): Promise<void> {
+  const currentEmail = (auth.currentUser?.email || '').trim().toLowerCase();
+  if (currentEmail !== 'risneraryan@gmail.com') {
+    throw new Error('Unauthorized: Only Coach Aryan Risner may publish shared custom programs.');
+  }
+
+  const cleanId = (program.id && program.id.trim().length > 0)
+    ? program.id.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
+    : `coach_prog_${Date.now()}`;
+  const path = `coachPrograms/${cleanId}`;
+
+  try {
+    const cleanDoc = {
+      id: cleanId,
+      title: program.title.slice(0, 150),
+      subtitle: (program.subtitle || '').slice(0, 300),
+      category: program.category || 'Hybrid',
+      programKind: program.programKind === 'single_workout' ? 'single_workout' : 'program',
+      frequency: (program.frequency || '4 Days / Week').slice(0, 100),
+      estimatedDurationMinutes: Math.max(5, Math.min(360, Number(program.estimatedDurationMinutes) || 60)),
+      description: (program.description || '').slice(0, 5000),
+      exercises: (program.exercises || []).slice(0, 100),
+      schedule: (program.schedule || []).slice(0, 100),
+      isPublished: program.isPublished !== false,
+      isCoachPublished: true,
+      allowAiAdaptation: program.allowAiAdaptation !== false,
+      createdByEmail: 'risneraryan@gmail.com',
+      createdAt: program.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const sanitized = sanitizeForFirestore(cleanDoc);
+    await setDoc(doc(db, 'coachPrograms', cleanId), sanitized);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Deletes a Coach-authored shared custom program or single workout from Firestore.
+ */
+export async function deleteCoachProgramFromFirestore(programId: string): Promise<void> {
+  const currentEmail = (auth.currentUser?.email || '').trim().toLowerCase();
+  if (currentEmail !== 'risneraryan@gmail.com') {
+    throw new Error('Unauthorized: Only Coach Aryan Risner may delete shared custom programs.');
+  }
+  const path = `coachPrograms/${programId}`;
+  try {
+    await deleteDoc(doc(db, 'coachPrograms', programId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 
 

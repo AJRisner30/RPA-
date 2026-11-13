@@ -50,6 +50,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { AIWorkoutGeneratorModal } from './components/AIWorkoutGeneratorModal';
 import { AISingleDayWorkoutModal } from './components/AISingleDayWorkoutModal';
+import { CoachProgramBuilderModal } from './components/CoachProgramBuilderModal';
 import { useFirebase } from './context/FirebaseContext';
 import { 
   subscribeToUserWorkoutLogs, 
@@ -57,10 +58,13 @@ import {
   subscribeToOfficerProgram,
   subscribeToUserCustomPrograms,
   subscribeToCoachWorkoutLogs,
+  subscribeToCoachPublishedPrograms,
   cleanUpLegacyMockCoachLogs,
   saveWorkoutLogToFirestore,
   saveAthleteToFirestore,
-  saveCustomProgramToFirestore
+  saveCustomProgramToFirestore,
+  saveCoachProgramToFirestore,
+  deleteCoachProgramFromFirestore
 } from './utils/firebaseSync';
 
 export default function App() {
@@ -90,12 +94,19 @@ export default function App() {
   // AI Workout Architect Generator modal & active custom AI program
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState<boolean>(false);
   const [adapterTargetProgramKey, setAdapterTargetProgramKey] = useState<ProgramKey | undefined>(undefined);
+  const [adapterCustomProgram, setAdapterCustomProgram] = useState<WorkoutProgram | null>(null);
   const [isSingleDayModalOpen, setIsSingleDayModalOpen] = useState<boolean>(false);
   const [activeCustomAIProgram, setActiveCustomAIProgram] = useState<WorkoutProgram | null>(() => 
     getStoredActiveCustomAIProgram()
   );
 
+  // Coach-only Custom Programs & Single Workouts (risneraryan@gmail.com authors; all users can view & adapt)
+  const [coachPublishedPrograms, setCoachPublishedPrograms] = useState<WorkoutProgram[]>([]);
+  const [isCoachBuilderOpen, setIsCoachBuilderOpen] = useState<boolean>(false);
+  const [editingCoachProgram, setEditingCoachProgram] = useState<WorkoutProgram | null>(null);
+
   const handleOpenProgramAdapter = (baseKey?: ProgramKey) => {
+    setAdapterCustomProgram(null);
     if (baseKey) {
       setAdapterTargetProgramKey(baseKey);
     } else if (activeProgramKey !== 'custom_ai') {
@@ -104,6 +115,39 @@ export default function App() {
       setAdapterTargetProgramKey(activeCustomAIProgram.baseProgramKey as ProgramKey);
     }
     setIsAIGeneratorOpen(true);
+  };
+
+  const handleOpenCustomProgramAdapter = (program: WorkoutProgram) => {
+    setAdapterCustomProgram(program);
+    setIsAIGeneratorOpen(true);
+  };
+
+  const handleOpenCoachBuilder = (programToEdit?: WorkoutProgram | null) => {
+    if (!isMasterExempt) return;
+    setEditingCoachProgram(programToEdit || null);
+    setIsCoachBuilderOpen(true);
+  };
+
+  const handleSaveCoachProgram = async (program: WorkoutProgram) => {
+    if (!isMasterExempt || !user) return;
+    await saveCoachProgramToFirestore(program);
+    setCoachPublishedPrograms((prev) => {
+      const idx = prev.findIndex((p) => p.id === program.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = program;
+        return next;
+      }
+      return [program, ...prev];
+    });
+    setIsCoachBuilderOpen(false);
+    setEditingCoachProgram(null);
+  };
+
+  const handleDeleteCoachProgram = async (programId: string) => {
+    if (!isMasterExempt) return;
+    await deleteCoachProgramFromFirestore(programId);
+    setCoachPublishedPrograms((prev) => prev.filter((p) => p.id !== programId));
   };
 
   // Guided App Tour & Feature Showcase state
@@ -147,6 +191,7 @@ export default function App() {
   // Android Back Button handler: close open modals or return to workouts
   const hasOpenModal = 
     activeLiveProgram !== null || 
+    isCoachBuilderOpen ||
     isGuidedTourOpen ||
     isSingleDayModalOpen ||
     isAIGeneratorOpen ||
@@ -160,12 +205,16 @@ export default function App() {
   const handleCloseTopModal = () => {
     if (activeLiveProgram !== null) {
       setActiveLiveProgram(null);
+    } else if (isCoachBuilderOpen) {
+      setIsCoachBuilderOpen(false);
+      setEditingCoachProgram(null);
     } else if (isGuidedTourOpen) {
       setIsGuidedTourOpen(false);
     } else if (isSingleDayModalOpen) {
       setIsSingleDayModalOpen(false);
     } else if (isAIGeneratorOpen) {
       setIsAIGeneratorOpen(false);
+      setAdapterCustomProgram(null);
     } else if (isCodeModalOpen) {
       setIsCodeModalOpen(false);
     } else if (isSquareSuccessModalOpen) {
@@ -332,7 +381,12 @@ export default function App() {
       }
     });
 
-    // 5. Clean up any legacy fictitious mock coach logs from Firestore
+    // 5. Subscribe to Coach AJ's published custom programs & single workouts
+    const unsubscribeCoachProgs = subscribeToCoachPublishedPrograms(isMasterExempt, (incoming) => {
+      setCoachPublishedPrograms(incoming);
+    });
+
+    // 6. Clean up any legacy fictitious mock coach logs from Firestore
     cleanUpLegacyMockCoachLogs().catch((err) => {
       console.warn('[Firebase] Legacy coach logs cleanup note:', err);
     });
@@ -342,6 +396,7 @@ export default function App() {
       unsubscribeAthlete();
       unsubscribeOfficerProg();
       unsubscribeCustomProgs();
+      unsubscribeCoachProgs();
     };
   }, [user, isMasterExempt]);
 
@@ -762,6 +817,10 @@ export default function App() {
                 readinessTier={readiness.tier}
                 latestCoachLog={coachLogs[0] || null}
                 onNavigateToLogs={() => setActiveTab('logs')}
+                coachPublishedPrograms={coachPublishedPrograms}
+                onAdaptCustomProgram={handleOpenCustomProgramAdapter}
+                onOpenCoachBuilder={isMasterExempt ? handleOpenCoachBuilder : undefined}
+                onDeleteCoachProgram={isMasterExempt ? handleDeleteCoachProgram : undefined}
               />
             )}
 
@@ -977,7 +1036,10 @@ export default function App() {
       {/* AI Tactical Workout Plan Architect Modal */}
       <AIWorkoutGeneratorModal
         isOpen={isAIGeneratorOpen}
-        onClose={() => setIsAIGeneratorOpen(false)}
+        onClose={() => {
+          setIsAIGeneratorOpen(false);
+          setAdapterCustomProgram(null);
+        }}
         onActivateProgram={(program) => {
           saveActiveCustomAIProgram(program);
           setActiveCustomAIProgram(program);
@@ -1013,7 +1075,23 @@ export default function App() {
         userEmail={user?.email || ''}
         onSwitchToSingleDay={() => setIsSingleDayModalOpen(true)}
         initialBaseProgramKey={adapterTargetProgramKey}
+        coachPublishedPrograms={coachPublishedPrograms}
+        initialCustomProgram={adapterCustomProgram}
       />
+
+      {/* Coach-Only Custom Program & Workout Builder Modal (risneraryan@gmail.com only) */}
+      {isMasterExempt && (
+        <CoachProgramBuilderModal
+          isOpen={isCoachBuilderOpen}
+          onClose={() => {
+            setIsCoachBuilderOpen(false);
+            setEditingCoachProgram(null);
+          }}
+          initialProgram={editingCoachProgram}
+          onSaveProgram={handleSaveCoachProgram}
+          userEmail={user?.email || 'risneraryan@gmail.com'}
+        />
+      )}
 
       {/* AI Single Day On-Demand Workout Modal */}
       <AISingleDayWorkoutModal

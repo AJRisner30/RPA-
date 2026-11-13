@@ -15,9 +15,33 @@ export interface ProgressionRule {
   action?: string;
 }
 
+export type WorkoutFormat = 'straight' | 'superset' | 'emom' | 'amrap' | 'circuit';
+
+export interface SupersetMovementItem {
+  name: string;
+  targetReps: string;
+  muscleGroup?: MuscleGroup;
+  weight_lbs?: number;
+  notes?: string;
+  originalExerciseName?: string;
+  adaptationReason?: string;
+}
+
+export interface BlockMovementItem {
+  name: string;
+  targetReps: string;
+  muscleGroup?: MuscleGroup;
+  notes?: string;
+  originalExerciseName?: string;
+  adaptationReason?: string;
+}
+
 export interface ProgramScheduleDay {
   day: number;
   focus: string;
+  warmup?: string;
+  conditioning?: string;
+  isRestDay?: boolean;
   exercises: ExerciseTemplate[];
 }
 
@@ -31,7 +55,17 @@ export interface ExerciseTemplate {
   restPeriodSeconds: number; // e.g. 90
   notes?: string;
   videoGuide?: string;
-  type?: 'strength' | 'cardio' | 'core' | 'circuit';
+  type?: 'strength' | 'cardio' | 'core' | 'circuit' | 'superset' | 'emom' | 'amrap';
+  format?: WorkoutFormat;
+  supersetExercises?: SupersetMovementItem[];
+  emomMinutes?: number;
+  emomIntervalSeconds?: number;
+  emomMovements?: BlockMovementItem[];
+  amrapDurationMinutes?: number;
+  amrapMovements?: BlockMovementItem[];
+  circuitStations?: string[];
+  workSeconds?: number;
+  restSeconds?: number;
   distance_miles?: number;
   weight_lbs?: number;
   pace?: string;
@@ -53,6 +87,23 @@ export interface WorkoutProgram {
   exercises: ExerciseTemplate[];
   schedule?: ProgramScheduleDay[];
   baseProgramKey?: string;
+  programKind?: 'program' | 'single_workout';
+  isCoachPublished?: boolean;
+  isPublished?: boolean;
+  allowAiAdaptation?: boolean;
+  createdByEmail?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SupersetLiveEntry {
+  name: string;
+  muscleGroup?: MuscleGroup;
+  weightLbs: number;
+  reps: number;
+  targetReps?: string;
+  prevWeightLbs?: number;
+  prevReps?: number;
 }
 
 export interface LiveSet {
@@ -70,6 +121,10 @@ export interface LiveSet {
   prevReps?: number;
   prevTimeFormatted?: string;
   isTimed?: boolean;
+  supersetEntries?: SupersetLiveEntry[];
+  amrapRoundsCompleted?: number;
+  amrapExtraReps?: number;
+  emomRoundsCompleted?: number;
 }
 
 export interface AutoOverloadRecommendation {
@@ -102,6 +157,16 @@ export interface LiveExerciseSession {
   targetRpe?: number;
   progressionRules?: ProgressionRule;
   isTimed?: boolean;
+  format?: WorkoutFormat;
+  supersetExercises?: SupersetMovementItem[];
+  emomMinutes?: number;
+  emomIntervalSeconds?: number;
+  emomMovements?: BlockMovementItem[];
+  amrapDurationMinutes?: number;
+  amrapMovements?: BlockMovementItem[];
+  circuitStations?: string[];
+  workSeconds?: number;
+  restSeconds?: number;
   distanceMiles?: number;
   distance_miles?: number;
   autoOverload?: AutoOverloadRecommendation;
@@ -129,6 +194,8 @@ export interface WorkoutSessionLog {
     exerciseName: string;
     muscleGroup: MuscleGroup;
     isTimed?: boolean;
+    format?: WorkoutFormat;
+    supersetGroupName?: string;
     sets: {
       setNumber: number;
       weightLbs: number;
@@ -138,6 +205,10 @@ export interface WorkoutSessionLog {
       distanceMiles?: number;
       rpe?: number;
       estimated1RM: number;
+      amrapRoundsCompleted?: number;
+      amrapExtraReps?: number;
+      emomRoundsCompleted?: number;
+      supersetEntries?: SupersetLiveEntry[];
     }[];
   }[];
 }
