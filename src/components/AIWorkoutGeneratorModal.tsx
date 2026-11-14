@@ -79,15 +79,13 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
   const handleSelectBaseProgram = (progKey: ProgramKey) => {
     setSelectedCustomProgram(null);
-    setBaseProgramKey(progKey);
-    const meta = getMasterProgramMetadata(progKey);
-    const defaultWks = progKey === 'tactical_hypertrophy' ? 6 : progKey === 'universal_pat' ? 8 : 12;
+    const normalizedKey = progKey === 'hybrid_db' ? 'hybrid_protocol' : progKey;
+    setBaseProgramKey(normalizedKey);
+    const meta = getMasterProgramMetadata(normalizedKey);
+    const defaultWks = normalizedKey === 'tactical_hypertrophy' ? 6 : normalizedKey === 'universal_pat' ? 8 : 12;
     setScheduleWeeks(defaultWks);
     setScheduleDuration(`${defaultWks}weeks`);
     setFrequency(meta.frequency);
-    if (progKey === 'hybrid_db') {
-      setEquipment(['Dumbbells & Adjustable Bench Only', 'Bodyweight & Pull-Up Bar Only']);
-    }
   };
 
   const handleSelectCustomProgram = (prog: WorkoutProgram) => {
@@ -414,6 +412,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       category: (planData.category as any) || selectedMasterMeta.category || 'Hybrid',
       frequency: planData.frequency || selectedMasterMeta.frequency,
       estimatedDurationMinutes: planData.estimatedDurationMinutes || sessionDurationMinutes,
+      recommendedWarmupId: 'warmup-dime-mandatory',
       description: planData.description || `Adapted from ${selectedMasterMeta.title} for ${fitnessLevel} ability and clinical joint guardrails.`,
       baseProgramKey: planData.baseProgramKey || baseProgramKey,
       programKind: planData.programKind,
@@ -512,7 +511,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
 
   // Available week horizon buttons based on the selected master program
   const availableWeekOptions = baseProgramKey === 'apex_protocol'
-    ? [4, 6, 8, 12, 26]
+    ? [4, 8, 12, 26, 52]
     : baseProgramKey === 'tactical_hypertrophy'
     ? [4, 6, 12]
     : baseProgramKey === 'universal_pat'
@@ -584,7 +583,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   Adapting {selectedMasterMeta.shortTitle}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-                  Preserving Coach Risner&apos;s authentic split &amp; mesocycle structure while swapping contraindicated movements and scaling volume to {fitnessLevel} ability.
+                  {!selectedCustomProgram && baseProgramKey === 'apex_protocol'
+                    ? 'Preserving the 52-Week Program’s built-in sets, reps, and quarterly progression while adapting exercises for injuries and equipment.'
+                    : `Preserving Coach Risner’s authentic split & mesocycle structure while swapping contraindicated movements and scaling volume to ${fitnessLevel} ability.`}
                 </p>
               </div>
 
@@ -607,7 +608,11 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                   generationStep >= 3 ? 'bg-blue-950/40 border-blue-500/50 text-blue-200' : 'bg-slate-900 border-slate-800 text-slate-500'
                 }`}>
                   <CheckCircle2 className={`w-4 h-4 ${generationStep >= 3 ? 'text-blue-400' : 'text-slate-600'}`} />
-                  <span>3. Scaling sets, reps, RPE &amp; conditioning to {fitnessLevel}</span>
+                  <span>
+                    {!selectedCustomProgram && baseProgramKey === 'apex_protocol'
+                      ? '3. Preserving built-in 52-week sets, reps & progression rules'
+                      : `3. Scaling sets, reps, RPE & conditioning to ${fitnessLevel}`}
+                  </span>
                 </div>
               </div>
             </div>
@@ -636,7 +641,9 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                       </span>
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border bg-sky-950/80 text-sky-300 border-sky-500/40">
                         <Award className="w-3 h-3 text-sky-400" />
-                        {fitnessLevel} Scaling
+                        {generatedPlan.baseProgramKey === 'apex_protocol'
+                          ? 'Built-In 52-Wk Progression'
+                          : `${fitnessLevel} Scaling`}
                       </span>
                       {(selectedInjuries.length > 0 || injuryNotes.trim().length > 0 || (generatedPlan.adaptationStats?.clinicalSwapsCount || 0) > 0) && (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border bg-amber-500/20 text-amber-300 border-amber-500/40">
@@ -692,9 +699,11 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                       </span>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[#080f1d] border border-sky-500/30">
-                      <span className="text-[10px] font-mono uppercase text-slate-400 block">Ability Calibration</span>
+                      <span className="text-[10px] font-mono uppercase text-slate-400 block">Sets &amp; Reps Progression</span>
                       <span className="text-xs font-black text-sky-300 font-mono block mt-0.5">
-                        {generatedPlan.adaptationStats.abilityLevel} ({generatedPlan.adaptationStats.scaledExercisesCount} Lifts Scaled)
+                        {generatedPlan.baseProgramKey === 'apex_protocol'
+                          ? 'Built-In 52-Wk Preserved'
+                          : `${generatedPlan.adaptationStats.fitnessLevel || fitnessLevel} (${generatedPlan.adaptationStats.scaledExercisesCount} Lifts Scaled)`}
                       </span>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[#080f1d] border border-emerald-500/30">
@@ -1363,40 +1372,58 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                     <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[11px] font-mono flex items-center justify-center">2</span>
                     <span>Ability Level (Scales Sets, Reps, Rest &amp; Target RPE)</span>
                   </label>
-                  <span className="text-[11px] font-mono text-sky-400">Auto-calibrates intensity &amp; volume</span>
+                  <span className="text-[11px] font-mono text-sky-400">
+                    {!selectedCustomProgram && baseProgramKey === 'apex_protocol'
+                      ? 'Excluded for 52-Week Program'
+                      : 'Auto-calibrates intensity & volume'}
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {fitnessLevelOptions.map((lvl) => {
-                    const isSelected = fitnessLevel === lvl.id;
-                    return (
-                      <button
-                        key={lvl.id}
-                        type="button"
-                        onClick={() => setFitnessLevel(lvl.id)}
-                        className={`p-3 rounded-2xl text-left border transition cursor-pointer flex items-start gap-3 ${
-                          isSelected
-                            ? 'bg-blue-950/60 border-blue-500 text-white shadow-md shadow-blue-950/40 ring-1 ring-blue-500/40'
-                            : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
-                        }`}
-                      >
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
-                          isSelected ? 'border-blue-400 bg-blue-600' : 'border-slate-700 bg-slate-900'
-                        }`}>
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                        <div>
-                          <span className="font-bold text-xs uppercase tracking-wide block font-athletic">
-                            {lvl.label}
-                          </span>
-                          <span className="text-[11px] text-slate-400 mt-0.5 block leading-snug">
-                            {lvl.desc}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                {!selectedCustomProgram && baseProgramKey === 'apex_protocol' ? (
+                  <div className="p-3.5 rounded-2xl bg-emerald-950/35 border border-emerald-500/40 text-xs text-slate-200 flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <span className="font-black uppercase text-emerald-300 font-athletic tracking-wide block">
+                        Sets &amp; Reps Excluded from Ability Scaling (Built-In 52-Week Progression)
+                      </span>
+                      <p className="text-[11px] text-slate-300 leading-relaxed">
+                        The <strong>Law Enforcement 52-Week Fitness &amp; Readiness Program</strong> already includes built-in 4-quarter periodization, low-end set/rep initialization, every-4th-week 40% deloads, and intra-session Set 1 auto-pacing. Prescribed sets and reps are preserved intact—Steps 3 &amp; 4 below still customize exercises for injuries, equipment, and conditioning preferences.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {fitnessLevelOptions.map((lvl) => {
+                      const isSelected = fitnessLevel === lvl.id;
+                      return (
+                        <button
+                          key={lvl.id}
+                          type="button"
+                          onClick={() => setFitnessLevel(lvl.id)}
+                          className={`p-3 rounded-2xl text-left border transition cursor-pointer flex items-start gap-3 ${
+                            isSelected
+                              ? 'bg-blue-950/60 border-blue-500 text-white shadow-md shadow-blue-950/40 ring-1 ring-blue-500/40'
+                              : 'bg-[#0b1220] hover:bg-[#101a2e] border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                            isSelected ? 'border-blue-400 bg-blue-600' : 'border-slate-700 bg-slate-900'
+                          }`}>
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
+                          <div>
+                            <span className="font-bold text-xs uppercase tracking-wide block font-athletic">
+                              {lvl.label}
+                            </span>
+                            <span className="text-[11px] text-slate-400 mt-0.5 block leading-snug">
+                              {lvl.desc}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* STEP 3: PHYSICAL INJURIES, SURGERIES & BANNED EXERCISES */}

@@ -1674,6 +1674,116 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
 
 export const INITIAL_WARMUPS: WarmUpRoutine[] = [
   {
+    id: 'warmup-dime-mandatory',
+    title: 'Mandatory 10-Minute DIME Warm-Up (Recommended for All Programs)',
+    category: 'Full Body / CNS',
+    durationMinutes: 10,
+    description:
+      'Never do long static stretches before lifting or sprinting—it temporarily reduces strength and power. Complete this 9-move Dynamic Integrated Movement Enhancement (DIME) circuit before every workout to warm up joints and prevent knee and back injuries. Cool-Down (5–10 Mins): Finish every workout with light walking and 20–30 second static stretches for hip flexors, hamstrings, calves, and chest.',
+    focusMuscles: ['Quads & Glutes', 'Hips & Knees', 'Core & Lumbar', 'Shoulders', 'Ankle Stability'],
+    steps: [
+      {
+        id: 'dime-1-bw-squats',
+        name: '1. Bodyweight Squats',
+        targetArea: 'Hips, Knees & Quads',
+        repsText: '10 reps',
+        cues: [
+          'Feet shoulder-width apart, brace your core and keep your back flat.',
+          'Squat until your thighs are parallel to the floor, then drive smoothly to standing.'
+        ],
+        coachingPoint: 'Lubricates the knee and hip joints and grooves parallel squat depth.'
+      },
+      {
+        id: 'dime-2-squat-jumps',
+        name: '2. Squat Jumps',
+        targetArea: 'Lower-Body Power & Elastic Tendons',
+        repsText: '8 reps',
+        cues: [
+          'Quarter-to-parallel squat, swing arms and jump upward with crisp intent.',
+          'Land softly on mid-foot with knees tracking over toes to absorb force.'
+        ],
+        coachingPoint: 'Activates fast-twitch motor units and prepares tendons for sprinting and lifting.'
+      },
+      {
+        id: 'dime-3-forward-lunges',
+        name: '3. Forward Lunges',
+        targetArea: 'Hip Flexors, Quads & Single-Leg Stability',
+        repsText: '8 reps / leg',
+        cues: [
+          'Step forward with a tall torso until both knees reach ~90 degrees.',
+          'Push decisively through the front heel to return to starting stance.'
+        ],
+        coachingPoint: 'Opens tight patrol-driving hip flexors and warms up unilateral leg drive.'
+      },
+      {
+        id: 'dime-4-side-plank',
+        name: '4. Side Plank',
+        targetArea: 'Lateral Core (Obliques & Quadratus Lumborum)',
+        repsText: '20 sec / side',
+        cues: [
+          'Stack elbow directly under shoulder, body in a rigid straight line from head to heels.',
+          'Brace lateral core and glutes with zero hip sag for 20 seconds per side.'
+        ],
+        coachingPoint: 'Builds lateral spinal stiffness to protect your lower back under duty belt load.'
+      },
+      {
+        id: 'dime-5-push-ups',
+        name: '5. Push-Ups',
+        targetArea: 'Chest, Shoulders, Triceps & Scapulae',
+        repsText: '10 reps',
+        cues: [
+          'Hands slightly wider than shoulders, body locked in a rigid plank.',
+          'Lower chest with elbows at ~45°, press back to full lockout.'
+        ],
+        coachingPoint: 'Primes pressing musculature, rotator cuffs, and anterior core bracing.'
+      },
+      {
+        id: 'dime-6-single-leg-reach',
+        name: '6. Single-Leg Reach',
+        targetArea: 'Hamstrings, Glutes & Balance',
+        repsText: '6 reps / leg',
+        cues: [
+          'Balance on one foot with a slight knee bend; hinge at the hips while reaching forward.',
+          'Keep hips square to the deck and feel a controlled hamstring lengthen before standing tall.'
+        ],
+        coachingPoint: 'Primes posterior chain proprioception and protects hamstrings during pursuits.'
+      },
+      {
+        id: 'dime-7-side-hop-balance',
+        name: '7. Side Hop to Balance',
+        targetArea: 'Ankle & Knee Lateral Stabilization',
+        repsText: '6 hops / side',
+        cues: [
+          'Hop laterally from one foot to the other and stick the landing for 1–2 seconds.',
+          'Keep knee aligned over mid-foot with zero inward valgus collapse.'
+        ],
+        coachingPoint: 'Trains lateral deceleration and protects ankles/ACL during sharp foot-pursuit cuts.'
+      },
+      {
+        id: 'dime-8-ice-skaters',
+        name: '8. Ice Skaters (Lateral)',
+        targetArea: 'Frontal-Plane Power & Hip Abductors',
+        repsText: '8 / side',
+        cues: [
+          'Bound smoothly side-to-side from leg to leg in a low athletic stance.',
+          'Drive laterally off the outside hip while sweeping arms for rhythm.'
+        ],
+        coachingPoint: 'Elevates heart rate and primes multi-directional agility.'
+      },
+      {
+        id: 'dime-9-l-hops',
+        name: '9. "L" Hops (Forward/Side)',
+        targetArea: 'Multi-Planar Ankle/Knee Reactivity',
+        repsText: '5 hops / leg',
+        cues: [
+          'On one leg, hop forward then immediately hop laterally in an "L" pattern, then return.',
+          'Stay light and springy on the ball of your foot.'
+        ],
+        coachingPoint: 'Completes CNS and joint preparation for heavy lifting, sprinting, and agility.'
+      }
+    ]
+  },
+  {
     id: 'warmup-universal-tactical',
     title: 'Universal Tactical Dynamic Warm-Up',
     category: 'Full Body / CNS',

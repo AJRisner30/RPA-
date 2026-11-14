@@ -105,19 +105,25 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     currentAthlete?.questionnaire && currentAthlete.questionnaire.completedAt
   );
 
-  // Primary program selector: 'apex_protocol' vs 'tactical_hypertrophy' vs 'hybrid_protocol' vs 'hybrid_db' vs 'universal_pat' vs 'custom_ai'
+  // Primary program selector: 'apex_protocol' vs 'tactical_hypertrophy' vs 'hybrid_protocol' vs 'universal_pat' vs 'custom_ai'
+  const normalizeProgramKey = (key?: ProgramKey | 'custom_ai'): ProgramKey | 'custom_ai' => {
+    if (!key) return 'apex_protocol';
+    if (key === 'hybrid_db') return 'hybrid_protocol';
+    return key;
+  };
+
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey | 'custom_ai'>(() => {
-    if (activeProgramKey) return activeProgramKey;
+    if (activeProgramKey) return normalizeProgramKey(activeProgramKey);
     if (activeCustomProgram) return 'custom_ai';
     if (!isMasterExempt && currentAthlete?.questionnaire?.recommendedProgramKey) {
-      return currentAthlete.questionnaire.recommendedProgramKey;
+      return normalizeProgramKey(currentAthlete.questionnaire.recommendedProgramKey);
     }
-    return currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol';
+    return normalizeProgramKey(currentAthlete?.questionnaire?.recommendedProgramKey || 'apex_protocol');
   });
 
   useEffect(() => {
     if (activeProgramKey) {
-      setSelectedProgram(activeProgramKey);
+      setSelectedProgram(normalizeProgramKey(activeProgramKey));
     }
   }, [activeProgramKey]);
 
@@ -129,13 +135,14 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
 
   useEffect(() => {
     if (!isMasterExempt && currentAthlete?.questionnaire?.recommendedProgramKey) {
-      setSelectedProgram(currentAthlete.questionnaire.recommendedProgramKey);
+      setSelectedProgram(normalizeProgramKey(currentAthlete.questionnaire.recommendedProgramKey));
     }
   }, [currentAthlete?.questionnaire?.recommendedProgramKey, isMasterExempt]);
 
   const handleProgramSwitch = (progKey: ProgramKey | 'custom_ai') => {
-    setSelectedProgram(progKey);
-    onSelectProgram?.(progKey);
+    const normalized = normalizeProgramKey(progKey);
+    setSelectedProgram(normalized);
+    onSelectProgram?.(normalized);
     setDayViewMode('all');
   };
   
@@ -145,19 +152,16 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
   // Active week inside Universal PAT Protocol (Weeks 1 to 8)
   const [activePatWeek, setActivePatWeek] = useState<number>(1);
 
-  // Active phase inside The Apex Protocol (5 Mesocycles)
+  // Active quarter inside Law Enforcement 52-Week Fitness & Readiness Program (4 Quarters)
   const [activeApexPhaseKey, setActiveApexPhaseKey] = useState<
-    'apex_phase1' | 'apex_phase2' | 'apex_phase3' | 'apex_phase4' | 'apex_phase5'
+    'apex_phase1' | 'apex_phase2' | 'apex_phase3' | 'apex_phase4'
   >('apex_phase1');
 
-  // Active week inside The Apex Protocol (Weeks 1 to 26)
+  // Active week inside Law Enforcement 52-Week Program (Weeks 1 to 52)
   const [activeApexWeek, setActiveApexWeek] = useState<number>(1);
 
   // Active phase inside Hybrid Protocol (condenses Phase 1, Phase 2, Phase 3 into 1 tab)
   const [activeProtocolPhaseKey, setActiveProtocolPhaseKey] = useState<'phase1' | 'phase2' | 'phase3'>('phase1');
-
-  // Active phase inside Hybrid DB & Bodyweight (condenses Phase 1, Phase 2, Phase 3 into 1 tab)
-  const [activeDbPhaseKey, setActiveDbPhaseKey] = useState<'db_phase1' | 'db_phase2' | 'db_phase3'>('db_phase1');
   
   const [showCoachNotes, setShowCoachNotes] = useState<boolean>(false);
   const [showOverloadRules, setShowOverloadRules] = useState<boolean>(false);
@@ -198,11 +202,8 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     if (selectedProgram === 'universal_pat') {
       return getUniversalPatWeekData(activePatWeek);
     }
-    if (selectedProgram === 'hybrid_db') {
-      return PROTOCOL_DATA[activeDbPhaseKey] || PROTOCOL_DATA.db_phase1 || PROTOCOL_DATA.hybrid_db;
-    }
     return PROTOCOL_DATA[activeProtocolPhaseKey] || PROTOCOL_DATA.phase1;
-  }, [selectedProgram, activeApexWeek, activeTacticalWeek, activePatWeek, activeDbPhaseKey, activeProtocolPhaseKey]);
+  }, [selectedProgram, activeApexWeek, activeTacticalWeek, activePatWeek, activeProtocolPhaseKey]);
 
   const getExerciseRest = (exerciseString: string): number => {
     const cleanStr = exerciseString.replace(/\[.*?\]/g, '').trim();
@@ -565,7 +566,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           muscleGroup,
           defaultSets,
           targetReps,
-          targetRpe: 8.5,
+          targetRpe: parsed.targetRpe || 8.0,
           weight_lbs: defaultWeightLbs,
           restPeriodSeconds: configuredRest,
           progression_rules: progressionRuleObj,
@@ -628,39 +629,50 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       const combined = `${day.run} ${day.pace} ${day.focus}`.toLowerCase();
       const isIntervals = combined.includes('interval') || combined.includes('track') || combined.includes('sprint') || combined.includes('repeats');
 
-      // Accurate distance extraction from day.run title and pace
+      // Accurate distance extraction from day.run title and pace (starting at low end of ranges)
       let distance: number | undefined;
-      const rangeMatch = day.run.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*mile/i);
+      const rangeMatch = day.run.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*mile/i);
       if (rangeMatch) {
-        distance = parseFloat(((parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2).toFixed(1));
+        distance = parseFloat(rangeMatch[1]);
       } else {
         const singleMatch = day.run.match(/(\d+(?:\.\d+)?)\s*mile/i);
         if (singleMatch) {
           distance = parseFloat(singleMatch[1]);
         } else {
-          const paceRangeMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*mile/i);
-          if (paceRangeMatch) {
-            distance = parseFloat(((parseFloat(paceRangeMatch[1]) + parseFloat(paceRangeMatch[2])) / 2).toFixed(1));
+          // Check meter ranges (e.g., 4,000–5,000m or 3,000m or 2,400m) — start at low end
+          const meterRangeMatch = day.run.match(/(\d[\d,]*)\s*[-–]\s*(\d[\d,]*)\s*m\b/i);
+          const singleMeterMatch = day.run.match(/(\d[\d,]{3,})\s*m\b/i);
+          if (meterRangeMatch) {
+            const lowMeters = parseInt(meterRangeMatch[1].replace(/,/g, ''), 10);
+            if (!isNaN(lowMeters) && lowMeters >= 400) {
+              distance = parseFloat((lowMeters / 1609.34).toFixed(1));
+            }
+          } else if (singleMeterMatch) {
+            const meters = parseInt(singleMeterMatch[1].replace(/,/g, ''), 10);
+            if (!isNaN(meters) && meters >= 800) {
+              distance = parseFloat((meters / 1609.34).toFixed(1));
+            }
           } else {
-            const paceSingleMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*mile/i);
-            if (paceSingleMatch) {
-              distance = parseFloat(paceSingleMatch[1]);
+            const paceRangeMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*mile/i);
+            if (paceRangeMatch) {
+              distance = parseFloat(paceRangeMatch[1]);
+            } else {
+              const paceSingleMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*mile/i);
+              if (paceSingleMatch) {
+                distance = parseFloat(paceSingleMatch[1]);
+              }
             }
           }
         }
       }
 
-      // Duration in minutes
+      // Duration in minutes (start at low end of minute ranges)
       let durationMins: number | undefined;
-      const minMatch = day.run.match(/(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*min/i);
+      const minMatch = day.run.match(/(\d+(?:\.\d+)?)\s*(?:[-–]\s*(\d+(?:\.\d+)?))?\s*min/i);
       if (minMatch) {
-        if (minMatch[2]) {
-          durationMins = Math.round((parseFloat(minMatch[1]) + parseFloat(minMatch[2])) / 2);
-        } else {
-          durationMins = Math.round(parseFloat(minMatch[1]));
-        }
+        durationMins = Math.round(parseFloat(minMatch[1]));
       } else {
-        const paceMinMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*min/i);
+        const paceMinMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*(?:[-–]\s*(\d+(?:\.\d+)?))?\s*min/i);
         if (paceMinMatch) {
           durationMins = Math.round(parseFloat(paceMinMatch[1]));
         }
@@ -669,11 +681,11 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       // Sensible defaults if not specified
       if (!distance && !durationMins) {
         if (isIntervals) {
+          distance = 2.0;
+          durationMins = 22;
+        } else {
           distance = 2.5;
           durationMins = 25;
-        } else {
-          distance = 3.5;
-          durationMins = 30;
         }
       } else if (!distance && durationMins) {
         distance = parseFloat((durationMins / 9.5).toFixed(1));
@@ -703,20 +715,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     }
 
     const programTitle = selectedProgram === 'apex_protocol'
-      ? `The Apex Protocol (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
+      ? `Law Enforcement 52-Week Program (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
       : selectedProgram === 'tactical_hypertrophy'
       ? `Tactical Hypertrophy & Conditioning (${currentPhase.weeks} • ${day.day}: ${day.focus})`
       : selectedProgram === 'hybrid_protocol'
       ? `Hybrid Protocol (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`
-      : selectedProgram === 'universal_pat'
-      ? `Universal PAT (${currentPhase.weeks} • ${day.day}: ${day.focus})`
-      : `Hybrid DB & Bodyweight (${currentPhase.title.split(':')[0]} • ${day.day}: ${day.focus})`;
+      : `Universal PAT (${currentPhase.weeks} • ${day.day}: ${day.focus})`;
 
-    const recommendedWarmupId = selectedProgram === 'apex_protocol'
-      ? 'warmup-apex-sop'
-      : (selectedProgram === 'tactical_hypertrophy' || selectedProgram === 'universal_pat')
-      ? 'warmup-universal-tactical'
-      : 'warmup-upper-primer';
+    // Mandatory 10-Minute DIME Warm-Up is recommended for all programs
+    const recommendedWarmupId = 'warmup-dime-mandatory';
 
     return {
       id: `session-${day.day.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
@@ -726,7 +733,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       frequency: 'Scheduled',
       estimatedDurationMinutes: 60,
       recommendedWarmupId,
-      description: `${currentPhase.title} - ${day.day}: ${day.focus}. Auto-Overload enabled session combining compound strength and aerobic capacity.`,
+      description: `${currentPhase.title} - ${day.day}: ${day.focus}. Auto-Overload enabled session starting at the low end of prescribed set/rep ranges.`,
       exercises: exercises.length > 0 ? exercises : [
         {
           id: 'ex-default',
@@ -746,52 +753,43 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
     onStartWorkout(program);
   };
 
-  // Mesocycle phase options for The Apex Protocol (26-Week Master)
+  // Quarter phase options for the Law Enforcement 52-Week Fitness & Readiness Program
   const apexMesocycles = [
     {
       id: 'apex_phase1' as const,
-      label: 'Phase 1: Foundation & Base',
-      weeks: 'Weeks 1-4',
-      badge: 'Base & Hypertrophy',
-      focus: 'Aerobic Base (Zone 2) & Structural Joint Prep',
-      weekRange: [1, 2, 3, 4],
+      label: 'Quarter 1: Aerobic Base, Posture & Core',
+      weeks: 'Q1: Wks 1–13',
+      badge: 'Aerobic Base & Core',
+      focus: 'Zone 2 Aerobic Base, Thoracic/Hip Mobility & Movement Mechanics (RPE 7)',
+      weekRange: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
       defaultWeek: 1
     },
     {
       id: 'apex_phase2' as const,
-      label: 'Phase 2: Build & Strength',
-      weeks: 'Weeks 5-10',
-      badge: 'Volume & Heavy Lifts',
-      focus: 'Progressive Barbell Loading, 400m Repeats & Duty Conditioning Base',
-      weekRange: [5, 6, 7, 8, 9, 10],
-      defaultWeek: 5
+      label: 'Quarter 2: Running Stamina & Grappling Strength',
+      weeks: 'Q2: Wks 14–26',
+      badge: 'Stamina & Grappling',
+      focus: 'Tempo Runs, 400m Intervals, Barbell Strength & Loaded Carries (RPE 8)',
+      weekRange: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26],
+      defaultWeek: 14
     },
     {
       id: 'apex_phase3' as const,
-      label: 'Phase 3: Intensify & Threshold',
-      weeks: 'Weeks 11-16',
-      badge: 'Threshold & Power',
-      focus: 'Heavy Triple Progression, VO2 Max Intervals & Foot Pursuit Conditioning',
-      weekRange: [11, 12, 13, 14, 15, 16],
-      defaultWeek: 11
+      label: 'Quarter 3: Limit Strength, Pursuit Speed & Threshold',
+      weeks: 'Q3: Wks 27–39',
+      badge: 'Limit Strength & Speed',
+      focus: 'Maximal Strength (80–85% 1RM), 200m–800m Track Repeats & Rotational Power (RPE 8.5)',
+      weekRange: [27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
+      defaultWeek: 27
     },
     {
       id: 'apex_phase4' as const,
-      label: 'Phase 4: Tactical Peak',
-      weeks: 'Weeks 17-22',
-      badge: 'Speed & Agility Under Stress',
-      focus: 'Speed Under Load, Agility Obstacle Drills & Explosive Combat Chassis',
-      weekRange: [17, 18, 19, 20, 21, 22],
-      defaultWeek: 17
-    },
-    {
-      id: 'apex_phase5' as const,
-      label: "Phase 5: Tactical Peak & Taper",
-      weeks: 'Weeks 23-26',
-      badge: 'Tactical Peak Performance',
-      focus: "Event-Specific Drills, Taper & Tactical Peak Performance",
-      weekRange: [23, 24, 25, 26],
-      defaultWeek: 23
+      label: 'Quarter 4: Use-of-Force Readiness & Annual Peak',
+      weeks: 'Q4: Wks 40–52',
+      badge: 'Duty Circuit & Peak',
+      focus: 'Strength Maintenance, High-HR Decision-Making & Use-of-Force Simulation Circuits',
+      weekRange: [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+      defaultWeek: 40
     },
   ];
 
@@ -817,31 +815,6 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
       weeks: 'Weeks 9-12',
       badge: 'Peak Power & Race Pace',
       focus: 'Max CNS Power Output & Race Pacing'
-    },
-  ];
-
-  // Mesocycle phase options for the condensed Hybrid DB & Bodyweight tab
-  const dbMesocycles = [
-    {
-      id: 'db_phase1' as const,
-      label: 'Phase 1: DB Foundation',
-      weeks: 'Weeks 1-4',
-      badge: 'Hypertrophy & Work Capacity',
-      focus: 'Push-Up Volume, DB Hypertrophy & Duty Carry Conditioning'
-    },
-    {
-      id: 'db_phase2' as const,
-      label: 'Phase 2: Strength Density',
-      weeks: 'Weeks 5-8',
-      badge: 'Heavy DB Loads & Threshold',
-      focus: 'Weighted/Deficit Push-Ups, Tempo Running & Foot Pursuit Sprints'
-    },
-    {
-      id: 'db_phase3' as const,
-      label: 'Phase 3: Tactical Peak',
-      weeks: 'Weeks 9-12',
-      badge: 'Max DB Power & Tactical Test',
-      focus: 'Explosive Plyo Push-Ups, LEO Agility Circuit & Peak Assessment'
     },
   ];
 
@@ -1558,22 +1531,20 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                   Duty Readiness &amp; Combat Chassis
                 </span>
               </div>
-              <h1 className="text-lg sm:text-xl font-black text-white font-athletic uppercase tracking-wide mt-0.5 flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-black text-white font-athletic uppercase tracking-wide mt-0.5 flex items-center gap-2 flex-wrap">
                 <span>
                   {selectedProgram === 'custom_ai' && activeCustomProgram ? (
                     <>
                       <span className="text-amber-400">Custom Track:</span> {activeCustomProgram.title}
                     </>
                   ) : selectedProgram === 'apex_protocol' ? (
-                    <>The Apex <span className="text-blue-400">Protocol (LEO Master)</span></>
+                    <>Law Enforcement <span className="text-blue-400">52-Week Fitness &amp; Readiness Program</span></>
                   ) : selectedProgram === 'tactical_hypertrophy' ? (
                     <>Patrol Ready <span className="text-blue-400">Tactical Hypertrophy &amp; Conditioning</span></>
                   ) : selectedProgram === 'hybrid_protocol' ? (
-                    <>Patrol Ready <span className="text-blue-400">Hybrid Protocol</span></>
-                  ) : selectedProgram === 'universal_pat' ? (
-                    <>Universal Law Enforcement <span className="text-amber-400">Physical Agility Test (PAT)</span></>
+                    <>Patrol Ready <span className="text-blue-400">12-Week Hybrid Protocol</span></>
                   ) : (
-                    <>Patrol Ready <span className="text-blue-400">DB &amp; Bodyweight</span></>
+                    <>Universal Law Enforcement <span className="text-amber-400">Physical Agility Test (PAT)</span></>
                   )}
                 </span>
                 <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
@@ -1669,10 +1640,10 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
           </div>
         </div>
 
-        {/* Program Selector: Full 5-Program Grid for Coach AJ, or Prescribed Protocol Header for Regular Users */}
+        {/* Program Selector: 4-Program Grid for Coach AJ, or Prescribed Protocol Header for Regular Users */}
         {isMasterExempt ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3 pt-3 border-t border-slate-800/80">
-            {/* Program 1: The Apex Protocol */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-800/80">
+            {/* Program 1: Law Enforcement 52-Week Fitness & Readiness Program */}
             <button
               type="button"
               onClick={() => handleProgramSwitch('apex_protocol')}
@@ -1685,14 +1656,14 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className={`w-2 h-2 rounded-full ${selectedProgram === 'apex_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">The Apex Protocol</span>
+                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">52-Wk LEO Readiness</span>
                 </div>
-                <span className="text-[10px] text-slate-400 block font-mono truncate">26-Wk Master • Barbell & VO2</span>
+                <span className="text-[10px] text-slate-400 block font-mono truncate">52-Wk Master • Speed, Strength &amp; Duty</span>
               </div>
               <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
                 selectedProgram === 'apex_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
               }`}>
-                26 WKS
+                52 WKS
               </span>
             </button>
 
@@ -1735,7 +1706,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                   <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_protocol' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
                   <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid Protocol</span>
                 </div>
-                <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Strength/Run</span>
+                <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Strength &amp; Run (AI DB Ready)</span>
               </div>
               <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
                 selectedProgram === 'hybrid_protocol' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
@@ -1744,31 +1715,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
               </span>
             </button>
 
-            {/* Program 4: Hybrid DB & Bodyweight */}
-            <button
-              type="button"
-              onClick={() => handleProgramSwitch('hybrid_db')}
-              className={`px-3 py-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                selectedProgram === 'hybrid_db'
-                  ? 'bg-blue-950/70 border-blue-400 shadow-md ring-1 ring-blue-400/40 text-white'
-                  : 'bg-[#0a0f1d] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${selectedProgram === 'hybrid_db' ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                  <span className="text-xs font-black uppercase tracking-wide truncate font-athletic">Hybrid DB &amp; BW</span>
-                </div>
-                <span className="text-[10px] text-slate-400 block font-mono truncate">12-Wk Master • Dumbbell &amp; Calisthenics</span>
-              </div>
-              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-                selectedProgram === 'hybrid_db' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
-              }`}>
-                12 WKS
-              </span>
-            </button>
-
-            {/* Program 5: Universal PAT Protocol */}
+            {/* Program 4: Universal PAT Protocol */}
             <button
               type="button"
               onClick={() => handleProgramSwitch('universal_pat')}
@@ -2499,11 +2446,11 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         {/* COMPACT MESOCYCLE & WEEK SELECTOR RAIL */}
         {selectedProgram === 'apex_protocol' && (
         <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-2">
-          {/* Phase Pills */}
+          {/* Quarter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 shrink-0 flex items-center gap-1 mr-1">
               <Activity className="w-3 h-3" />
-              Phase:
+              Quarter:
             </span>
             {apexMesocycles.map((m) => {
               const isSelected = activeApexPhaseKey === m.id;
@@ -2523,7 +2470,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                   }`}
                 >
                   <span>{m.weeks}</span>
-                  <span className="text-[10px] opacity-80 hidden md:inline">({m.badge.split('&')[0].trim()})</span>
+                  <span className="text-[10px] opacity-80 hidden md:inline">({m.badge})</span>
                   {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
                 </button>
               );
@@ -2537,6 +2484,9 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
             </span>
             {(apexMesocycles.find((m) => m.id === activeApexPhaseKey)?.weekRange || [1, 2, 3, 4]).map((w) => {
               const isSelectedWeek = activeApexWeek === w;
+              const isDeloadWk = w % 4 === 0 && w !== 52;
+              const isTaperWk = w === 51;
+              const isBenchmarkWk = w === 13 || w === 26 || w === 39 || w === 52;
               return (
                 <button
                   key={w}
@@ -2545,18 +2495,21 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     setActiveApexWeek(w);
                     setDayViewMode('all');
                   }}
-                  className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border ${
+                  className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
                     isSelectedWeek
                       ? 'bg-blue-600 text-white border-blue-400 shadow-sm font-black'
                       : 'bg-[#0a0f1d] text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
                   }`}
                 >
-                  W{w}
+                  <span>W{w}</span>
+                  {isDeloadWk && <span className="text-[8px] font-black uppercase px-1 rounded bg-red-950/90 text-red-300 border border-red-500/40">Deload</span>}
+                  {isTaperWk && <span className="text-[8px] font-black uppercase px-1 rounded bg-amber-950/90 text-amber-300 border border-amber-500/40">Taper</span>}
+                  {isBenchmarkWk && <span className="text-[8px] font-black uppercase px-1 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-500/40">Test</span>}
                 </button>
               );
             })}
             <span className="text-[10px] font-mono text-blue-400 ml-auto hidden sm:inline shrink-0">
-              Week {activeApexWeek} Active
+              Week {activeApexWeek} of 52 Active
             </span>
           </div>
         </div>
@@ -2592,36 +2545,6 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         </div>
       )}
 
-      {selectedProgram === 'hybrid_db' && (
-        <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-2.5 sm:p-3 shadow-md flex items-center gap-2 overflow-x-auto scrollbar-none">
-          <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 shrink-0 flex items-center gap-1 mr-1">
-            <Activity className="w-3 h-3" />
-            Phase:
-          </span>
-          {dbMesocycles.map((m) => {
-            const isSelected = activeDbPhaseKey === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => {
-                  setActiveDbPhaseKey(m.id);
-                  setDayViewMode('all');
-                }}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-blue-600 text-white border-blue-400 font-black shadow-sm'
-                    : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-[#111c2e]'
-                }`}
-              >
-                <span>{m.label} ({m.weeks})</span>
-                {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* COLLAPSIBLE AUTO-OVERLOAD BENCHMARKS (Expands cleanly on user request) */}
       {showOverloadRules && (
         <RequireTier 
@@ -2634,40 +2557,40 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-xs sm:text-sm font-black uppercase text-emerald-400 tracking-wider font-athletic">
                   {selectedProgram === 'apex_protocol' 
-                    ? `The Apex Protocol Auto-Overload Laws (${currentPhase.weeks})`
+                    ? `52-Week LEO Progression Rules & Benchmarks (${currentPhase.weeks})`
                     : selectedProgram === 'tactical_hypertrophy'
                     ? `Tactical Hypertrophy Auto-Overload Benchmarks (${currentPhase.weeks})`
                     : selectedProgram === 'hybrid_protocol'
-                    ? 'Hybrid Protocol Auto-Overload Benchmarks'
-                    : `Hybrid DB & Bodyweight Auto-Overload (${currentPhase.weeks})`}
+                    ? '12-Week Hybrid Protocol Auto-Overload Benchmarks'
+                    : `Universal PAT Auto-Overload Benchmarks (${currentPhase.weeks})`}
                 </h3>
               </div>
               <span className="text-[11px] text-zinc-400 font-mono">
-                Apply linear increments upon completing target reps
+                Starts at low end of set/rep ranges • Intra-session Set 1 auto-pacing active
               </span>
             </div>
 
           {selectedProgram === 'apex_protocol' ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
               <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Strict OHP & Pull-Ups</span>
-                <span className="text-sm font-black text-emerald-400 font-mono">+2.5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Strict linear progression each week</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">1. Reps First &rarr; 2. Weight Second</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">+2.5–5 lbs / +5–10 lbs</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Start at low end of rep range; hit top of range on all sets before adding load</span>
               </div>
               <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Squat & Trap Bar DL</span>
-                <span className="text-sm font-black text-emerald-400 font-mono">+10 lbs / +5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">+10 lbs if RPE ≤ 7.5; else +5 lbs</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">3. Sets Third &amp; Set 1 Auto-Pacing</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">Low-End Start &rarr; +1 Set</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Starts at low end of set range; Set 1 log auto-calculates Sets 2+ weight</span>
               </div>
               <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Incline, Rows & Push Press</span>
-                <span className="text-sm font-black text-emerald-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Upon completing all target reps</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Every 4th Week Deload</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">-40% Volume</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Wks 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48 cut sets/miles 40%</span>
               </div>
               <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Aerobic Run & Sprints</span>
-                <span className="text-sm font-black text-emerald-400 font-mono">+5 min / +2 min / +1 mi</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Dynamic weekly prescription</span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Section 8 Annual Benchmarks</span>
+                <span className="text-sm font-black text-emerald-400 font-mono">1.5-Mi &lt; 10:30 • 300m &lt; 46s</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">TBDL 2.0x BW • Bench 1.25x BW • 12+ Pull-Ups • 50+ Push-Ups</span>
               </div>
             </div>
           ) : selectedProgram === 'tactical_hypertrophy' ? (
@@ -2716,7 +2639,7 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className="text-[10px] text-slate-400 block mt-0.5">Passing academy benchmark</span>
               </div>
             </div>
-          ) : selectedProgram === 'hybrid_protocol' ? (
+          ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
               <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Squat & Deadlift</span>
@@ -2737,29 +2660,6 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Zone 2 Aerobic Base</span>
                 <span className="text-sm font-black text-blue-400 font-mono">+0.5 - 1.0 mi/wk</span>
                 <span className="text-[10px] text-slate-400 block mt-0.5">Continuous base expansion</span>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2.5">
-              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DB Floor Press</span>
-                <span className="text-sm font-black text-blue-400 font-mono">+5 lbs</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Upon 3 sets × 12 reps</span>
-              </div>
-              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Push-ups</span>
-                <span className="text-sm font-black text-blue-400 font-mono">+1 rep</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Every workout session</span>
-              </div>
-              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Zone 2 Run</span>
-                <span className="text-sm font-black text-blue-400 font-mono">+0.5 mi / wk</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Conversational base pace</span>
-              </div>
-              <div className="p-2.5 bg-[#0a0f1d] rounded-xl border border-slate-800/80">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Duty Agility / Farmer's Carry</span>
-                <span className="text-sm font-black text-blue-400 font-mono">+5-10 lbs carry</span>
-                <span className="text-[10px] text-slate-400 block mt-0.5">Maintain upright trunk posture</span>
               </div>
             </div>
           )}
@@ -3011,20 +2911,12 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (selectedProgram === 'apex_protocol') {
-                          onSelectWarmup('warmup-apex-sop');
-                        } else if (selectedProgram === 'tactical_hypertrophy') {
-                          onSelectWarmup('warmup-universal-tactical');
-                        } else if (day.focus.toLowerCase().includes('lower') || day.focus.toLowerCase().includes('squat') || day.focus.toLowerCase().includes('deadlift')) {
-                          onSelectWarmup('warmup-lower-hip');
-                        } else {
-                          onSelectWarmup('warmup-upper-primer');
-                        }
+                        onSelectWarmup('warmup-dime-mandatory');
                       }}
                       className="shrink-0 px-3 py-1.5 bg-[#0f172a] hover:bg-slate-800 text-blue-300 hover:text-white text-xs font-bold rounded-lg border border-blue-500/30 transition-colors flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
                     >
                       <Clock className="w-3.5 h-3.5" />
-                      <span>Guided Primer</span>
+                      <span>DIME Guided Primer</span>
                     </button>
                   )}
                 </div>

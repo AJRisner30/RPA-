@@ -125,10 +125,17 @@ export const WarmupsTab: React.FC<{ selectedWarmupId?: string | null }> = ({
               }`}
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-950/60 text-blue-300 border border-blue-800/40">
-                    {routine.category}
-                  </span>
+                <div className="flex items-center justify-between gap-1.5 mb-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-950/60 text-blue-300 border border-blue-800/40">
+                      {routine.category}
+                    </span>
+                    {routine.id === 'warmup-dime-mandatory' && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        Recommended for All Programs
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                     {routine.steps.length} Rep Drills
                   </span>

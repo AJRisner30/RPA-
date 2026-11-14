@@ -17,7 +17,12 @@ import {
   SupersetLiveEntry,
 } from '../types';
 import { calculate1RM, saveWorkoutLog, getStoredWorkoutLogs } from '../utils/storage';
-import { getAutoOverloadRecommendation } from '../utils/autoOverload';
+import {
+  getAutoOverloadRecommendation,
+  calculateSubsequentSetsWeight,
+  SubsequentSetPacingRecommendation,
+  parseRepRangeBounds,
+} from '../utils/autoOverload';
 import { getCurrentAthlete } from '../utils/athleteAuth';
 import { soundManager } from '../utils/audio';
 import { useAndroidHaptics } from '../hooks/useAndroidHaptics';
@@ -84,15 +89,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
               mov.name,
               mov.targetReps || template.targetReps,
               template.targetRpe,
-              effectiveLogs
+              effectiveLogs,
+              rounds,
+              rounds
             );
             const prev = findPrevStats(mov.name, mov.weight_lbs);
-            const parsedTargetReps = parseInt(mov.targetReps || template.targetReps || '10', 10);
-            const defaultReps = !isNaN(parsedTargetReps) ? parsedTargetReps : 10;
+            const { min: repMin } = parseRepRangeBounds(mov.targetReps || template.targetReps || '10');
+            const defaultReps = overloadMov.recommendedReps || repMin || 10;
             const isBodyweightMov = /push-up|pushup|pull-up|chin-up|dip|plank|inverted/i.test(mov.name);
 
             const startWeight =
-              overloadMov.status === 'overload_applied' || overloadMov.status === 'maintain'
+              overloadMov.status === 'overload_applied' ||
+              overloadMov.status === 'rep_progression' ||
+              overloadMov.status === 'maintain'
                 ? overloadMov.recommendedWeightLbs
                 : mov.weight_lbs !== undefined
                 ? mov.weight_lbs
@@ -250,7 +259,9 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         template.name,
         template.targetReps,
         template.targetRpe,
-        effectiveLogs
+        effectiveLogs,
+        template.defaultSets || 3,
+        template.defaultSets || 3
       );
 
       if (timed) {
@@ -318,7 +329,11 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         let startingWeight = 50;
         let prevWeight = template.weight_lbs;
 
-        if (overload.status === 'overload_applied' || overload.status === 'maintain') {
+        if (
+          overload.status === 'overload_applied' ||
+          overload.status === 'rep_progression' ||
+          overload.status === 'maintain'
+        ) {
           startingWeight = overload.recommendedWeightLbs;
           prevWeight = overload.previousWeightLbs;
         } else if (template.weight_lbs !== undefined) {
@@ -327,20 +342,18 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
           const isBodyweight =
             template.name.toLowerCase().includes('push-up') ||
             template.name.toLowerCase().includes('pull-up') ||
+            template.name.toLowerCase().includes('chin-up') ||
             template.name.toLowerCase().includes('dip') ||
             template.muscleGroup === 'Core';
           startingWeight = isBodyweight ? 0 : 95;
         }
 
-        let startingReps = 8;
-        if (template.targetReps) {
-          const parsed = parseInt(template.targetReps, 10);
-          if (!isNaN(parsed)) {
-            startingReps = parsed;
-          }
-        }
+        // Start at the low end of the rep range (or session-progressed rep target)
+        const { min: repMin } = parseRepRangeBounds(template.targetReps);
+        const startingReps = overload.recommendedReps || repMin || 8;
+        const startingSets = overload.recommendedSets || template.defaultSets || 3;
 
-        const initialSets: LiveSet[] = Array.from({ length: template.defaultSets || 3 }).map((_, i) => ({
+        const initialSets: LiveSet[] = Array.from({ length: startingSets }).map((_, i) => ({
           id: `set-${template.id}-${i + 1}`,
           setNumber: i + 1,
           weightLbs: startingWeight,
@@ -372,6 +385,9 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
   });
 
   const [activeExerciseIndex, setActiveExerciseIndex] = useState<number>(0);
+  const [subsequentSetPacingMap, setSubsequentSetPacingMap] = useState<
+    Record<string, SubsequentSetPacingRecommendation>
+  >({});
   const [workoutStartTime] = useState<Date>(new Date());
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [workoutNotes, setWorkoutNotes] = useState<string>('');
@@ -549,6 +565,83 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
 
   const currentExercise = exercises[activeExerciseIndex];
 
+  const applySet1PacingToExercise = (ex: LiveExerciseSession): {
+    updatedEx: LiveExerciseSession;
+    pacing: SubsequentSetPacingRecommendation | null;
+  } => {
+    const set1 = ex.sets[0];
+    if (!set1 || ex.isTimed || ex.sets.length <= 1) {
+      return { updatedEx: ex, pacing: null };
+    }
+
+    const targetRpe = ex.targetRpe || 8;
+    const set1Rpe = set1.rpe ?? targetRpe;
+
+    if (ex.format === 'superset' && set1.supersetEntries && set1.supersetEntries.length > 0) {
+      const primaryEntry = set1.supersetEntries[0];
+      const primaryPacing = calculateSubsequentSetsWeight(
+        primaryEntry.weightLbs,
+        primaryEntry.reps,
+        set1Rpe,
+        targetRpe,
+        primaryEntry.targetReps || ex.targetReps,
+        primaryEntry.name
+      );
+
+      const newSets = ex.sets.map((s, idx) => {
+        if (idx === 0 || s.completed || !s.supersetEntries) return s;
+        const updatedEntries = s.supersetEntries.map((entry, entryIdx) => {
+          const refEntry = set1.supersetEntries?.[entryIdx];
+          if (!refEntry) return entry;
+          const entryPacing = calculateSubsequentSetsWeight(
+            refEntry.weightLbs,
+            refEntry.reps,
+            set1Rpe,
+            targetRpe,
+            refEntry.targetReps || ex.targetReps,
+            refEntry.name
+          );
+          return {
+            ...entry,
+            weightLbs: entryPacing.recommendedSubsequentWeightLbs,
+          };
+        });
+        return {
+          ...s,
+          weightLbs: updatedEntries[0]?.weightLbs ?? s.weightLbs,
+          supersetEntries: updatedEntries,
+        };
+      });
+
+      return {
+        updatedEx: { ...ex, sets: newSets },
+        pacing: primaryPacing,
+      };
+    }
+
+    const pacing = calculateSubsequentSetsWeight(
+      set1.weightLbs,
+      set1.reps,
+      set1Rpe,
+      targetRpe,
+      ex.targetReps,
+      ex.exerciseName
+    );
+
+    const newSets = ex.sets.map((s, idx) => {
+      if (idx === 0 || s.completed) return s;
+      return {
+        ...s,
+        weightLbs: pacing.recommendedSubsequentWeightLbs,
+      };
+    });
+
+    return {
+      updatedEx: { ...ex, sets: newSets },
+      pacing,
+    };
+  };
+
   const handleUpdateSet = (
     exerciseIdx: number,
     setIdx: number,
@@ -573,6 +666,21 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
         [field]: value,
       };
       ex.sets = setList;
+
+      // If Set 1 is already logged/completed and the user updates Set 1 weight, reps, or RPE,
+      // automatically recalculate and update subsequent uncompleted sets!
+      if (setIdx === 0 && setList[0].completed && (field === 'weightLbs' || field === 'reps' || field === 'rpe')) {
+        const { updatedEx, pacing } = applySet1PacingToExercise(ex);
+        copy[exerciseIdx] = updatedEx;
+        if (pacing) {
+          setSubsequentSetPacingMap((prevMap) => ({
+            ...prevMap,
+            [ex.exerciseId]: pacing,
+          }));
+        }
+        return copy;
+      }
+
       copy[exerciseIdx] = ex;
       return copy;
     });
@@ -604,6 +712,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       }
       setList[setIdx] = targetSet;
       ex.sets = setList;
+
+      if (setIdx === 0 && targetSet.completed) {
+        const { updatedEx, pacing } = applySet1PacingToExercise(ex);
+        copy[exerciseIdx] = updatedEx;
+        if (pacing) {
+          setSubsequentSetPacingMap((prevMap) => ({
+            ...prevMap,
+            [ex.exerciseId]: pacing,
+          }));
+        }
+        return copy;
+      }
+
       copy[exerciseIdx] = ex;
       return copy;
     });
@@ -616,6 +737,36 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       ex.sets = ex.sets.map((s) => ({ ...s, weightLbs: targetWeight }));
       copy[exerciseIdx] = ex;
       return copy;
+    });
+    soundManager.playSetLogged();
+  };
+
+  const handleApplySubsequentSetsWeight = (exerciseIdx: number, targetWeight: number) => {
+    const validWeight = Math.max(0, targetWeight);
+    setExercises((prev) => {
+      const copy = [...prev];
+      const ex = { ...copy[exerciseIdx] };
+      ex.sets = ex.sets.map((s, idx) => (idx === 0 ? s : { ...s, weightLbs: validWeight }));
+      copy[exerciseIdx] = ex;
+      return copy;
+    });
+    setSubsequentSetPacingMap((prevMap) => {
+      const exId = exercises[exerciseIdx]?.exerciseId;
+      if (!exId || !prevMap[exId]) return prevMap;
+      return {
+        ...prevMap,
+        [exId]: {
+          ...prevMap[exId],
+          recommendedSubsequentWeightLbs: validWeight,
+          weightDeltaLbs: validWeight - prevMap[exId].set1WeightLbs,
+          direction:
+            validWeight > prevMap[exId].set1WeightLbs
+              ? 'increase'
+              : validWeight < prevMap[exId].set1WeightLbs
+              ? 'decrease'
+              : 'maintain',
+        },
+      };
     });
     soundManager.playSetLogged();
   };
@@ -654,6 +805,21 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
       const setList = [...ex.sets];
       setList[setIdx] = { ...setList[setIdx], completed: willBeComplete };
       ex.sets = setList;
+
+      // Once the user logs Set 1 (setIdx === 0), automatically recommend and apply
+      // the target weight for all subsequent uncompleted sets to maintain target effort level!
+      if (setIdx === 0 && willBeComplete && !ex.isTimed && ex.sets.length > 1) {
+        const { updatedEx, pacing } = applySet1PacingToExercise(ex);
+        copy[exerciseIdx] = updatedEx;
+        if (pacing) {
+          setSubsequentSetPacingMap((prevMap) => ({
+            ...prevMap,
+            [ex.exerciseId]: pacing,
+          }));
+        }
+        return copy;
+      }
+
       copy[exerciseIdx] = ex;
       return copy;
     });
@@ -1357,6 +1523,10 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                       <span className="font-athletic font-bold text-blue-300 uppercase tracking-wide mr-1.5">
                         {currentExercise.autoOverload.status === 'overload_applied'
                           ? `Auto-Overload: Target ${currentExercise.autoOverload.recommendedWeightLbs} lbs (+${currentExercise.autoOverload.incrementLbs} lbs)`
+                          : currentExercise.autoOverload.status === 'rep_progression'
+                          ? `Auto-Overload: Reps-First (${currentExercise.autoOverload.recommendedSets} × ${currentExercise.autoOverload.recommendedReps} @ ${currentExercise.autoOverload.recommendedWeightLbs} lbs)`
+                          : currentExercise.autoOverload.status === 'baseline'
+                          ? `Low-End Calibration: Starting at ${currentExercise.autoOverload.recommendedSets} sets × ${currentExercise.autoOverload.recommendedReps} reps`
                           : 'Auto-Overload: Consolidate Working Weight'}
                       </span>
                       <span className="text-slate-400 text-[11px] hidden md:inline truncate">
@@ -1387,6 +1557,110 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({
                   )}
                 </div>
               )}
+
+              {/* Intra-Session Set 1 -> Subsequent Sets Weight Recommendation Banner */}
+              {!currentExercise.isTimed &&
+                currentExercise.sets.length > 1 &&
+                currentExercise.sets[0]?.completed &&
+                subsequentSetPacingMap[currentExercise.exerciseId] && (
+                  <div
+                    className={`px-3.5 py-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs animate-in fade-in ${
+                      subsequentSetPacingMap[currentExercise.exerciseId].direction === 'increase'
+                        ? 'bg-emerald-950/35 border-emerald-500/40'
+                        : subsequentSetPacingMap[currentExercise.exerciseId].direction === 'decrease'
+                        ? 'bg-amber-950/35 border-amber-500/40'
+                        : 'bg-blue-950/35 border-blue-500/40'
+                    }`}
+                  >
+                    <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                      <TrendingUp
+                        className={`w-4 h-4 shrink-0 mt-0.5 sm:mt-0 ${
+                          subsequentSetPacingMap[currentExercise.exerciseId].direction === 'increase'
+                            ? 'text-emerald-400'
+                            : subsequentSetPacingMap[currentExercise.exerciseId].direction === 'decrease'
+                            ? 'text-amber-400'
+                            : 'text-blue-400'
+                        }`}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-athletic font-bold uppercase tracking-wider text-white">
+                            Subsequent Sets Auto-Pacing (Sets 2–{currentExercise.sets.length}):
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded font-mono font-bold text-[11px] ${
+                              subsequentSetPacingMap[currentExercise.exerciseId].direction === 'increase'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : subsequentSetPacingMap[currentExercise.exerciseId].direction === 'decrease'
+                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                            }`}
+                          >
+                            {subsequentSetPacingMap[currentExercise.exerciseId].recommendedSubsequentWeightLbs} lbs
+                            {subsequentSetPacingMap[currentExercise.exerciseId].weightDeltaLbs > 0
+                              ? ` (+${subsequentSetPacingMap[currentExercise.exerciseId].weightDeltaLbs} lbs)`
+                              : subsequentSetPacingMap[currentExercise.exerciseId].weightDeltaLbs < 0
+                              ? ` (${subsequentSetPacingMap[currentExercise.exerciseId].weightDeltaLbs} lbs)`
+                              : ' (Locked)'}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400">
+                            Target RPE {subsequentSetPacingMap[currentExercise.exerciseId].targetRpe}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                          {subsequentSetPacingMap[currentExercise.exerciseId].reason}
+                        </p>
+                      </div>
+                    </div>
+
+                    {subsequentSetPacingMap[currentExercise.exerciseId].set1WeightLbs > 0 && (
+                      <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleApplySubsequentSetsWeight(
+                              activeExerciseIndex,
+                              subsequentSetPacingMap[currentExercise.exerciseId].recommendedSubsequentWeightLbs - 2.5
+                            )
+                          }
+                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-lg text-[11px] font-mono cursor-pointer"
+                          title="Reduce Sets 2+ by 2.5 lbs"
+                        >
+                          -2.5
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleApplySubsequentSetsWeight(
+                              activeExerciseIndex,
+                              subsequentSetPacingMap[currentExercise.exerciseId].recommendedSubsequentWeightLbs + 2.5
+                            )
+                          }
+                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-lg text-[11px] font-mono cursor-pointer"
+                          title="Increase Sets 2+ by 2.5 lbs"
+                        >
+                          +2.5
+                        </button>
+                        {subsequentSetPacingMap[currentExercise.exerciseId].recommendedSubsequentWeightLbs !==
+                          subsequentSetPacingMap[currentExercise.exerciseId].set1WeightLbs && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleApplySubsequentSetsWeight(
+                                activeExerciseIndex,
+                                subsequentSetPacingMap[currentExercise.exerciseId].set1WeightLbs
+                              )
+                            }
+                            className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-mono cursor-pointer"
+                            title="Reset Sets 2+ to Set 1 weight"
+                          >
+                            Keep {subsequentSetPacingMap[currentExercise.exerciseId].set1WeightLbs} lbs
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {/* Set-by-Set Logging Table */}
               <div className="bg-[#0b121e] border border-slate-800/80 rounded-2xl p-3.5 sm:p-5 shadow-lg space-y-3">

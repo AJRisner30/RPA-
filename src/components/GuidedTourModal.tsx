@@ -59,8 +59,8 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'programs',
     badge: 'Core Protocols',
-    title: '5 Periodized Coach Risner Core Protocols',
-    tagline: 'Proven law enforcement tracks for recruits, patrol officers, and tactical operators',
+    title: '4 Periodized Coach Risner Core Protocols',
+    tagline: 'Proven law enforcement tracks from 6-week hypertrophy to the 52-week annual readiness blueprint',
     tabTarget: 'workouts',
     actionLabel: 'Take Ability Matcher',
     actionCallback: 'questionnaire',
@@ -68,14 +68,14 @@ export const TOUR_STEPS: TourStep[] = [
     iconColor: 'text-amber-400',
     locationTip: 'Found in: Workouts Tab → Program Selector & Diagnostic Ability Matcher',
     features: [
-      'The Apex Protocol (26-Week Master): Multi-phase tactical strength, power & VO2 Max conditioning.',
+      'Law Enforcement 52-Week Fitness & Readiness Program: 4-Quarter annual periodization covering Aerobic Base, Grappling Strength, Pursuit Speed & Use-of-Force Peak.',
       'Tactical Hypertrophy (6-Week): 4-day Upper/Lower armor split + 2-day aerobic engine.',
-      '12-Week Hybrid Protocol & 12-Week DB/Bodyweight: Full gym or garage/station gym options.',
+      '12-Week Hybrid Protocol: Full barbell/run architecture that also adapts 1-for-1 to Dumbbells & Bodyweight via the AI Adaptation Engine.',
       'Universal Police PAT (8-Week): State academy prep for 1.5-mi runs, 300m sprints & 165-lb dummy drag.',
-      'Adaptive Ready: Every core protocol can be customized to your injuries & ability with one click.'
+      'Mandatory 10-Minute DIME Warm-Up recommended across all programs for joint durability.'
     ],
-    promoPitch: 'Built by law enforcement for law enforcement. Choose from 5 combat-tested Coach Risner training protocols structured in multi-week phases to crush academy tests and dominate the street.',
-    socialHook: 'No generic bodybuilder fluff. 5 proven training protocols designed for police, sheriff, and tactical operators.',
+    promoPitch: 'Built by law enforcement for law enforcement. Choose from 4 combat-tested Coach Risner training protocols—including the complete 52-Week Law Enforcement Fitness & Readiness Program—structured to crush academy tests and dominate the street.',
+    socialHook: 'No generic bodybuilder fluff. Complete 52-week periodized training designed for police, sheriff, and tactical operators.',
     visualPreviewType: 'programs'
   },
   {
@@ -122,20 +122,20 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'auto_overload',
     badge: 'Progression Engine',
-    title: 'Automated Progressive Overload Engine',
-    tagline: 'Algorithm calculates exact weight increases so you never guess what to lift',
+    title: 'Automated Progressive Overload & Set 1 Pacing',
+    tagline: 'Starts at the low end of set/rep ranges and auto-calculates Set 2+ weights from Set 1 effort',
     tabTarget: 'workouts',
     icon: TrendingUp,
     iconColor: 'text-blue-400',
-    locationTip: 'Found in: Live Workout Screen → Top "⚡ Auto-Overload" Recommendation Banner',
+    locationTip: 'Found in: Live Workout Screen → Set 1 Auto-Pacing & Overload Banner',
     features: [
-      'Week-over-week performance tracking evaluates your logged sets, reps completed, and target RPE.',
-      'Prescribes exact weight increments: +5 lbs or +10 lbs next week when you beat working targets.',
-      'Fatigue & Consolidation Guard: Alerts you to maintain current weight when shift fatigue lowers recovery.',
-      'One-Click Apply: Tap "Apply Overload Weight" to automatically set all working sets in seconds.'
+      'Low-End Range Start: Prescriptions with set/rep ranges (e.g., 3–4 × 10–12) automatically start at the low end (3 × 10) until your logged sessions earn volume expansion.',
+      '3-Step Double Progression: 1. Reps First (hit top of rep range) → 2. Weight Second (+2.5–5 lbs upper / +5–10 lbs lower) → 3. Sets Third.',
+      'Intra-Session Set 1 Auto-Pacing: As soon as you log Set 1, the engine automatically calculates and recommends weights for all remaining sets to maintain your target RPE.',
+      'Every-4th-Week 40% Deloads: Built-in structural recovery weeks prevent overtraining and duty fatigue.'
     ],
-    promoPitch: 'Never guess what weight to put on the bar again. Patrol Ready\'s automated progressive overload algorithm reviews your previous performance and tells you the exact target weight for next week.',
-    socialHook: 'How tactical athletes get stronger on duty without burning out. The app automatically tells you when to add 5 lbs or when to consolidate.',
+    promoPitch: 'Never guess what weight to put on the bar again. Log your first set and Patrol Ready automatically calculates the exact weight for your remaining sets to hold your target effort level.',
+    socialHook: 'Log Set 1 and let the algorithm dial in your exact working weights for Sets 2, 3, and 4 to hit your target RPE.',
     visualPreviewType: 'auto_overload'
   },
   {
@@ -514,17 +514,17 @@ export const GuidedTourModal: React.FC<GuidedTourModalProps> = ({
                 <div className="space-y-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/40">
                     <div className="flex items-center justify-between font-bold text-blue-200">
-                      <span>The Apex Protocol (LEO Master)</span>
-                      <span className="text-[10px] font-mono text-amber-400">26 Weeks</span>
+                      <span>52-Week LEO Fitness &amp; Readiness</span>
+                      <span className="text-[10px] font-mono text-amber-400">52 Weeks</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">5-phase tactical strength, power &amp; VO2 conditioning.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">4-Quarter strength, stamina, pursuit speed &amp; use-of-force peak.</p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
                     <div className="flex items-center justify-between font-bold text-slate-200">
-                      <span>Universal Police PAT Prep</span>
-                      <span className="text-[10px] font-mono text-blue-400">8 Weeks</span>
+                      <span>12-Week Hybrid Protocol (AI DB Ready)</span>
+                      <span className="text-[10px] font-mono text-blue-400">12 Weeks</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Cadence push-ups, 300m sprints, dummy drag &amp; 1.5-mi run.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Full gym or AI-adapted Dumbbell &amp; Bodyweight + DIME Warm-Up.</p>
                   </div>
                 </div>
               )}

@@ -156,9 +156,9 @@ export const GOAL_OPTIONS = [
   },
   {
     id: 'complete_apex_peak' as const,
-    label: 'The 26-Week Peak Tactical Transformation',
-    badge: 'Comprehensive 5-Mesocycle Engine',
-    description: 'Long-term elite periodization taking you from foundational hypertrophy through peak speed, heavy triple strength, and tactical conditioning.',
+    label: 'The 52-Week Law Enforcement Fitness & Readiness Program',
+    badge: 'Comprehensive 4-Quarter Annual Engine',
+    description: 'Year-round tactical periodization taking you from Aerobic Base & Core Stability through Grappling Strength, Limit Strength & Pursuit Speed, and Use-of-Force Readiness.',
     preferredProgram: 'apex_protocol' as ProgramKey,
   },
   {
@@ -177,16 +177,16 @@ export const GOAL_OPTIONS = [
   },
   {
     id: 'station_db_minimal' as const,
-    label: 'Dumbbell & Precinct Bodyweight Mastery',
-    badge: 'Minimal Gear • Maximum Intensity',
-    description: 'Zero barbells required. Full progression using progressive dumbbell volume, push-up densities, and interval conditioning.',
-    preferredProgram: 'hybrid_db' as ProgramKey,
+    label: 'Dumbbell & Bodyweight Hybrid Adaptation',
+    badge: 'Minimal Gear • AI Adapted Hybrid',
+    description: 'Uses the 12-Week Hybrid Protocol automatically adapted by the AI Adaptation Engine for dumbbells, bodyweight calisthenics, and running.',
+    preferredProgram: 'hybrid_protocol' as ProgramKey,
   },
   {
     id: 'custom_ai_individualized' as const,
-    label: 'Custom Individualized Protocol (AI Architect)',
+    label: 'Custom Individualized Protocol (AI Program Adapter)',
     badge: '100% Bespoke • AI Tailored',
-    description: 'Have our AI Workout Architect build a completely individualized training protocol tailored to your exact shift hours, equipment access, and specific joint/injury constraints.',
+    description: 'Have our AI Adaptation Engine tailor any master training protocol to your exact shift hours, equipment access, and specific joint/injury constraints.',
     preferredProgram: 'custom_ai' as ProgramKey,
   },
 ];
@@ -273,25 +273,25 @@ export function calculateProgramRecommendation(
     };
   }
 
-  // 4. Hardware / Equipment constraint
+  // 4. Hardware / Equipment constraint -> Route to 12-Week Hybrid Protocol (which covers DB & Bodyweight via AI Adaptation Engine)
   if (answers.equipmentAccess === 'bodyweight_dumbbells' || answers.primaryGoalCategory === 'station_db_minimal') {
     return {
-      programKey: 'hybrid_db',
-      programTitle: 'Hybrid DB & Bodyweight Protocol',
-      badge: 'Dumbbell & Calisthenics Engine',
+      programKey: 'hybrid_protocol',
+      programTitle: 'Patrol Ready 12-Week Hybrid Protocol (AI DB & Bodyweight Ready)',
+      badge: '12-Week Hybrid • AI DB/BW Adapted',
       durationText: '12-Week Master Protocol (3 Phases)',
       weeklySplit: '3-4 Days Resistance + 2 Days Conditioning',
       fitnessTier,
       startingWeek: 1,
-      startingPhaseTitle: 'Phase 1: DB Foundation & Work Capacity',
+      startingPhaseTitle: 'Phase 1: Foundation (Use AI Adapter for DB & Bodyweight Gear)',
       primaryRationale:
-        'Matched to your equipment setup and current volume capacity. This protocol maximizes progressive dumbbell loads, push-up density, and structured running without requiring a barbell or commercial gym rack.',
+        'Matched to your equipment setup. The 12-Week Hybrid Protocol covers full Dumbbell & Bodyweight training seamlessly—tap "Adapt This Program" to swap all barbell movements for Dumbbell & Calisthenics equivalents while preserving the 3-phase progression.',
       keyActionPoints: [
-        'Utilize floor presses, goblet squats, and dumbbell rows with linear load increments.',
-        'Track push-up total volume (+1 rep per workout progression).',
-        'Build steady Zone 2 conversational running base alongside interval conditioning.',
+        'Tap "Adapt Program" to automatically swap barbell lifts for goblet squats, DB floor presses, and DB rows.',
+        'Starts at the low end of prescribed set and rep ranges and progresses dynamically from your logged sets.',
+        'Includes the Mandatory 10-Minute DIME Warm-Up before every session.',
       ],
-      equipmentNotice: 'No barbell required — optimized for station gyms or home workout spaces.',
+      equipmentNotice: 'Click "Adapt This Program" with Dumbbells & Bodyweight selected for instant 1-for-1 equipment conversion.',
     };
   }
 
@@ -337,25 +337,25 @@ export function calculateProgramRecommendation(
     };
   }
 
-  // Default to The Apex Protocol (comprehensive 26-week tactical blueprint)
-  const startingWeek = fitnessTier === 'Recruit Foundation' ? 1 : 1;
-  const startingPhase = 'Phase 1: Base & Hypertrophy (Weeks 1-4)';
+  // Default to Law Enforcement 52-Week Fitness & Readiness Program
+  const startingWeek = 1;
+  const startingPhase = 'Quarter 1: Aerobic Base, Posture & Core Stability (Weeks 1–13)';
 
   return {
     programKey: 'apex_protocol',
-    programTitle: 'The Apex Protocol (26-Week Tactical Blueprint)',
-    badge: 'Frontline Law Enforcement Peak System',
-    durationText: '26-Week Multi-Mesocycle Protocol',
-    weeklySplit: '4-5 Days Tactical Strength + Duty Conditioning & Agility',
+    programTitle: 'Law Enforcement 52-Week Fitness & Readiness Program',
+    badge: '52-Week Frontline Law Enforcement System',
+    durationText: '52-Week 4-Quarter Periodized Protocol',
+    weeklySplit: '5-6 Days Tactical Strength, Running Stamina & Duty Readiness',
     fitnessTier,
     startingWeek,
     startingPhaseTitle: startingPhase,
     primaryRationale:
-      'The premier law enforcement tactical fitness protocol. Designed to systematically build a resilient combat chassis, eliminate weak points, and peak your physical speed and durability across 5 dedicated mesocycles.',
+      'The complete 52-week law enforcement fitness and readiness blueprint. Engineered across 4 progressive 13-week quarters to build your aerobic base, grappling strength, pursuit speed, and use-of-force stamina with every-4th-week 40% deloads.',
     keyActionPoints: [
-      'Mesocycle 1 builds thick connective tissue armor and foundational work capacity.',
-      'Progresses seamlessly through Heavy Strength, Threshold Power, and Frontline Agility.',
-      'Includes auto-overload rules (+2.5 to +10 lbs) dynamically tailored to your logged performance.',
+      'Mandatory 10-Minute DIME Warm-Up before every session to protect hips, knees, shoulders, and lower back.',
+      'Starts at the low end of prescribed set and rep ranges (1. Reps First -> 2. Weight Second -> 3. Sets Third).',
+      'Intra-session Set 1 auto-pacing automatically recommends weights for all subsequent sets to maintain target effort.',
     ],
   };
 }

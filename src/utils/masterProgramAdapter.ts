@@ -51,15 +51,15 @@ export interface MasterProgramMetadata {
 export const MASTER_PROGRAMS_CATALOG: MasterProgramMetadata[] = [
   {
     key: 'apex_protocol',
-    title: 'The Apex Protocol (LEO Master)',
-    shortTitle: 'The Apex Protocol',
-    subtitle: '5-Phase Tactical Strength, Power & VO2 Max Conditioning',
-    nativeWeeks: 26,
-    recommendedWeeksOptions: [4, 8, 12, 26],
+    title: 'Law Enforcement 52-Week Fitness & Readiness Program',
+    shortTitle: '52-Week LEO Readiness',
+    subtitle: '4-Quarter Periodized Strength, Running Stamina, Pursuit Speed & Use-of-Force Readiness',
+    nativeWeeks: 52,
+    recommendedWeeksOptions: [4, 8, 12, 26, 52],
     frequency: '5-6 Days / Week',
     category: 'Hybrid',
-    summary: 'Coach Risner’s flagship multi-phase law enforcement blueprint combining progressive barbell compounds (Squat, OHP, Trap Bar Deadlift, Weighted Pull-Ups) with structured Zone 2 base runs and track speed intervals.',
-    defaultEquipment: 'Full Commercial Gym (Barbells, DBs, Cables, Machines)',
+    summary: 'Comprehensive 52-week annual tactical periodization across 4 Quarters (Aerobic Base & Core, Running Stamina & Grappling Strength, Limit Strength & Pursuit Speed, and Use-of-Force Simulation Peak) with mandatory 10-minute DIME warm-ups and low-end set/rep progression.',
+    defaultEquipment: 'Full Commercial Gym (Barbells, DBs, Cables, Sandbag/Sled)',
   },
   {
     key: 'tactical_hypertrophy',
@@ -77,25 +77,13 @@ export const MASTER_PROGRAMS_CATALOG: MasterProgramMetadata[] = [
     key: 'hybrid_protocol',
     title: 'Patrol Ready 12-Week Hybrid Protocol',
     shortTitle: '12-Week Hybrid Protocol',
-    subtitle: '3-Phase Periodized Barbell Strength & Running Architecture',
+    subtitle: '3-Phase Periodized Strength & Running Architecture (Full Gym or AI DB/Bodyweight)',
     nativeWeeks: 12,
     recommendedWeeksOptions: [4, 8, 12],
     frequency: '5 Days / Week',
     category: 'Hybrid',
-    summary: 'Three 4-week mesocycles (Foundation, Intensification, Peak Performance) blending heavy compound lifting with track intervals, tempo runs, and long aerobic endurance.',
-    defaultEquipment: 'Full Commercial Gym (Barbells, DBs, Cables, Machines)',
-  },
-  {
-    key: 'hybrid_db',
-    title: 'Patrol Ready 12-Week DB & Bodyweight Protocol',
-    shortTitle: '12-Week DB & Bodyweight',
-    subtitle: '3-Phase Dumbbell, Calisthenics & Pursuit Conditioning',
-    nativeWeeks: 12,
-    recommendedWeeksOptions: [4, 8, 12],
-    frequency: '5 Days / Week',
-    category: 'Athletic Conditioning',
-    summary: 'Full 12-week periodized tactical program engineered specifically for home/garage or station gyms using only dumbbells, bodyweight calisthenics, farmer carries, and running.',
-    defaultEquipment: 'Dumbbells & Bench Only (Home / Garage Gym)',
+    summary: 'Three 4-week mesocycles (Foundation, Intensification, Peak Performance) blending compound strength with track intervals, tempo runs, and long aerobic endurance. Easily adapts to Dumbbell & Bodyweight setups via the AI Adaptation Engine.',
+    defaultEquipment: 'Full Gym or AI-Adapted Dumbbells & Bodyweight',
   },
   {
     key: 'universal_pat',
@@ -112,7 +100,8 @@ export const MASTER_PROGRAMS_CATALOG: MasterProgramMetadata[] = [
 ];
 
 export function getMasterProgramMetadata(key?: ProgramKey | string): MasterProgramMetadata {
-  const found = MASTER_PROGRAMS_CATALOG.find((p) => p.key === key);
+  const normalizedKey = key === 'hybrid_db' ? 'hybrid_protocol' : key;
+  const found = MASTER_PROGRAMS_CATALOG.find((p) => p.key === normalizedKey);
   return found || MASTER_PROGRAMS_CATALOG[0];
 }
 
@@ -477,21 +466,24 @@ function adaptMasterConditioning(
 }
 
 /**
- * Retrieves the authentic ProtocolPhase for a given Master Program and week number (1..26)
+ * Retrieves the authentic ProtocolPhase for a given Master Program and week number (1..52)
  */
 function getMasterPhaseForWeek(baseKey: ProgramKey, weekNum: number, totalWeeksRequested: number): ProtocolPhase {
   if (baseKey === 'apex_protocol') {
-    // If user requested a 12-week condensed Apex cycle, map Weeks 1-4 -> Phase 1, Weeks 5-8 -> Phase 2/3, Weeks 9-12 -> Phase 4/5
+    // If user requested a 12-week condensed cycle across the 4 Quarters of the 52-week program:
+    // Weeks 1-3 -> Quarter 1, Weeks 4-6 -> Quarter 2, Weeks 7-9 -> Quarter 3, Weeks 10-12 -> Quarter 4
     if (totalWeeksRequested === 12) {
       const mappedApexWeek =
-        weekNum <= 4
-          ? weekNum // Weeks 1-4 (Phase 1)
-          : weekNum <= 8
-          ? (weekNum - 4) * 2 + 4 // Weeks 6, 8, 10, 12 (Phases 2 & 3)
-          : (weekNum - 8) * 3 + 13; // Weeks 16, 19, 22, 25 (Phases 4 & 5)
-      return getApexWeekData(Math.min(26, mappedApexWeek));
+        weekNum <= 3
+          ? weekNum // Weeks 1-3 (Quarter 1)
+          : weekNum <= 6
+          ? 13 + (weekNum - 3) // Weeks 14-16 (Quarter 2)
+          : weekNum <= 9
+          ? 26 + (weekNum - 6) // Weeks 27-29 (Quarter 3)
+          : 39 + (weekNum - 9); // Weeks 40-42 (Quarter 4)
+      return getApexWeekData(Math.min(52, mappedApexWeek));
     }
-    return getApexWeekData(weekNum);
+    return getApexWeekData(Math.min(52, weekNum));
   }
 
   if (baseKey === 'tactical_hypertrophy') {
@@ -504,13 +496,7 @@ function getMasterPhaseForWeek(baseKey: ProgramKey, weekNum: number, totalWeeksR
     return getUniversalPatWeekData(cycleWeek);
   }
 
-  if (baseKey === 'hybrid_db') {
-    if (weekNum <= 4) return PROTOCOL_DATA.db_phase1;
-    if (weekNum <= 8) return PROTOCOL_DATA.db_phase2;
-    return PROTOCOL_DATA.db_phase3;
-  }
-
-  // Default: 'hybrid_protocol' (12-Week Hybrid Law Enforcement Protocol)
+  // Default: 'hybrid_protocol' (also covers any legacy 'hybrid_db' key)
   if (weekNum <= 4) return PROTOCOL_DATA.phase1;
   if (weekNum <= 8) return PROTOCOL_DATA.phase2;
   return PROTOCOL_DATA.phase3;
@@ -955,12 +941,13 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
   if (params.customProgram) {
     return adaptCustomCoachProgram(params);
   }
-  const baseKey: ProgramKey = (params.baseProgramKey as ProgramKey) || 'apex_protocol';
+  const rawKey = (params.baseProgramKey as ProgramKey) || 'apex_protocol';
+  const baseKey: ProgramKey = rawKey === 'hybrid_db' ? 'hybrid_protocol' : rawKey;
   const meta = getMasterProgramMetadata(baseKey);
   const fitnessLevel = params.fitnessLevel || 'Intermediate';
 
   let weeksCount = meta.nativeWeeks;
-  if (typeof params.scheduleWeeks === 'number' && params.scheduleWeeks >= 1 && params.scheduleWeeks <= 26) {
+  if (typeof params.scheduleWeeks === 'number' && params.scheduleWeeks >= 1 && params.scheduleWeeks <= 52) {
     weeksCount = Math.round(params.scheduleWeeks);
   } else if (params.scheduleDuration === '4weeks' || params.scheduleDuration === 'monthly') {
     weeksCount = 4;
@@ -970,7 +957,9 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
     weeksCount = 8;
   } else if (params.scheduleDuration === '12weeks') {
     weeksCount = 12;
-  } else if (params.scheduleDuration === '26weeks' || params.scheduleDuration === 'full') {
+  } else if (params.scheduleDuration === '26weeks') {
+    weeksCount = 26;
+  } else if (params.scheduleDuration === '52weeks' || params.scheduleDuration === 'full') {
     weeksCount = meta.nativeWeeks;
   }
 
@@ -987,10 +976,12 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
   let scaledExercisesCount = 0;
   let conditioningAdaptationsCount = 0;
 
+  const is52WeekBuiltIn = baseKey === 'apex_protocol';
+
   for (let weekNum = 1; weekNum <= weeksCount; weekNum++) {
     const phaseData = getMasterPhaseForWeek(baseKey, weekNum, weeksCount);
-    const isDeloadWeek = weekNum === 4 || weekNum === 8 || (baseKey === 'apex_protocol' && weekNum % 6 === 0);
-    const isPeakWeek = weekNum === weeksCount && weeksCount >= 4;
+    const isDeloadWeek = (weekNum % 4 === 0 && weekNum !== 52) || weekNum === 51;
+    const isPeakWeek = (weekNum === weeksCount && weeksCount >= 4) || weekNum === 13 || weekNum === 26 || weekNum === 39 || weekNum === 52;
 
     phaseData.days.forEach((protoDay: ProtocolDay, dayIdx: number) => {
       const globalDayNum = (weekNum - 1) * 7 + (dayIdx + 1);
@@ -1002,7 +993,7 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
         protoDay.pace,
         globalDayNum,
         weekNum,
-        fitnessLevel,
+        is52WeekBuiltIn ? 'Intermediate' : fitnessLevel,
         bannedRules,
         params.cardioPreference,
         params.runningDistancePreference,
@@ -1067,27 +1058,41 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
         }
 
         // 3. Ability level set/rep/RPE scaling
-        const scaled = scalePrescriptionForAbility(
-          parsed.defaultSets,
-          parsed.targetReps,
-          parsed.restSeconds,
-          fitnessLevel,
-          isCompound,
-          isDeloadWeek,
-          isPeakWeek,
-          weekNum
-        );
+        // Excluded for the 52-Week Program since its progression, low-end start & deloads are already built in.
+        let finalSets = parsed.defaultSets;
+        let finalReps = parsed.targetReps;
+        let finalRest = parsed.restSeconds;
+        let finalRpe = parsed.targetRpe || 8.0;
+        let scalingSummary: string | undefined;
 
-        if (scaled.sets !== parsed.defaultSets || scaled.reps !== parsed.targetReps || fitnessLevel !== 'Intermediate') {
-          scaledExercisesCount++;
+        if (!is52WeekBuiltIn) {
+          const scaled = scalePrescriptionForAbility(
+            parsed.defaultSets,
+            parsed.targetReps,
+            parsed.restSeconds,
+            fitnessLevel,
+            isCompound,
+            isDeloadWeek,
+            isPeakWeek,
+            weekNum
+          );
+          finalSets = scaled.sets;
+          finalReps = scaled.reps;
+          finalRest = scaled.rest;
+          finalRpe = scaled.rpe;
+          scalingSummary = scaled.scalingSummary;
+
+          if (scaled.sets !== parsed.defaultSets || scaled.reps !== parsed.targetReps || fitnessLevel !== 'Intermediate') {
+            scaledExercisesCount++;
+          }
         }
 
         const noteParts: string[] = [];
         if (adaptationReason) {
           noteParts.push(`[ADAPTED: ${adaptationReason}]`);
         }
-        if (scaled.scalingSummary) {
-          noteParts.push(`[${fitnessLevel} Scaling: ${scaled.scalingSummary}]`);
+        if (scalingSummary) {
+          noteParts.push(`[${fitnessLevel} Scaling: ${scalingSummary}]`);
         }
         if (parsed.notes) {
           noteParts.push(parsed.notes);
@@ -1100,13 +1105,13 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
           name: workingName,
           muscleGroup: mg,
           type: mg === 'Core' ? 'core' : 'strength',
-          defaultSets: scaled.sets,
-          targetReps: scaled.reps,
-          restPeriodSeconds: scaled.rest,
-          targetRpe: scaled.rpe,
+          defaultSets: finalSets,
+          targetReps: finalReps,
+          restPeriodSeconds: finalRest,
+          targetRpe: finalRpe,
           originalExerciseName: workingName !== originalName ? originalName : undefined,
           adaptationReason,
-          scalingNote: scaled.scalingSummary,
+          scalingNote: scalingSummary,
           notes: noteParts.join(' • '),
         });
       });
@@ -1137,12 +1142,14 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
       ? ` • Adapted for ${activeInjuryLabels.slice(0, 2).join(' & ')}`
       : '';
 
+  const effectiveAbilityLabel = is52WeekBuiltIn ? 'Built-In 52-Wk Progression' : fitnessLevel;
+
   const adaptationStats: AdaptationSummaryStats = {
     baseProgramKey: baseKey,
     baseProgramTitle: meta.title,
     totalWeeks: weeksCount,
     totalDays: schedule.length,
-    fitnessLevel,
+    fitnessLevel: effectiveAbilityLabel,
     clinicalSwapsCount,
     equipmentSwapsCount,
     scaledExercisesCount,
@@ -1151,24 +1158,40 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
   };
 
   return {
-    title: `${meta.shortTitle} (${fitnessLevel} Adapted)`,
-    subtitle: `Coach Risner Master Protocol • ${weeksCount} Weeks • ${fitnessLevel}${injuryBadge}`,
+    title: is52WeekBuiltIn
+      ? `${meta.shortTitle} (${activeInjuryLabels.length > 0 ? 'Injury-Adapted' : 'Built-In Progression'})`
+      : `${meta.shortTitle} (${fitnessLevel} Adapted)`,
+    subtitle: `Coach Risner Master Protocol • ${weeksCount} Weeks • ${effectiveAbilityLabel}${injuryBadge}`,
     category: meta.category,
     frequency: meta.frequency,
-    scheduleDuration: `${weeksCount}-Week Adapted Master Protocol (${meta.shortTitle})`,
+    scheduleDuration: `${weeksCount}-Week ${is52WeekBuiltIn ? '52-Wk Built-In Progression' : 'Adapted Master Protocol'} (${meta.shortTitle})`,
     estimatedDurationMinutes: params.sessionDurationMinutes || 60,
-    description: `Directly adapted from Coach Risner's "${meta.title}" across ${weeksCount} weeks (${schedule.length} days). Customized for ${fitnessLevel} ability level${
-      activeInjuryLabels.length > 0
-        ? ` with ${clinicalSwapsCount} clinical movement swaps protecting: ${activeInjuryLabels.join(', ')}`
-        : ''
-    }${equipmentSwapsCount > 0 ? ` and ${equipmentSwapsCount} equipment substitutions` : ''}.`,
-    coachingPhilosophy: `Master Program Integrity + Individualized Biomechanics: Instead of random exercises, you are running Coach Risner's exact ${meta.title} split and progression laws—with movements, sets, reps, target RPE, and conditioning calibrated to your current ability tier and joint profile.`,
+    description: is52WeekBuiltIn
+      ? `Preserves Coach Risner's exact prescribed sets, reps, and built-in 52-week progression from "${meta.title}" across ${weeksCount} weeks (${schedule.length} days)${
+          activeInjuryLabels.length > 0
+            ? `, with ${clinicalSwapsCount} clinical movement swaps protecting: ${activeInjuryLabels.join(', ')}`
+            : ''
+        }${equipmentSwapsCount > 0 ? ` and ${equipmentSwapsCount} equipment substitutions` : ''}.`
+      : `Directly adapted from Coach Risner's "${meta.title}" across ${weeksCount} weeks (${schedule.length} days). Customized for ${fitnessLevel} ability level${
+          activeInjuryLabels.length > 0
+            ? ` with ${clinicalSwapsCount} clinical movement swaps protecting: ${activeInjuryLabels.join(', ')}`
+            : ''
+        }${equipmentSwapsCount > 0 ? ` and ${equipmentSwapsCount} equipment substitutions` : ''}.`,
+    coachingPhilosophy: is52WeekBuiltIn
+      ? `Built-In 52-Week Progression + Joint/Equipment Protection: Sets and reps remain 100% faithful to the 52-week program's built-in 4-quarter progression, low-end range initialization, and 4th-week 40% deloads—while movements automatically adapt for your injuries and available gear.`
+      : `Master Program Integrity + Individualized Biomechanics: Instead of random exercises, you are running Coach Risner's exact ${meta.title} split and progression laws—with movements, sets, reps, target RPE, and conditioning calibrated to your current ability tier and joint profile.`,
     weeklyProgressionTips: [
-      `Master Overload Law: Follow the prescribed rep targets on every compound lift. When you hit the top of the rep range at or below target RPE, add +5 lbs (upper) or +10 lbs (lower).`,
+      is52WeekBuiltIn
+        ? `Built-In 3-Step Overload: Starts at the low end of prescribed set/rep ranges — 1. Reps First (hit top of rep range) → 2. Weight Second (+2.5–5 lbs upper / +5–10 lbs lower) → 3. Sets Third.`
+        : `Master Overload Law: Follow the prescribed rep targets on every compound lift. When you hit the top of the rep range at or below target RPE, add +5 lbs (upper) or +10 lbs (lower).`,
       activeInjuryLabels.length > 0
         ? `Clinical Joint Guardrail Active: ${clinicalSwapsCount} movements in ${meta.shortTitle} were automatically swapped to joint-sparing variations (${activeInjuryLabels.join(', ')}). Never force range of motion through pain.`
+        : is52WeekBuiltIn
+        ? `Built-In Sets & Reps Preserved: Rep and set prescriptions are excluded from ability scaling so your 52-week progression and Set 1 auto-pacing remain exact.`
         : `Ability Tier Scaling (${fitnessLevel}): Sets, target RPE, and running volume have been calibrated to your ${fitnessLevel} recovery capacity.`,
-      `Deload & Peak Rhythm: Week 4 and Week 8 automatically reduce working sets and cap RPE at 6.5 to flush systemic fatigue before the next intensification block.`,
+      is52WeekBuiltIn
+        ? `Every-4th-Week 40% Deloads & Set 1 Pacing: Weeks 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, and 48 cut volume 40%, while Set 1 auto-pacing calculates subsequent set weights in real time.`
+        : `Deload & Peak Rhythm: Week 4 and Week 8 automatically reduce working sets and cap RPE at 6.5 to flush systemic fatigue before the next intensification block.`,
     ],
     nutritionAdvice:
       'Consume 1.0g of high-quality protein per pound of lean body weight daily. Hydrate with 1/2 oz water per lb body weight + electrolytes prior to training and conditioning sessions.',
