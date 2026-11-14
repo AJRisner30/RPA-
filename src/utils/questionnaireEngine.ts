@@ -149,9 +149,9 @@ export const GOAL_OPTIONS = [
   },
   {
     id: 'muscle_armor_hypertrophy' as const,
-    label: 'Tactical Hypertrophy & Muscle Armor',
-    badge: 'Upper Body Density & Armor',
-    description: 'Focused on building dense muscle mass, upper body strength, and joint resiliency to withstand defensive tactics and physical encounters.',
+    label: '12-Week Tactical Bodybuilding Program',
+    badge: '3-Phase Hypertrophy, Speed & Pursuit',
+    description: '12-week Sunday–Saturday periodization (Armor & Base → Power-Building → Peak & Velocity) with daily 8-min DIME warm-ups, Deload Weeks 4/8/12, and Zero Olympic/Burpee/Sandbag guardrails.',
     preferredProgram: 'tactical_hypertrophy' as ProgramKey,
   },
   {
@@ -295,24 +295,24 @@ export function calculateProgramRecommendation(
     };
   }
 
-  // 4. Goal & Schedule matching
+  // 5. Goal & Schedule matching
   if (answers.primaryGoalCategory === 'muscle_armor_hypertrophy') {
-    const startWeek = fitnessTier === 'Recruit Foundation' ? 1 : 1;
+    const startWeek = 1;
     return {
       programKey: 'tactical_hypertrophy',
-      programTitle: 'Tactical Hypertrophy & Conditioning',
-      badge: '6-Week Rapid Armor Cycle',
-      durationText: '6-Week Tactical Mesocycle',
-      weeklySplit: '4 Days Upper/Lower Lift + 2 Days Duty Conditioning',
+      programTitle: '12-Week Tactical Bodybuilding Program',
+      badge: '3-Phase Armor, Power & Pursuit System',
+      durationText: '12-Week 3-Phase Tactical Mesocycle',
+      weeklySplit: 'Starts Sunday: 4 Lift + Tuesday Speed/Pursuit + Friday Pump & Zone 2 + Sat Rest',
       fitnessTier,
       startingWeek: startWeek,
-      startingPhaseTitle: `Week ${startWeek}: Upper/Lower Base Armor`,
+      startingPhaseTitle: 'Phase 1 (Weeks 1–4): Armor & Base (8–10 Main • 10–12 Acc)',
       primaryRationale:
-        'Selected for your goal to forge dense muscle armor and tactical upper-body strength. The 4-day Upper/Lower frequency provides the optimal balance of high-volume hypertrophy and frontline recovery.',
+        'Selected for building dense tactical muscle armor alongside foot-pursuit speed without Olympic lifts, burpees, sandbags, or jump ropes. Progresses linearly from Armor & Base (Weeks 1–4) into Power-Building (Weeks 5–8) and Peak & Velocity (Weeks 9–12) with built-in Bad Shift rules.',
       keyActionPoints: [
-        'Upper/Lower split allows maximal CNS recovery between duty shifts.',
-        'Double progression on trap bar deadlifts, barbell bench, and strict pull-ups.',
-        'Dedicated foot pursuit intervals and 1.5-mile conditioning sessions on Day 2 and Day 6.',
+        'Mandated Daily 8-Minute DIME Warm-Up before every single session (plus daily restorative DIME option).',
+        'Double Progression: +5 lbs upper / +10 lbs lower once hitting top reps with 1–2 RIR; Deloads at Weeks 4, 8, and 12 (-40% sets).',
+        'Bad Shift Protocol: After double shifts or 4-hr sleep, halve secondary accessories and swap sprints for 20-min Zone 2 flush.',
       ],
     };
   }

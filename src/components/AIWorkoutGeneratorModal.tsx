@@ -6,7 +6,15 @@ import {
   Zap, Heart, Award, SlidersHorizontal,
   Info, Timer, Activity, RefreshCw
 } from 'lucide-react';
-import { WorkoutProgram, ExerciseTemplate, AthleteProfile, ProgramKey } from '../types';
+import {
+  WorkoutProgram,
+  ExerciseTemplate,
+  AthleteProfile,
+  ProgramKey,
+  isBodyweightExercise,
+  isExerciseTimed,
+  isTimedHoldExercise,
+} from '../types';
 import { 
   generateWorkoutPlanClient, 
   GeneratedWorkoutPlan 
@@ -70,7 +78,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     if (initialBaseProgramKey) {
       setBaseProgramKey(initialBaseProgramKey);
       const meta = getMasterProgramMetadata(initialBaseProgramKey);
-      const defaultWks = meta.key === 'tactical_hypertrophy' ? 6 : meta.key === 'universal_pat' ? 8 : 12;
+      const defaultWks = meta.key === 'universal_pat' ? 8 : 12;
       setScheduleWeeks(defaultWks);
       setScheduleDuration(`${defaultWks}weeks`);
       setFrequency(meta.frequency);
@@ -82,7 +90,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     const normalizedKey = progKey === 'hybrid_db' ? 'hybrid_protocol' : progKey;
     setBaseProgramKey(normalizedKey);
     const meta = getMasterProgramMetadata(normalizedKey);
-    const defaultWks = normalizedKey === 'tactical_hypertrophy' ? 6 : normalizedKey === 'universal_pat' ? 8 : 12;
+    const defaultWks = normalizedKey === 'universal_pat' ? 8 : 12;
     setScheduleWeeks(defaultWks);
     setScheduleDuration(`${defaultWks}weeks`);
     setFrequency(meta.frequency);
@@ -347,15 +355,18 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
     const rawRest = ex.restPeriodSeconds;
     const parsedRest = parseInt(String(rawRest), 10);
     const cleanRest = rawRest === 0 ? 0 : !isNaN(parsedRest) && parsedRest > 0 ? parsedRest : 90;
+    const resolvedType =
+      ex.type ||
+      (isExerciseTimed(ex.name || '', ex.type, ex.targetReps) ||
+      ex.name.toLowerCase().includes('run') ||
+      ex.name.toLowerCase().includes('circuit')
+        ? 'cardio'
+        : 'strength');
     return {
       id: ex.id || fallbackId,
       name: ex.name,
       muscleGroup: ex.muscleGroup || 'Full Body',
-      type:
-        ex.type ||
-        (ex.name.toLowerCase().includes('run') || ex.name.toLowerCase().includes('circuit')
-          ? 'cardio'
-          : 'strength'),
+      type: resolvedType,
       format: ex.format,
       supersetExercises: ex.supersetExercises,
       emomMinutes: ex.emomMinutes,
@@ -412,7 +423,10 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
       category: (planData.category as any) || selectedMasterMeta.category || 'Hybrid',
       frequency: planData.frequency || selectedMasterMeta.frequency,
       estimatedDurationMinutes: planData.estimatedDurationMinutes || sessionDurationMinutes,
-      recommendedWarmupId: 'warmup-dime-mandatory',
+      recommendedWarmupId:
+        (planData.baseProgramKey || baseProgramKey) === 'tactical_hypertrophy'
+          ? 'warmup-dime-tactical-bb'
+          : 'warmup-dime-mandatory',
       description: planData.description || `Adapted from ${selectedMasterMeta.title} for ${fitnessLevel} ability and clinical joint guardrails.`,
       baseProgramKey: planData.baseProgramKey || baseProgramKey,
       programKind: planData.programKind,
@@ -513,7 +527,7 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
   const availableWeekOptions = baseProgramKey === 'apex_protocol'
     ? [4, 8, 12, 26, 52]
     : baseProgramKey === 'tactical_hypertrophy'
-    ? [4, 6, 12]
+    ? [4, 8, 12]
     : baseProgramKey === 'universal_pat'
     ? [4, 6, 8, 12]
     : [4, 6, 8, 12];
@@ -969,6 +983,17 @@ export const AIWorkoutGeneratorModal: React.FC<AIWorkoutGeneratorModalProps> = (
                                 <span className="text-[10px] text-blue-400 font-mono">
                                   {ex.muscleGroup || 'Full Body'}
                                 </span>
+                                {isBodyweightExercise(ex.name || '') && (
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-400/30 uppercase">
+                                    Bodyweight
+                                  </span>
+                                )}
+                                {isExerciseTimed(ex.name || '', ex.type, ex.targetReps) &&
+                                  isTimedHoldExercise(ex.name || '', ex.targetReps) && (
+                                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase">
+                                      Timed Hold
+                                    </span>
+                                  )}
                                 {ex.originalExerciseName && (
                                   <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                                     <RefreshCw className="w-2.5 h-2.5 text-amber-400 shrink-0" />

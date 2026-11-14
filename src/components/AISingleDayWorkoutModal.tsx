@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Dumbbell, ShieldCheck, Flame, 
   Target, Clock, Calendar, CheckCircle2, AlertCircle, 
   ArrowRight, RotateCcw, Copy, Check, Play, Pause, Save, 
   Zap, Heart, Award, SlidersHorizontal, ChevronRight,
-  Info, Loader2, RefreshCw, Activity, Compass, CheckSquare, Square, Timer
+  Info, Loader2, RefreshCw, Activity, Compass, CheckSquare, Square, Timer, Lock
 } from 'lucide-react';
-import { WorkoutProgram, ExerciseTemplate, MuscleGroup, AthleteProfile } from '../types';
+import {
+  WorkoutProgram,
+  ExerciseTemplate,
+  MuscleGroup,
+  AthleteProfile,
+  isBodyweightExercise,
+  isExerciseTimed,
+  isTimedHoldExercise,
+  parseTimedHoldSeconds,
+} from '../types';
 import { PatrolReadyCompanyEmblem } from './BrandingLogos';
 import { soundManager } from '../utils/audio';
 import { 
   generateSingleDayWorkoutClient, 
-  SingleDayWorkoutRequest 
+  SingleDayWorkoutRequest,
+  resolveSingleWorkoutEquipmentMode
 } from '../utils/aiWorkoutService';
 
 import { useRestTimer } from '../hooks/useRestTimer';
@@ -126,6 +136,59 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
     }
   };
 
+  // Detect if Step 2 Workout Type or Custom Prompt locks KB-only, DB-only, or BW-only equipment
+  const lockedEquipmentMode = showCustomInput
+    ? resolveSingleWorkoutEquipmentMode({
+        workoutType: customPrompt,
+        customPrompt,
+        equipment: [],
+      })
+    : resolveSingleWorkoutEquipmentMode({
+        workoutType,
+        equipment: [],
+      });
+  const isEquipmentLocked = lockedEquipmentMode !== 'flexible';
+  const wasAutoLockedRef = useRef(false);
+
+  useEffect(() => {
+    if (lockedEquipmentMode === 'bw_only') {
+      wasAutoLockedRef.current = true;
+      setEquipment(['Bodyweight & Pull-Up Bar Only']);
+    } else if (lockedEquipmentMode === 'db_only') {
+      wasAutoLockedRef.current = true;
+      setEquipment(['Dumbbells Only']);
+    } else if (lockedEquipmentMode === 'kb_only') {
+      wasAutoLockedRef.current = true;
+      setEquipment(['Kettlebells Only']);
+    } else if (wasAutoLockedRef.current) {
+      wasAutoLockedRef.current = false;
+      setEquipment(['Full Commercial Gym (Barbells, DBs, Cables, Machines)']);
+    }
+  }, [lockedEquipmentMode]);
+
+  const effectiveEquipmentMode = isEquipmentLocked
+    ? lockedEquipmentMode
+    : resolveSingleWorkoutEquipmentMode({ workoutType, equipment });
+
+  const allowedCircuitOptions =
+    effectiveEquipmentMode === 'bw_only'
+      ? ['Duty Tactical HIIT & Combat Intervals']
+      : effectiveEquipmentMode === 'db_only'
+      ? ['Dumbbell Metabolic Conditioning Flow', 'Duty Tactical HIIT & Combat Intervals']
+      : effectiveEquipmentMode === 'kb_only'
+      ? ['Kettlebell Conditioning Flow', 'Duty Tactical HIIT & Combat Intervals']
+      : [
+          'Duty Tactical HIIT & Combat Intervals',
+          'Kettlebell & Dumbbell Conditioning Flow',
+          'Assault Bike / Erg & Core Burner',
+        ];
+
+  useEffect(() => {
+    if (!allowedCircuitOptions.includes(cardioCircuitType)) {
+      setCardioCircuitType(allowedCircuitOptions[0]);
+    }
+  }, [effectiveEquipmentMode]);
+
   if (!isOpen) return null;
 
   const durationOptions = [
@@ -170,18 +233,26 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
       color: 'red',
     },
     {
-      id: 'Kettlebell & Dumbbell High-Density Circuit',
-      title: 'Kettlebell / DB Functional Flow',
-      desc: 'Non-stop metabolic complexes: clean & press, goblet squats, renegade rows, and carries.',
-      badge: 'High Density',
+      id: 'Kettlebell Only Functional Flow',
+      title: 'Kettlebell Only Flow',
+      desc: 'Pure kettlebell complexes: clean & press, goblet squats, gorilla rows, swings, and carries.',
+      badge: 'KB Only',
       icon: Zap,
       color: 'orange',
     },
     {
+      id: 'Dumbbell Only Armor & Hypertrophy',
+      title: 'Dumbbell Only Armor',
+      desc: 'Pure dumbbell pressing, chest-supported rows, goblet squats, RDLs, and arm finishers.',
+      badge: 'DB Only',
+      icon: Dumbbell,
+      color: 'amber',
+    },
+    {
       id: 'Bodyweight Duty Calisthenics & Tactical Core',
-      title: 'Zero-Equipment Duty Calisthenics',
-      desc: 'Hand-release push-ups, pull-ups, lunges, and isometric core tension with zero gym gear.',
-      badge: 'No Equipment',
+      title: 'Bodyweight Only Calisthenics',
+      desc: '100% zero-equipment calisthenics: push-ups, pull-ups, lunges, and isometric core.',
+      badge: 'BW Only',
       icon: Target,
       color: 'sky',
     },
@@ -221,13 +292,30 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
     { id: 'Knee Pain / Patellar Tendonitis', label: 'Knee / Tendon Safe', desc: 'Backward sled drags, box squats, vertical tibia angles.' },
   ];
 
+  const EXCLUSIVE_ONLY_EQUIPMENT = new Set([
+    'Bodyweight & Pull-Up Bar Only',
+    'Dumbbells Only',
+    'Kettlebells Only',
+  ]);
+
   const toggleEquipment = (eqId: string) => {
-    if (equipment.includes(eqId)) {
-      if (equipment.length > 1) {
-        setEquipment(equipment.filter((e) => e !== eqId));
+    if (isEquipmentLocked) return;
+
+    if (EXCLUSIVE_ONLY_EQUIPMENT.has(eqId)) {
+      if (equipment.length === 1 && equipment[0] === eqId) {
+        return;
+      }
+      setEquipment([eqId]);
+      return;
+    }
+
+    const withoutExclusive = equipment.filter((e) => !EXCLUSIVE_ONLY_EQUIPMENT.has(e));
+    if (withoutExclusive.includes(eqId)) {
+      if (withoutExclusive.length > 1) {
+        setEquipment(withoutExclusive.filter((e) => e !== eqId));
       }
     } else {
-      setEquipment([...equipment, eqId]);
+      setEquipment([...withoutExclusive, eqId]);
     }
   };
 
@@ -248,10 +336,19 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
     const timer2 = setTimeout(() => setGenerationStep(3), 1300);
 
     try {
+      const effectiveEquipment =
+        lockedEquipmentMode === 'bw_only'
+          ? ['Bodyweight & Pull-Up Bar Only']
+          : lockedEquipmentMode === 'db_only'
+          ? ['Dumbbells Only']
+          : lockedEquipmentMode === 'kb_only'
+          ? ['Kettlebells Only']
+          : equipment;
+
       const workout = await generateSingleDayWorkoutClient({
         workoutType: showCustomInput && customPrompt.trim().length > 0 ? customPrompt.trim() : workoutType,
         durationMinutes,
-        equipment,
+        equipment: effectiveEquipment,
         intensity,
         fitnessLevel: currentAthlete?.experienceLevel || 'Intermediate',
         injuries: selectedInjuries,
@@ -451,7 +548,7 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                     />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     {workoutTypeOptions.map((opt) => {
                       const isSelected = workoutType === opt.id;
                       const IconComponent = opt.icon;
@@ -493,50 +590,79 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                 )}
               </div>
 
-              {/* STEP 3: EQUIPMENT ON HAND */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5 font-athletic">
-                    <Dumbbell className="w-4 h-4 text-amber-400" />
-                    <span>3. What Equipment Do You Have Today? (Select All That Apply)</span>
-                  </label>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    {equipment.length} Selected
+              {/* STEP 3: EQUIPMENT ON HAND (Removed when KB-only / DB-only / BW-only is selected) */}
+              {isEquipmentLocked ? (
+                <div className="p-4 rounded-2xl bg-sky-950/35 border border-sky-500/40 flex items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center shrink-0">
+                      <Lock className="w-4 h-4 text-sky-300" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider text-sky-200 font-athletic block">
+                        {lockedEquipmentMode === 'bw_only'
+                          ? '3. Equipment Locked: Bodyweight Only (Zero Weighted Gear)'
+                          : lockedEquipmentMode === 'db_only'
+                          ? '3. Equipment Locked: Dumbbells Only'
+                          : '3. Equipment Locked: Kettlebells Only'}
+                      </span>
+                      <p className="text-[11px] text-slate-300 mt-0.5">
+                        {lockedEquipmentMode === 'bw_only'
+                          ? 'Equipment selection is removed because you selected a Bodyweight-Only session. Every movement will require zero weights or machines.'
+                          : lockedEquipmentMode === 'db_only'
+                          ? 'Equipment selection is removed because you selected a Dumbbell-Only session. Only dumbbells (and bodyweight) will be programmed.'
+                          : 'Equipment selection is removed because you selected a Kettlebell-Only session. Only kettlebells (and bodyweight) will be programmed.'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-sky-500/20 border border-sky-400/40 text-sky-300 text-[10px] font-mono font-bold uppercase shrink-0">
+                    {lockedEquipmentMode === 'bw_only' ? 'BW Only' : lockedEquipmentMode === 'db_only' ? 'DB Only' : 'KB Only'}
                   </span>
                 </div>
+              ) : (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5 font-athletic">
+                      <Dumbbell className="w-4 h-4 text-amber-400" />
+                      <span>3. What Equipment Do You Have Today? (Select All That Apply)</span>
+                    </label>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {equipment.length} Selected
+                    </span>
+                  </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {equipmentOptions.map((opt) => {
-                    const isSelected = equipment.includes(opt.id);
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => toggleEquipment(opt.id)}
-                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
-                          isSelected
-                            ? 'bg-blue-950/50 border-blue-400 text-white shadow-sm ring-1 ring-blue-400/40'
-                            : 'bg-[#0f172a] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <span className="text-xs font-bold block truncate text-slate-200">
-                            {opt.label}
-                          </span>
-                          <span className="text-[10px] text-slate-400 block font-mono truncate">
-                            {opt.desc}
-                          </span>
-                        </div>
-                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                          isSelected ? 'bg-blue-600 border-blue-400 text-white' : 'border-slate-700 bg-slate-900'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {equipmentOptions.map((opt) => {
+                      const isSelected = equipment.includes(opt.id);
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => toggleEquipment(opt.id)}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                            isSelected
+                              ? 'bg-blue-950/50 border-blue-400 text-white shadow-sm ring-1 ring-blue-400/40'
+                              : 'bg-[#0f172a] border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <span className="text-xs font-bold block truncate text-slate-200">
+                              {opt.label}
+                            </span>
+                            <span className="text-[10px] text-slate-400 block font-mono truncate">
+                              {opt.desc}
+                            </span>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                            isSelected ? 'bg-blue-600 border-blue-400 text-white' : 'border-slate-700 bg-slate-900'
+                          }`}>
+                            {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* STEP 4: INTENSITY & INJURY SAFETY CONTROLS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
@@ -679,12 +805,8 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                       <label className="text-[10px] font-bold text-amber-300 uppercase font-mono block">
                         Preferred Cardio Circuit:
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-                        {[
-                          'Duty Tactical HIIT & Combat Intervals',
-                          'Kettlebell & Dumbbell Conditioning Flow',
-                          'Assault Bike / Erg & Core Burner',
-                        ].map((circ) => (
+                      <div className={`grid grid-cols-1 ${allowedCircuitOptions.length > 1 ? 'sm:grid-cols-3' : ''} gap-1.5`}>
+                        {allowedCircuitOptions.map((circ) => (
                           <button
                             key={circ}
                             type="button"
@@ -728,6 +850,15 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">
                         {generatedWorkout.exercises.length} Exercises
                       </span>
+                      {effectiveEquipmentMode !== 'flexible' && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40 text-[10px] font-black uppercase font-mono">
+                          {effectiveEquipmentMode === 'bw_only'
+                            ? 'Bodyweight Only'
+                            : effectiveEquipmentMode === 'db_only'
+                            ? 'Dumbbells Only'
+                            : 'Kettlebells Only'}
+                        </span>
+                      )}
                     </div>
 
                     <h3 className="text-xl sm:text-2xl font-black uppercase text-white font-athletic tracking-wide">
@@ -804,6 +935,16 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                       );
                     }
 
+                    const isTimedEx = isExerciseTimed(ex.name, ex.type, ex.targetReps);
+                    const isHoldEx = isTimedEx && isTimedHoldExercise(ex.name, ex.targetReps, ex.distance_miles);
+                    const holdSecs = isHoldEx ? (parseTimedHoldSeconds(ex.targetReps, ex.name) || 45) : 0;
+                    const isBwEx = isBodyweightExercise(
+                      ex.name,
+                      `${generatedWorkout.title} ${generatedWorkout.description}`
+                    );
+                    const holdTimerKey = `${ex.name} (Hold)`;
+                    const isHoldTimerActive = Boolean(activeSingleTimer && activeSingleTimer.exerciseName === holdTimerKey);
+
                     return (
                     <div
                       key={ex.id || idx}
@@ -820,6 +961,16 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
                             {ex.muscleGroup}
                           </span>
+                          {isBwEx && (
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-400/30 uppercase">
+                              Bodyweight
+                            </span>
+                          )}
+                          {isHoldEx && (
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase">
+                              Timed Hold
+                            </span>
+                          )}
                         </div>
                         {ex.notes && (
                           <p className="text-[11px] text-slate-400 mt-1.5 ml-8 italic leading-snug">
@@ -837,6 +988,40 @@ export const AISingleDayWorkoutModal: React.FC<AISingleDayWorkoutModalProps> = (
                             Target RPE {ex.targetRpe || 8}
                           </span>
                         </div>
+
+                        {isHoldEx && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSingleTimer(holdTimerKey, holdSecs)}
+                            className={`px-2.5 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer self-start sm:self-center ${
+                              isHoldTimerActive
+                                ? activeSingleTimer!.secondsRemaining === 0
+                                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 animate-pulse'
+                                  : 'bg-emerald-600 text-white border-emerald-400 shadow'
+                                : 'bg-emerald-950/50 hover:bg-emerald-900/70 text-emerald-300 border-emerald-500/40'
+                            }`}
+                            title={`Start ${holdSecs}s isometric hold timer`}
+                          >
+                            {isHoldTimerActive ? (
+                              activeSingleTimer!.secondsRemaining === 0 ? (
+                                <>
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  <span>HOLD DONE!</span>
+                                </>
+                              ) : (
+                                <>
+                                  {activeSingleTimer!.isRunning ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                                  <span>{activeSingleTimer!.secondsRemaining}s Hold</span>
+                                </>
+                              )
+                            ) : (
+                              <>
+                                <Play className="w-3 h-3 fill-current" />
+                                <span>{holdSecs}s Hold Timer</span>
+                              </>
+                            )}
+                          </button>
+                        )}
 
                         {/* Dedicated Rest Timer Controls for Single Day Exercise */}
                         <div className="flex items-center gap-1.5 self-start sm:self-center">

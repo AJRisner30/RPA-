@@ -23,6 +23,7 @@ import {
 } from './tacticalExerciseEngine';
 import {
   getExerciseFormat,
+  isSupersetExercise,
   parseSupersetDetails,
   parseEmomDetails,
   parseAmrapDetails,
@@ -63,15 +64,15 @@ export const MASTER_PROGRAMS_CATALOG: MasterProgramMetadata[] = [
   },
   {
     key: 'tactical_hypertrophy',
-    title: 'Patrol Ready Tactical Hypertrophy & Conditioning',
-    shortTitle: 'Tactical Hypertrophy',
-    subtitle: '4-Day Upper/Lower Armor Split + 2-Day Aerobic Engine',
-    nativeWeeks: 6,
-    recommendedWeeksOptions: [6, 12],
-    frequency: '6 Days / Week (4 Lift + 2 Engine)',
+    title: '12-Week Tactical Bodybuilding Program',
+    shortTitle: 'Tactical Bodybuilding',
+    subtitle: '3-Phase Power-Building, Speed & Pursuit Split (Starts Sunday • Mandatory Daily DIME)',
+    nativeWeeks: 12,
+    recommendedWeeksOptions: [4, 8, 12],
+    frequency: '6 Days / Week (Starts Sunday • 4 Lift + 2 Speed/Cond)',
     category: 'Hypertrophy',
-    summary: 'Builds dense upper and lower body combat chassis armor using double-progression compound lifts paired with Rower/Bike Flush intervals and progressive Zone 2 duty runs.',
-    defaultEquipment: 'Full Commercial Gym (Barbells, DBs, Cables, Machines)',
+    summary: '12-week Sunday–Saturday periodization across Phase 1 (Armor & Base), Phase 2 (Power-Building), and Phase 3 (Peak & Velocity) with Double Progression (+5 upper / +10 lower), Deload Weeks 4/8/12 (-40% sets), Bad Shift Protocol, Mandatory Daily 8-Min DIME Warm-Up, and Zero Olympic Lift, Burpee, Sandbag, or Jump Rope guardrails.',
+    defaultEquipment: 'Full Commercial Gym (Barbells, DBs, Cables, Sled, Med Ball)',
   },
   {
     key: 'hybrid_protocol',
@@ -107,25 +108,25 @@ export function getMasterProgramMetadata(key?: ProgramKey | string): MasterProgr
 
 function inferMuscleGroupFromName(name: string): MuscleGroup {
   const lower = name.toLowerCase();
-  if (lower.includes('squat') || lower.includes('lunge') || lower.includes('step-up') || lower.includes('leg press') || lower.includes('calf') || lower.includes('sled')) {
+  if (lower.includes('squat') || lower.includes('lunge') || lower.includes('step-up') || lower.includes('leg press') || lower.includes('calf') || lower.includes('sled') || lower.includes('box jump')) {
     return 'Quads';
   }
   if (lower.includes('deadlift') || lower.includes('rdl') || lower.includes('romanian') || lower.includes('hip thrust') || lower.includes('glute') || lower.includes('hamstring') || lower.includes('leg curl') || lower.includes('swing') || lower.includes('sorensen') || lower.includes('hyperextension')) {
     return 'Hamstrings & Glutes';
   }
-  if (lower.includes('bench') || lower.includes('floor press') || lower.includes('push-up') || lower.includes('pushup') || lower.includes('dip') || lower.includes('fly')) {
+  if (lower.includes('bench') || lower.includes('floor press') || lower.includes('push-up') || lower.includes('pushup') || lower.includes('dip') || lower.includes('fly') || lower.includes('chest pass')) {
     return 'Chest';
   }
-  if (lower.includes('pull-up') || lower.includes('pullup') || lower.includes('chin-up') || lower.includes('row') || lower.includes('pulldown') || lower.includes('face pull')) {
+  if (lower.includes('pull-up') || lower.includes('pullup') || lower.includes('chin-up') || lower.includes('row') || lower.includes('pulldown') || lower.includes('face pull') || lower.includes('shrug')) {
     return 'Back';
   }
   if (lower.includes('overhead') || lower.includes('ohp') || lower.includes('military') || lower.includes('push press') || lower.includes('z-press') || lower.includes('lateral raise') || lower.includes('landmine') || lower.includes('shoulder') || lower.includes('arnold')) {
     return 'Shoulders';
   }
-  if (lower.includes('curl') || lower.includes('tricep') || lower.includes('skull') || lower.includes('wrist') || lower.includes('close-grip')) {
+  if (lower.includes('curl') || lower.includes('tricep') || lower.includes('skull') || lower.includes('wrist') || lower.includes('close-grip') || lower.includes('pushdown')) {
     return 'Arms';
   }
-  if (lower.includes('plank') || lower.includes('pallof') || lower.includes('hollow') || lower.includes('sit-up') || lower.includes('knee raise') || lower.includes('leg raise') || lower.includes('tuck') || lower.includes('twist') || lower.includes('rollout') || lower.includes('core') || lower.includes('deadbug')) {
+  if (lower.includes('plank') || lower.includes('pallof') || lower.includes('hollow') || lower.includes('sit-up') || lower.includes('knee raise') || lower.includes('leg raise') || lower.includes('tuck') || lower.includes('twist') || lower.includes('rollout') || lower.includes('core') || lower.includes('deadbug') || lower.includes('crunch')) {
     return 'Core';
   }
   return 'Full Body';
@@ -167,23 +168,68 @@ function adaptExerciseForEquipment(
   const lower = exerciseName.toLowerCase();
 
   if (isBodyweightOnly) {
+    if (lower.includes('leg press')) {
+      return { name: 'Close-Stance Tempo Bodyweight Squats (3-2-1 Tempo)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
     if (lower.includes('squat') && !lower.includes('split')) {
       return { name: 'Tempo Bodyweight Squat to Pause (3-2-1 Tempo)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
     }
     if (lower.includes('split squat') || lower.includes('lunge')) {
       return { name: 'Rear-Foot Elevated Bulgarian Split Squat (Bodyweight Tempo)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
     }
+    if (lower.includes('leg curl')) {
+      return { name: 'Eccentric Hamstring Walkouts / Slider Curl', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
     if (lower.includes('deadlift') || lower.includes('rdl') || lower.includes('romanian') || lower.includes('hip thrust')) {
       return { name: 'Single-Leg Bodyweight Hip Thrust & Hamstring Walkout', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('med-ball') || lower.includes('chest pass')) {
+      return { name: 'Explosive Plyometric Push-Ups (Full Reset)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('pushdown') || lower.includes('skullcrusher') || lower.includes('overhead cable')) {
+      return { name: 'Strict Diamond Push-Ups or Bench Tricep Dips', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('dip') && lower.includes('close-grip')) {
+      return { name: 'Parallel Bar or Bench Tricep Dips (Controlled Eccentric)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
     }
     if (lower.includes('bench') || lower.includes('floor press') || lower.includes('incline')) {
       return { name: 'Deficit Hand-Release Push-Ups (Feet Elevated)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
     }
+    if (lower.includes('lateral raise')) {
+      return { name: 'Prone Y-T-W Scapular Raises (Slow Tempo)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('face pull')) {
+      return { name: 'Prone Y-T-W External Rotation Holds', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
     if (lower.includes('overhead') || lower.includes('ohp') || lower.includes('push press') || lower.includes('z-press')) {
       return { name: 'Elevated Pike Push-Ups (Strict Shoulder Press)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
     }
+    if (lower.includes('pull-up') || lower.includes('lat pulldown')) {
+      return { name: 'Strict Bodyweight Pull-Ups or Inverted Table Rows', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
     if (lower.includes('row')) {
       return { name: 'Inverted Bodyweight Table / Bar Rows (Pause at Top)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('shrug')) {
+      return { name: 'Scapular Pull-Up Holds (2-Sec Peak Squeeze)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('calf')) {
+      return { name: 'Single-Leg Elevated Bodyweight Calf Raises (2s Stretch)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('sled')) {
+      return { name: 'Explosive Broad Jumps or 20m Hill Accelerations', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('kettlebell swing')) {
+      return { name: 'Explosive Broad Jumps (Step Back & Full Reset)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('pallof')) {
+      return { name: 'Side Plank Anti-Rotation Holds (30s/side)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('cable crunch')) {
+      return { name: 'Strict Hanging Knee Raises or Hollow Body Rocks', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
+    }
+    if (lower.includes('assault bike')) {
+      return { name: 'Shuttle Accelerations (15s Sprint / 45s Walk Recovery)', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
     }
     if (lower.includes('farmer') || lower.includes('carry')) {
       return { name: 'Bear Crawl Hold & Isometric Core Brace', adapted: true, reason: 'Adapted for Bodyweight Equipment' };
@@ -194,7 +240,13 @@ function adaptExerciseForEquipment(
     return { name: exerciseName, adapted: false };
   }
 
-  // Dumbbell / Kettlebell Home Gym Adaptation (No Barbell)
+  // Dumbbell / Kettlebell Home Gym Adaptation (No Barbell / Cables / Machines)
+  if (lower.includes('trap bar deadlift or front squat')) {
+    return { name: 'Heavy Dual-Dumbbell Front Squat or Trap-Stance DB Deadlift', adapted: true, reason: 'Swapped Barbell/Trap Bar for Dumbbells' };
+  }
+  if (lower.includes('leg press')) {
+    return { name: 'Heavy Goblet Squat (3-Second Eccentric)', adapted: true, reason: 'Swapped Machine for Dumbbells' };
+  }
   if (lower.includes('barbell back squat') || lower.includes('front squat') || lower === 'back squat') {
     return { name: 'Heavy Dumbbell Goblet Squat or Dual-DB Front Squat', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
   }
@@ -206,14 +258,14 @@ function adaptExerciseForEquipment(
       return { name: 'Heavy Dumbbell Romanian Deadlift (RDL)', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
     }
   }
+  if (lower.includes('incline barbell') || lower.includes('barbell incline')) {
+    return { name: 'Incline Dumbbell Bench Press (30°)', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
+  }
   if (lower.includes('barbell bench') || lower.includes('flat barbell bench')) {
     return { name: 'Heavy Dumbbell Floor Press or Flat DB Bench Press', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
   }
-  if (lower.includes('barbell incline') || lower.includes('incline barbell')) {
-    return { name: 'Incline Dumbbell Bench Press (30°)', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
-  }
-  if (lower.includes('close-grip barbell')) {
-    return { name: 'Neutral-Grip Crush Dumbbell Press (Triceps Focus)', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
+  if (lower.includes('close-grip barbell') || lower.includes('close-grip bench')) {
+    return { name: 'Weighted Dips or Neutral-Grip Crush Dumbbell Press', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
   }
   if (lower.includes('overhead barbell') || lower.includes('strict overhead press') || lower.includes('military overhead press') || lower.includes('barbell z-press')) {
     return { name: 'Seated or Standing Dual-Dumbbell Overhead Press', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
@@ -221,17 +273,47 @@ function adaptExerciseForEquipment(
   if (lower.includes('push press') && !lower.includes('dumbbell')) {
     return { name: 'Dual-Dumbbell Push Press', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
   }
+  if (lower.includes('med-ball') || lower.includes('chest pass')) {
+    return { name: 'Explosive Plyometric Push-Ups (Full Reset)', adapted: true, reason: 'Adapted for Dumbbell Home Gym' };
+  }
+  if (lower.includes('cable tricep pushdown')) {
+    return { name: 'Seated Dumbbell Overhead Triceps Extensions', adapted: true, reason: 'Swapped Cable for Dumbbells' };
+  }
+  if (lower.includes('skullcrushers or overhead cable') || lower.includes('skullcrusher')) {
+    return { name: 'Dumbbell Skullcrushers or Overhead DB Triceps Extension', adapted: true, reason: 'Swapped Barbell/Cable for Dumbbells' };
+  }
+  if (lower.includes('weighted pull-ups or lat pulldowns')) {
+    return { name: 'Pull-Ups or Heavy Single-Arm Dumbbell Rows', adapted: true, reason: 'Adapted for Dumbbell Home Gym' };
+  }
   if (lower.includes('barbell bent-over row') || lower.includes('pendlay') || lower.includes('t-bar')) {
     return { name: 'Chest-Supported Dual-Dumbbell Row', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
+  }
+  if (lower.includes('face pull')) {
+    return { name: 'Bent-Over Rear Delt Dumbbell Flyes (External Rotation)', adapted: true, reason: 'Swapped Cable for Dumbbells' };
+  }
+  if (lower.includes('barbell or heavy dumbbell shrugs') || lower.includes('barbell shrug')) {
+    return { name: 'Heavy Dumbbell Shrugs (2-Sec Top Pause)', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
   }
   if (lower.includes('barbell hip thrust')) {
     return { name: 'Heavy Dumbbell Hip Thrusts (Back on Bench)', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
   }
-  if (lower.includes('barbell calf')) {
-    return { name: 'Standing Dumbbell Calf Raises (2s Pause)', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
+  if (lower.includes('lying or seated leg curls')) {
+    return { name: 'Dumbbell Hamstring Leg Curls or Slider Curls', adapted: true, reason: 'Swapped Machine for Dumbbells' };
   }
-  if (lower.includes('barbell ez-curl') || lower.includes('barbell curl')) {
-    return { name: 'Strict Dumbbell Supinating Biceps Curls', adapted: true, reason: 'Swapped Barbell for Dumbbells' };
+  if (lower.includes('heavy sled push') || lower.includes('sled push')) {
+    return { name: 'Heavy Dumbbell Split-Stance Marches or Kettlebell Swings', adapted: true, reason: 'Swapped Sled for Dumbbells' };
+  }
+  if (lower.includes('standing calf') || lower.includes('barbell calf')) {
+    return { name: 'Standing Dumbbell Calf Raises (2s Pause)', adapted: true, reason: 'Swapped Machine/Barbell for Dumbbells' };
+  }
+  if (lower.includes('ez-bar') || lower.includes('barbell ez-curl') || lower.includes('barbell curl')) {
+    return { name: 'Strict Dumbbell Supinating Biceps Curls', adapted: true, reason: 'Swapped Barbell/EZ-Bar for Dumbbells' };
+  }
+  if (lower.includes('cable crunches')) {
+    return { name: 'Ab-Wheel Rollouts or Weighted Decline Sit-Ups', adapted: true, reason: 'Swapped Cable for Home Core' };
+  }
+  if (lower.includes('pallof press')) {
+    return { name: 'Dumbbell Anti-Rotation Plank Pull-Throughs', adapted: true, reason: 'Swapped Cable for Dumbbells' };
   }
   if (lower.includes('trap bar farmer')) {
     return { name: "Heavy Dumbbell Farmer's Walks", adapted: true, reason: 'Swapped Trap Bar for Dumbbells' };
@@ -320,6 +402,22 @@ function scalePrescriptionForAbility(
   };
 }
 
+function selectSafeDistinctCircuit(
+  dayNum: number,
+  cardioCircuitType: string | undefined,
+  bannedRules: BannedLimitation[]
+) {
+  for (let offset = 0; offset < 12; offset++) {
+    const candidate = getDistinctCircuitForDay(dayNum - 1 + offset, cardioCircuitType, bannedRules);
+    const haystack = `${candidate.name} ${(candidate.circuitStations || []).join(' ')}`.toLowerCase();
+    const violates = bannedRules.some((r) => r.forbiddenRegex.test(haystack));
+    if (!violates) {
+      return candidate;
+    }
+  }
+  return getDistinctCircuitForDay(dayNum - 1, cardioCircuitType, bannedRules);
+}
+
 /**
  * Adapts the master program's running / conditioning prescription for ability level & injuries
  */
@@ -332,7 +430,8 @@ function adaptMasterConditioning(
   bannedRules: BannedLimitation[],
   cardioPreference?: string,
   runningDistPref?: string,
-  cardioCircuitType?: string
+  cardioCircuitType?: string,
+  skipSupplementalRunOnRestRun?: boolean
 ): GeneratedExercise[] {
   const results: GeneratedExercise[] = [];
   const runClean = (dayRun || '').trim();
@@ -351,7 +450,7 @@ function adaptMasterConditioning(
 
   // Case 1: User explicitly wants Cardio Circuits instead of running, OR has a lower-body impact injury banning runs
   if (cardioPreference === 'cardio_circuits' || (hasRunBan && !isRestRun)) {
-    const circuitEx = getDistinctCircuitForDay(dayNum - 1, cardioCircuitType, bannedRules);
+    const circuitEx = selectSafeDistinctCircuit(dayNum, cardioCircuitType, bannedRules);
     const originalLabel = !isRestRun ? runClean : 'Master Conditioning Slot';
     const scaledRounds = level.includes('beginner')
       ? Math.max(2, circuitEx.defaultSets - 1)
@@ -381,12 +480,21 @@ function adaptMasterConditioning(
     let adaptationReason: string | undefined;
 
     // Scale distance or minutes in the run title for Beginner / Advanced / Elite
-    const mileMatch = runClean.match(/(\d+(?:\.\d+)?)\s*Mile/i);
+    const mileRangeMatch = runClean.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*Miles?/i);
+    const mileMatch = runClean.match(/(\d+(?:\.\d+)?)[-\s]*Miles?/i);
     const minMatch = runClean.match(/(\d+)\s*Min/i);
     const repeatMatch = runClean.match(/(\d+)\s*x\s*(\d+m)/i);
 
     if (level.includes('beginner')) {
-      if (mileMatch) {
+      if (mileRangeMatch) {
+        const origLow = parseFloat(mileRangeMatch[1]);
+        const origHigh = parseFloat(mileRangeMatch[2]);
+        const scaledLow = Math.max(1.0, parseFloat((origLow * 0.75).toFixed(1)));
+        const scaledHigh = Math.max(scaledLow + 0.3, parseFloat((origHigh * 0.75).toFixed(1)));
+        adaptedRunName = runClean.replace(mileRangeMatch[0], `${scaledLow}–${scaledHigh} Miles`);
+        adaptedTargetReps = `${scaledLow}–${scaledHigh} Miles`;
+        adaptationReason = `Scaled from ${origLow}–${origHigh} Miles (-25% volume for Beginner tier)`;
+      } else if (mileMatch) {
         const origMiles = parseFloat(mileMatch[1]);
         const scaledMiles = Math.max(1.0, parseFloat((origMiles * 0.75).toFixed(1)));
         adaptedRunName = runClean.replace(mileMatch[0], `${scaledMiles} Mile`);
@@ -407,7 +515,15 @@ function adaptMasterConditioning(
       }
       adaptedPace = `${adaptedPace} [Beginner Scaling: Add +45-60s/mi cushion or walk-jog intervals as needed]`;
     } else if (level.includes('elite')) {
-      if (mileMatch) {
+      if (mileRangeMatch) {
+        const origLow = parseFloat(mileRangeMatch[1]);
+        const origHigh = parseFloat(mileRangeMatch[2]);
+        const scaledLow = parseFloat((origLow * 1.15).toFixed(1));
+        const scaledHigh = parseFloat((origHigh * 1.15).toFixed(1));
+        adaptedRunName = runClean.replace(mileRangeMatch[0], `${scaledLow}–${scaledHigh} Miles`);
+        adaptedTargetReps = `${scaledLow}–${scaledHigh} Miles`;
+        adaptationReason = `Scaled from ${origLow}–${origHigh} Miles (+15% volume for Elite tier)`;
+      } else if (mileMatch) {
         const origMiles = parseFloat(mileMatch[1]);
         const scaledMiles = parseFloat((origMiles * 1.15).toFixed(1));
         adaptedRunName = runClean.replace(mileMatch[0], `${scaledMiles} Mile`);
@@ -435,7 +551,7 @@ function adaptMasterConditioning(
       adaptationReason,
       notes: `Target Pace: ${adaptedPace} (Week ${weekNum})`,
     });
-  } else if (cardioPreference === 'running') {
+  } else if (cardioPreference === 'running' && !skipSupplementalRunOnRestRun) {
     // Master day had no run, but user requested running on every training day
     const dist = runningDistPref || '1.5-2.0 Miles';
     results.push({
@@ -454,7 +570,7 @@ function adaptMasterConditioning(
 
   // If hybrid preference, also append a distinct conditioning circuit on non-interval lift days
   if (cardioPreference === 'hybrid' && results.length === 0) {
-    const circuitEx = getDistinctCircuitForDay(dayNum - 1, cardioCircuitType, bannedRules);
+    const circuitEx = selectSafeDistinctCircuit(dayNum, cardioCircuitType, bannedRules);
     results.push({
       ...circuitEx,
       id: `adapt-hybrid-circuit-d${dayNum}`,
@@ -487,7 +603,7 @@ function getMasterPhaseForWeek(baseKey: ProgramKey, weekNum: number, totalWeeksR
   }
 
   if (baseKey === 'tactical_hypertrophy') {
-    const cycleWeek = ((weekNum - 1) % 6) + 1;
+    const cycleWeek = ((weekNum - 1) % 12) + 1;
     return getTacticalHypertrophyWeekData(cycleWeek);
   }
 
@@ -977,28 +1093,83 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
   let conditioningAdaptationsCount = 0;
 
   const is52WeekBuiltIn = baseKey === 'apex_protocol';
+  const isTacticalBodybuilding = baseKey === 'tactical_hypertrophy';
+
+  // Enforce 12-Week Tactical Bodybuilding architectural guardrails:
+  // Zero Olympic lifts, burpees, sandbags, or jump ropes.
+  const programBannedRules: BannedLimitation[] = isTacticalBodybuilding
+    ? [
+        ...bannedRules,
+        {
+          keyword: 'burpee',
+          label: 'Zero Burpees Guardrail',
+          forbiddenRegex: /\b(burpees?|combat\s*sprawls?)\b/i,
+          substitutions: {
+            chest: 'Explosive Med-Ball Chest Pass',
+            back: 'Kettlebell Power Swings',
+            quads: '50m Sled Push',
+            hamstrings: 'Kettlebell Swings',
+            shoulders: 'Sled Push Intervals',
+            arms: 'Hammer Curls',
+            core: 'Pallof Press',
+            fullBody: 'Assault Bike Sprint Intervals (Zero Burpee Guardrail)',
+          },
+        },
+        {
+          keyword: 'sandbag_olympic_rope',
+          label: 'Zero Olympic Lifts / Sandbags / Jump Ropes',
+          forbiddenRegex: /\b(sandbag|jump\s*rope|double[-\s]?under|snatch|power\s*clean|hang\s*clean|clean\s*&\s*jerk)\b/i,
+          substitutions: {
+            chest: 'Explosive Med-Ball Chest Pass',
+            back: 'Chest-Supported Dumbbell Row',
+            quads: 'Heavy Sled Push or Box Jumps',
+            hamstrings: 'Kettlebell Swings',
+            shoulders: 'Seated Dumbbell Overhead Press',
+            arms: 'EZ-Bar Curls',
+            core: 'Pallof Press',
+            fullBody: 'Heavy Sled Push & Kettlebell Swing Intervals',
+          },
+        },
+      ]
+    : bannedRules;
 
   for (let weekNum = 1; weekNum <= weeksCount; weekNum++) {
     const phaseData = getMasterPhaseForWeek(baseKey, weekNum, weeksCount);
-    const isDeloadWeek = (weekNum % 4 === 0 && weekNum !== 52) || weekNum === 51;
-    const isPeakWeek = (weekNum === weeksCount && weeksCount >= 4) || weekNum === 13 || weekNum === 26 || weekNum === 39 || weekNum === 52;
+    const isDeloadWeek = isTacticalBodybuilding
+      ? weekNum === 4 || weekNum === 8 || weekNum === 12
+      : (weekNum % 4 === 0 && weekNum !== 52) || weekNum === 51;
+    const isPeakWeek = isTacticalBodybuilding
+      ? weekNum === 11
+      : (weekNum === weeksCount && weeksCount >= 4) || weekNum === 13 || weekNum === 26 || weekNum === 39 || weekNum === 52;
 
     phaseData.days.forEach((protoDay: ProtocolDay, dayIdx: number) => {
       const globalDayNum = (weekNum - 1) * 7 + (dayIdx + 1);
       const rawStrength = protoDay.strength || [];
       const realStrengthStrings = rawStrength.filter((s) => !isRecoveryPlaceholder(s));
 
-      const conditioningExercises = adaptMasterConditioning(
-        protoDay.run,
-        protoDay.pace,
-        globalDayNum,
-        weekNum,
-        is52WeekBuiltIn ? 'Intermediate' : fitnessLevel,
-        bannedRules,
-        params.cardioPreference,
-        params.runningDistancePreference,
-        params.cardioCircuitType
+      const hasRunBan = bannedRules.some(
+        (r) => r.keyword === 'run' || r.keyword === 'jump' || r.keyword === 'lunge'
       );
+      const tacticalHasConditioningInStrength =
+        isTacticalBodybuilding && (dayIdx === 2 || dayIdx === 5);
+
+      // Avoid duplicating Tuesday sprints/agility or Friday Zone 2 Flush on 12-Week Tactical Bodybuilding
+      // since day.strength already holds the exact track/turf sprints, bike finisher, and Zone 2 Flush.
+      const conditioningExercises =
+        tacticalHasConditioningInStrength && params.cardioPreference !== 'cardio_circuits' && !hasRunBan
+          ? []
+          : adaptMasterConditioning(
+              protoDay.run,
+              protoDay.pace,
+              globalDayNum,
+              weekNum,
+              is52WeekBuiltIn ? 'Intermediate' : fitnessLevel,
+              programBannedRules,
+              params.cardioPreference,
+              params.runningDistancePreference,
+              params.cardioCircuitType,
+              isTacticalBodybuilding
+            );
 
       conditioningExercises.forEach((cEx) => {
         if (cEx.adaptationReason) conditioningAdaptationsCount++;
@@ -1024,8 +1195,96 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
       const dayExercises: GeneratedExercise[] = [];
 
       realStrengthStrings.forEach((exStr, exIdx) => {
+        // On Tactical Bodybuilding Tuesday/Friday, if athlete switched to Cardio Circuits or has a Run Ban,
+        // skip the duplicate run/sprint items inside realStrengthStrings so the swapped circuit takes over cleanly.
+        if (
+          tacticalHasConditioningInStrength &&
+          (params.cardioPreference === 'cardio_circuits' || hasRunBan) &&
+          /\b(sprint|sprints|pro\s+agility|t-drill|zone\s*2\s*run)\b/i.test(exStr)
+        ) {
+          return;
+        }
+
         const parsed = parseExerciseString(exStr);
         const originalName = parsed.name;
+
+        // Superset Support inside Master Programs (e.g. Tactical Bodybuilding Sun/Mon/Wed supersets)
+        if (isSupersetExercise({ name: originalName, notes: parsed.notes })) {
+          const parsedSS = parseSupersetDetails({
+            name: originalName,
+            defaultSets: parsed.defaultSets,
+            targetReps: parsed.targetReps,
+            restPeriodSeconds: parsed.restSeconds,
+            targetRpe: parsed.targetRpe,
+            notes: parsed.notes,
+          });
+
+          const adaptedMovements: SupersetMovementItem[] = parsedSS.movements.map((mov) => {
+            const movMg = mov.muscleGroup || inferMovementMuscleGroup(mov.name);
+            const res = adaptSingleMovement(mov.name, movMg, parsed.notes, params.equipment || [], programBannedRules);
+            if (res.eqSwapped) equipmentSwapsCount++;
+            if (res.clinicalSwapped) clinicalSwapsCount++;
+
+            const scaledMov = scalePrescriptionForAbility(
+              parsedSS.rounds,
+              mov.targetReps || '12-15',
+              parsed.restSeconds || 75,
+              fitnessLevel,
+              false,
+              isDeloadWeek,
+              isPeakWeek,
+              weekNum
+            );
+
+            return {
+              ...mov,
+              name: res.name,
+              muscleGroup: movMg,
+              targetReps: scaledMov.reps,
+              originalExerciseName: res.name !== mov.name ? mov.name : undefined,
+              adaptationReason: res.reason,
+            };
+          });
+
+          const scaledRounds = scalePrescriptionForAbility(
+            parsedSS.rounds,
+            parsed.targetReps,
+            parsed.restSeconds || 75,
+            fitnessLevel,
+            false,
+            isDeloadWeek,
+            isPeakWeek,
+            weekNum
+          );
+          if (scaledRounds.sets !== parsedSS.rounds || fitnessLevel !== 'Intermediate') {
+            scaledExercisesCount++;
+          }
+
+          const anySwap = adaptedMovements.find((m) => m.originalExerciseName);
+          const noteParts: string[] = [];
+          if (anySwap?.adaptationReason) noteParts.push(`[ADAPTED: ${anySwap.adaptationReason}]`);
+          if (scaledRounds.scalingSummary) noteParts.push(`[${fitnessLevel} Scaling: ${scaledRounds.scalingSummary}]`);
+          if (parsed.notes) noteParts.push(parsed.notes);
+
+          dayExercises.push({
+            id: `master-${baseKey}-w${weekNum}-d${dayIdx + 1}-ex${exIdx + 1}`,
+            name: `Superset: ${adaptedMovements.map((m) => m.name).join(' + ')}`,
+            muscleGroup: adaptedMovements[0]?.muscleGroup || 'Full Body',
+            type: 'superset',
+            format: 'superset',
+            defaultSets: scaledRounds.sets,
+            targetReps: adaptedMovements.map((m) => m.targetReps).join(' / '),
+            restPeriodSeconds: scaledRounds.rest,
+            targetRpe: scaledRounds.rpe,
+            supersetExercises: adaptedMovements,
+            originalExerciseName: anySwap ? originalName : undefined,
+            adaptationReason: anySwap?.adaptationReason,
+            scalingNote: scaledRounds.scalingSummary,
+            notes: noteParts.join(' • '),
+          });
+          return;
+        }
+
         const mg = inferMuscleGroupFromName(originalName);
         const isCompound = exIdx === 0 || exIdx === 1 || parsed.restSeconds >= 120;
 
@@ -1038,7 +1297,7 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
         }
 
         // 2. Clinical injury & limitation swap check
-        if (bannedRules.length > 0) {
+        if (programBannedRules.length > 0) {
           const sanitizedArr = sanitizeExerciseList(
             [
               {
@@ -1047,12 +1306,12 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
                 notes: parsed.notes,
               },
             ],
-            bannedRules
+            programBannedRules
           );
           const afterSanitize = sanitizedArr[0];
           if (afterSanitize.name !== workingName) {
             workingName = afterSanitize.name;
-            adaptationReason = `Clinically swapped from "${originalName}" (${bannedRules.map((b) => b.label).join(', ')})`;
+            adaptationReason = `Clinically swapped from "${originalName}" (${programBannedRules.map((b) => b.label).join(', ')})`;
             clinicalSwapsCount++;
           }
         }
@@ -1065,26 +1324,43 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
         let finalRpe = parsed.targetRpe || 8.0;
         let scalingSummary: string | undefined;
 
-        if (!is52WeekBuiltIn) {
-          const scaled = scalePrescriptionForAbility(
-            parsed.defaultSets,
-            parsed.targetReps,
-            parsed.restSeconds,
-            fitnessLevel,
-            isCompound,
-            isDeloadWeek,
-            isPeakWeek,
-            weekNum
-          );
-          finalSets = scaled.sets;
-          finalReps = scaled.reps;
-          finalRest = scaled.rest;
-          finalRpe = scaled.rpe;
-          scalingSummary = scaled.scalingSummary;
+        const isSprintOrConditioningDrill =
+          /\b(sprint|sprints|pro\s+agility|t-drill|assault\s+bike|zone\s*2|med-ball|box\s+jumps|sled)\b/i.test(workingName);
 
-          if (scaled.sets !== parsed.defaultSets || scaled.reps !== parsed.targetReps || fitnessLevel !== 'Intermediate') {
-            scaledExercisesCount++;
+        if (!is52WeekBuiltIn) {
+          if (isSprintOrConditioningDrill && workingName.toLowerCase().includes('zone 2')) {
+            // Preserve Zone 2 Flush duration target cleanly while allowing Beginner scaling
+            finalSets = 1;
+            finalReps = fitnessLevel.toLowerCase().includes('beginner') ? '20 mins Zone 2' : '25-30 mins Zone 2';
+            finalRest = 0;
+            finalRpe = 7.0;
+          } else {
+            const scaled = scalePrescriptionForAbility(
+              parsed.defaultSets,
+              parsed.targetReps,
+              parsed.restSeconds,
+              fitnessLevel,
+              isCompound,
+              isDeloadWeek,
+              isPeakWeek,
+              weekNum
+            );
+            finalSets = scaled.sets;
+            finalReps = scaled.reps;
+            finalRest = scaled.rest;
+            finalRpe = scaled.rpe;
+            scalingSummary = scaled.scalingSummary;
+
+            if (scaled.sets !== parsed.defaultSets || scaled.reps !== parsed.targetReps || fitnessLevel !== 'Intermediate') {
+              scaledExercisesCount++;
+            }
           }
+        }
+
+        if (workingName === 'Bear Crawl Hold & Isometric Core Brace') {
+          finalReps = '45s hold';
+        } else if (workingName === 'Underhand Chin-Up Negative Holds') {
+          finalReps = '30s hold';
         }
 
         const noteParts: string[] = [];
@@ -1100,11 +1376,23 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
           noteParts.push(protoDay.progressionRule);
         }
 
+        const resolvedType =
+          isSprintOrConditioningDrill &&
+          (workingName.toLowerCase().includes('sprint') ||
+            workingName.toLowerCase().includes('agility') ||
+            workingName.toLowerCase().includes('t-drill') ||
+            workingName.toLowerCase().includes('bike') ||
+            workingName.toLowerCase().includes('zone 2'))
+            ? 'cardio'
+            : workingName === 'Bear Crawl Hold & Isometric Core Brace' || mg === 'Core'
+            ? 'core'
+            : 'strength';
+
         dayExercises.push({
           id: `master-${baseKey}-w${weekNum}-d${dayIdx + 1}-ex${exIdx + 1}`,
           name: workingName,
           muscleGroup: mg,
-          type: mg === 'Core' ? 'core' : 'strength',
+          type: resolvedType,
           defaultSets: finalSets,
           targetReps: finalReps,
           restPeriodSeconds: finalRest,
@@ -1179,18 +1467,26 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
         }${equipmentSwapsCount > 0 ? ` and ${equipmentSwapsCount} equipment substitutions` : ''}.`,
     coachingPhilosophy: is52WeekBuiltIn
       ? `Built-In 52-Week Progression + Joint/Equipment Protection: Sets and reps remain 100% faithful to the 52-week program's built-in 4-quarter progression, low-end range initialization, and 4th-week 40% deloads—while movements automatically adapt for your injuries and available gear.`
+      : isTacticalBodybuilding
+      ? `12-Week Tactical Bodybuilding Architecture: Preserves the Sunday–Saturday split (Armor & Base → Power-Building → Peak & Velocity), Mandated Daily 8-Min DIME Warm-Up, Deload Weeks 4/8/12 (-40% sets), Bad Shift Protocol, and strict Zero Olympic/Burpee/Sandbag/Jump-Rope guardrails while adapting equipment, injuries, and RPE to ${fitnessLevel}.`
       : `Master Program Integrity + Individualized Biomechanics: Instead of random exercises, you are running Coach Risner's exact ${meta.title} split and progression laws—with movements, sets, reps, target RPE, and conditioning calibrated to your current ability tier and joint profile.`,
     weeklyProgressionTips: [
       is52WeekBuiltIn
         ? `Built-In 3-Step Overload: Starts at the low end of prescribed set/rep ranges — 1. Reps First (hit top of rep range) → 2. Weight Second (+2.5–5 lbs upper / +5–10 lbs lower) → 3. Sets Third.`
+        : isTacticalBodybuilding
+        ? `Double Progression & Bad Shift Protocol: Add +5 lbs (upper) or +10 lbs (lower) once hitting top reps with 1–2 RIR. Off double shifts/4h sleep: halve secondary accessory sets, lift main compound @ 3 RIR, swap sprints for 20m Zone 2 flush.`
         : `Master Overload Law: Follow the prescribed rep targets on every compound lift. When you hit the top of the rep range at or below target RPE, add +5 lbs (upper) or +10 lbs (lower).`,
       activeInjuryLabels.length > 0
         ? `Clinical Joint Guardrail Active: ${clinicalSwapsCount} movements in ${meta.shortTitle} were automatically swapped to joint-sparing variations (${activeInjuryLabels.join(', ')}). Never force range of motion through pain.`
         : is52WeekBuiltIn
         ? `Built-In Sets & Reps Preserved: Rep and set prescriptions are excluded from ability scaling so your 52-week progression and Set 1 auto-pacing remain exact.`
+        : isTacticalBodybuilding
+        ? `Mandated Daily DIME & Guardrails: Complete the 8-Minute DIME Warm-Up before EVERY session. Zero Olympic lifts, burpees, sandbags, or jump ropes allowed.`
         : `Ability Tier Scaling (${fitnessLevel}): Sets, target RPE, and running volume have been calibrated to your ${fitnessLevel} recovery capacity.`,
       is52WeekBuiltIn
         ? `Every-4th-Week 40% Deloads & Set 1 Pacing: Weeks 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, and 48 cut volume 40%, while Set 1 auto-pacing calculates subsequent set weights in real time.`
+        : isTacticalBodybuilding
+        ? `12-Week Periodized Deload Rhythm: Weeks 4, 8, and 12 automatically cut working sets by 40% (~80% prior load, crisp speed) before transitioning between Phases 1–3.`
         : `Deload & Peak Rhythm: Week 4 and Week 8 automatically reduce working sets and cap RPE at 6.5 to flush systemic fatigue before the next intensification block.`,
     ],
     nutritionAdvice:

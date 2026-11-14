@@ -60,7 +60,7 @@ export const TOUR_STEPS: TourStep[] = [
     id: 'programs',
     badge: 'Core Protocols',
     title: '4 Periodized Coach Risner Core Protocols',
-    tagline: 'Proven law enforcement tracks from 6-week hypertrophy to the 52-week annual readiness blueprint',
+    tagline: 'Proven law enforcement tracks from 8-week PAT prep to 12-week Tactical Bodybuilding & the 52-week annual blueprint',
     tabTarget: 'workouts',
     actionLabel: 'Take Ability Matcher',
     actionCallback: 'questionnaire',
@@ -69,10 +69,10 @@ export const TOUR_STEPS: TourStep[] = [
     locationTip: 'Found in: Workouts Tab → Program Selector & Diagnostic Ability Matcher',
     features: [
       'Law Enforcement 52-Week Fitness & Readiness Program: 4-Quarter annual periodization covering Aerobic Base, Grappling Strength, Pursuit Speed & Use-of-Force Peak.',
-      'Tactical Hypertrophy (6-Week): 4-day Upper/Lower armor split + 2-day aerobic engine.',
+      '12-Week Tactical Bodybuilding Program: Starts Sunday across Armor & Base, Power-Building & Peak Velocity with daily 8-min DIME warm-ups and Bad Shift Protocol.',
       '12-Week Hybrid Protocol: Full barbell/run architecture that also adapts 1-for-1 to Dumbbells & Bodyweight via the AI Adaptation Engine.',
       'Universal Police PAT (8-Week): State academy prep for 1.5-mi runs, 300m sprints & 165-lb dummy drag.',
-      'Mandatory 10-Minute DIME Warm-Up recommended across all programs for joint durability.'
+      'Mandatory DIME Warm-Up Protocol recommended daily across all programs for joint durability.'
     ],
     promoPitch: 'Built by law enforcement for law enforcement. Choose from 4 combat-tested Coach Risner training protocols—including the complete 52-Week Law Enforcement Fitness & Readiness Program—structured to crush academy tests and dominate the street.',
     socialHook: 'No generic bodybuilder fluff. Complete 52-week periodized training designed for police, sheriff, and tactical operators.',
@@ -90,7 +90,7 @@ export const TOUR_STEPS: TourStep[] = [
     iconColor: 'text-sky-400',
     locationTip: 'Found in: Top Bar → "Adapt Program" or "Adapt This Program" on any protocol',
     features: [
-      'Adapts Proven Core Programs: Modifies any of Coach Risner’s 5 master tracks—preserving authentic splits, mesocycles, and deload weeks instead of building random workouts.',
+      'Adapts Proven Core Programs: Modifies any of Coach Risner’s 4 master tracks—preserving authentic splits, mesocycles, and deload weeks instead of building random workouts.',
       '1-for-1 Clinical Injury Swaps: Automatically intercepts movements that aggravate hip labrum, lumbar disc, shoulder, or knee limitations and tags replacements ("Replaced: [Original]").',
       'Ability-Level Calibration: Scales sets, target reps, rest periods, and target RPE across Beginner, Intermediate, Advanced, and Elite tiers.',
       'Equipment & Conditioning Scaling: Converts barbell lifts to DB/bodyweight when away from a gym and scales run distances/paces or swaps runs to low-impact tactical circuits.',
@@ -534,7 +534,7 @@ export const GuidedTourModal: React.FC<GuidedTourModalProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sky-300 flex items-center gap-1.5 font-athletic uppercase">
                       <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
-                      The Apex Protocol • Adapted
+                      12-Wk Tactical Bodybuilding • Adapted
                     </span>
                     <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
                       Hip-Sparing

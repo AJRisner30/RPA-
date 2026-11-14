@@ -857,7 +857,7 @@ export const CoachProgramBuilderModal: React.FC<CoachProgramBuilderModalProps> =
                                   type="text"
                                   value={block.targetReps}
                                   onChange={(e) => handleUpdateBlock(bIdx, { targetReps: e.target.value })}
-                                  placeholder="8-10"
+                                  placeholder="8-10 or 45s hold"
                                   className="w-full bg-[#0d1424] border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white font-mono"
                                 />
                               </div>
@@ -972,7 +972,7 @@ export const CoachProgramBuilderModal: React.FC<CoachProgramBuilderModalProps> =
                                     <input
                                       type="text"
                                       value={sub.targetReps}
-                                      placeholder="Reps"
+                                      placeholder="10 or 45s"
                                       onChange={(e) => {
                                         const next = [...(block.supersetExercises || [])];
                                         next[sIdx] = { ...next[sIdx], targetReps: e.target.value };

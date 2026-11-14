@@ -218,7 +218,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
 
           <p className="mt-2 text-xs sm:text-base text-slate-300 max-w-xl leading-relaxed">
             {mode === 'signin' && 'Welcome back, Officer. Enter your email and password to access your workout protocols, progressive overload logs, and readiness scores.'}
-            {mode === 'signup' && 'Sign up to start your 14-day free trial. Instant access to all 5 tactical fitness protocols, the Universal PAT program, automated overload, and the AI workout architect.'}
+            {mode === 'signup' && 'Sign up to start your 14-day free trial. Instant access to all 4 tactical fitness protocols, the 52-Week LEO Program, 12-Week Tactical Bodybuilding, automated overload, and the Adaptive AI engine.'}
             {mode === 'set_password' && 'Previously signed in with Google or need to reset your password? Enter your email address to receive a secure link to set your password.'}
           </p>
         </div>
@@ -321,7 +321,7 @@ export const SignInGate: React.FC<SignInGateProps> = ({
               <div className="space-y-1.5 text-xs text-slate-300">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>Apex, Tactical Hypertrophy, Hybrid &amp; PAT Protocols</span>
+                  <span>52-Week LEO, Tactical Bodybuilding, Hybrid &amp; PAT</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />

@@ -1,4 +1,4 @@
-import { WorkoutSessionLog, isExerciseTimed } from '../types';
+import { WorkoutSessionLog, isExerciseTimed, isBodyweightExercise } from '../types';
 
 export interface OverloadRecommendation {
   exerciseName: string;
@@ -111,6 +111,7 @@ export function getAutoOverloadRecommendation(
   const isDumbbell = nameLower.includes('db') || nameLower.includes('dumbbell');
 
   const isTimed = isExerciseTimed(exerciseName, undefined, targetRepsText);
+  const isBodyweight = isBodyweightExercise(exerciseName);
 
   // Search past logs for this exercise (most recent first)
   let matchingSession: WorkoutSessionLog | undefined;
@@ -130,10 +131,13 @@ export function getAutoOverloadRecommendation(
 
   // No session history yet -> Start at the LOW END of both the set range and rep range
   if (!matchingEx || !matchingSession || matchingEx.sets.length === 0) {
-    const rangeNote =
-      safeSetMax > safeSetMin || repRangeMax > repRangeMin
-        ? `Starting at the low end (${safeSetMin} sets × ${repRangeMin} reps) until logged sessions establish your recovery and work capacity.`
-        : `First session on record (${safeSetMin} sets × ${repRangeMin} reps). Log Set 1 to auto-calibrate subsequent set weights.`;
+    const rangeNote = isTimed
+      ? `Starting timed target: ${targetRepsText || '45s'}. Tap Play on the timer to record your hold or interval.`
+      : isBodyweight
+      ? `Bodyweight baseline (${safeSetMin} sets × ${repRangeMin} reps). Progress by adding clean reps each session.`
+      : safeSetMax > safeSetMin || repRangeMax > repRangeMin
+      ? `Starting at the low end (${safeSetMin} sets × ${repRangeMin} reps) until logged sessions establish your recovery and work capacity.`
+      : `First session on record (${safeSetMin} sets × ${repRangeMin} reps). Log Set 1 to auto-calibrate subsequent set weights.`;
     return {
       exerciseName,
       hasPreviousData: false,
@@ -222,6 +226,64 @@ export function getAutoOverloadRecommendation(
   let recommendedSets = Math.max(safeSetMin, Math.min(safeSetMax, prevCompletedSets));
   if (safeSetMax > safeSetMin && controlledEffort && prevCompletedSets >= safeSetMin && effectiveRpe <= targetRpe) {
     recommendedSets = Math.min(safeSetMax, prevCompletedSets + 1);
+  }
+
+  // Bodyweight rep/set progression (never recommend adding lbs to unweighted BW movements)
+  if (isBodyweight || prevWeight <= 0) {
+    if (controlledEffort && (prevReps < repRangeMax || prevReps === 0)) {
+      const nextReps = prevReps > 0 ? Math.min(Math.max(repRangeMax, prevReps + 2), prevReps + 1) : repRangeMin;
+      return {
+        exerciseName,
+        hasPreviousData: true,
+        lastSessionDate: matchingSession.date,
+        previousWeightLbs: 0,
+        recommendedWeightLbs: 0,
+        incrementLbs: 0,
+        previousReps: prevReps,
+        recommendedReps: nextReps,
+        repRangeMin,
+        repRangeMax,
+        recommendedSets,
+        setRangeMin: safeSetMin,
+        setRangeMax: safeSetMax,
+        targetRepsText,
+        lastRpe: effectiveRpe,
+        status: 'rep_progression',
+        reason: isTimed
+          ? `Previous hold logged on ${matchingSession.date} @ RPE ${effectiveRpe.toFixed(1)}. Maintain crisp tension and extend hold duration.`
+          : `Bodyweight Overload: Advance from ${prevReps} → ${nextReps} clean reps (${recommendedSets} sets) at strict form.`,
+        isLowerBodyCompound,
+        isUpperBodyCompound,
+        isDumbbell,
+        isTimed,
+      };
+    }
+
+    return {
+      exerciseName,
+      hasPreviousData: true,
+      lastSessionDate: matchingSession.date,
+      previousWeightLbs: 0,
+      recommendedWeightLbs: 0,
+      incrementLbs: 0,
+      previousReps: prevReps,
+      recommendedReps: Math.max(repRangeMin, prevReps || repRangeMin),
+      repRangeMin,
+      repRangeMax,
+      recommendedSets,
+      setRangeMin: safeSetMin,
+      setRangeMax: safeSetMax,
+      targetRepsText,
+      lastRpe: effectiveRpe,
+      status: 'maintain',
+      reason: isTimed
+        ? `Maintain target hold tension (${safeSetMin} sets) matching ${matchingSession.date}.`
+        : `Consolidate Bodyweight Reps: Hold ${Math.max(repRangeMin, prevReps || repRangeMin)} reps × ${recommendedSets} sets with crisp tempo.`,
+      isLowerBodyCompound,
+      isUpperBodyCompound,
+      isDumbbell,
+      isTimed,
+    };
   }
 
   // Step 1: Double Progression — If top of rep range is achieved at controlled RPE, add weight & reset reps to repRangeMin

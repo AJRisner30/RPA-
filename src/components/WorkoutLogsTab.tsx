@@ -6,7 +6,7 @@ import {
   AlertTriangle, RotateCcw, Filter, Check, ShieldAlert,
   ShieldCheck, Eye, Zap, ArrowRight, User
 } from 'lucide-react';
-import { WorkoutSessionLog, MuscleGroup, WorkoutProgram } from '../types';
+import { WorkoutSessionLog, MuscleGroup, WorkoutProgram, isBodyweightExercise, isExerciseTimed } from '../types';
 import { 
   deleteWorkoutLog, 
   calculate1RM, 
@@ -283,17 +283,32 @@ export const WorkoutLogsTab: React.FC<WorkoutLogsTabProps> = ({
       frequency: 'Duty Session',
       estimatedDurationMinutes: log.durationMinutes || 60,
       description: `Adopted directly from Coach AJ Risner's verified duty session (${log.date}). Total volume: ${log.totalVolumeLbs.toLocaleString()} lbs across ${log.totalSetsCompleted} sets. Notes: ${log.notes || 'Duty protocol followed.'}`,
-      exercises: log.exercises.map((ex, idx) => ({
-        id: `adopted-ex-${idx}-${Date.now()}`,
-        name: ex.exerciseName,
-        muscleGroup: ex.muscleGroup,
-        defaultSets: Math.max(1, ex.sets.length),
-        targetReps: ex.sets.map((s) => s.reps).filter(Boolean).join('/') || '8-10',
-        targetRpe: ex.sets[0]?.rpe || 8.5,
-        weight_lbs: ex.sets[0]?.weightLbs || 45,
-        restPeriodSeconds: 90,
-        notes: `Coach AJ Logged: ${ex.sets.map((s) => `${s.weightLbs} lbs × ${s.reps}`).join(', ')}.`
-      }))
+      exercises: log.exercises.map((ex, idx) => {
+        const isBw = isBodyweightExercise(ex.exerciseName);
+        const isTimedEx = Boolean(ex.isTimed || isExerciseTimed(ex.exerciseName));
+        return {
+          id: `adopted-ex-${idx}-${Date.now()}`,
+          name: ex.exerciseName,
+          muscleGroup: ex.muscleGroup,
+          type: isTimedEx ? 'cardio' : undefined,
+          defaultSets: Math.max(1, ex.sets.length),
+          targetReps: isTimedEx
+            ? ex.sets.map((s) => s.timeFormatted).filter(Boolean).join('/') || '45s'
+            : ex.sets.map((s) => s.reps).filter(Boolean).join('/') || '8-10',
+          targetRpe: ex.sets[0]?.rpe || 8.5,
+          weight_lbs: isBw ? 0 : (ex.sets[0]?.weightLbs ?? 0),
+          restPeriodSeconds: 90,
+          notes: `Coach AJ Logged: ${ex.sets
+            .map((s) =>
+              s.timeFormatted
+                ? s.timeFormatted
+                : !isBw && s.weightLbs > 0
+                ? `${s.weightLbs} lbs × ${s.reps}`
+                : `${s.reps} reps`
+            )
+            .join(', ')}.`,
+        };
+      })
     };
 
     if (onStartWorkout) {

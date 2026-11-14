@@ -964,709 +964,440 @@ export const INITIAL_PROGRAMS: WorkoutProgram[] = [
   },
   {
     id: 'tactical-hypertrophy-conditioning-v1',
-    title: 'Patrol Ready Tactical Hypertrophy & Conditioning Protocol',
-    subtitle: '6-Week Tactical Cycle • Upper / Lower / Engine / Upper / Lower / Duty Cardio / Rest',
-    category: 'Hybrid',
+    title: '12-Week Tactical Bodybuilding Program',
+    subtitle: 'Starts Sunday • 4 Lift (Sun/Mon/Wed/Thu) + 2 Speed & Conditioning (Tue/Fri) + Rest (Sat)',
+    category: 'Hypertrophy',
     frequency: '6 Days / Week',
-    estimatedDurationMinutes: 65,
-    recommendedWarmupId: 'warmup-universal-tactical',
-    description: 'A 6-day comprehensive frontline tactical conditioning protocol combining a 4-day Upper/Lower hypertrophy split with a 2-day aerobic capacity and duty pursuit stamina system.',
+    estimatedDurationMinutes: 60,
+    recommendedWarmupId: 'warmup-dime-tactical-bb',
+    description: '12-week 3-phase Tactical Bodybuilding program (Phase 1 Armor & Base, Phase 2 Power-Building, Phase 3 Peak & Velocity). Guardrails: Zero Olympic lifts, burpees, sandbags, or jump ropes. Mandatory 8-Minute DIME Warm-Up before every session.',
     schedule: [
       {
         day: 1,
-        focus: 'Heavy Upper: Tactical Press & Pull',
+        focus: 'Sunday: Upper Body — Push & Shoulder Armor',
         exercises: [
           {
-            id: 'th-d1-ohp',
-            name: 'Standing Overhead Barbell Press (OHP)',
-            muscleGroup: 'Shoulders',
-            type: 'strength',
-            defaultSets: 4,
-            targetReps: '6-8',
-            targetRpe: 8,
-            restPeriodSeconds: 120,
-            notes: 'Tempo: 2-0-1-0. Glutes clenched, core braced, head through at lockout.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+2.5 to 5 lbs next session'
-            }
-          },
-          {
-            id: 'th-d1-pullups',
-            name: 'Weighted Neutral-Grip Pull-Ups',
-            muscleGroup: 'Back',
-            type: 'strength',
-            defaultSets: 4,
-            targetReps: '6-8',
-            targetRpe: 8,
-            restPeriodSeconds: 120,
-            notes: 'Tempo: 2-1-1-0. Full dead hang stretch at bottom, clear chin above bar.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 2.5,
-              action: '+2.5 to 5 lbs on belt'
-            }
-          },
-          {
-            id: 'th-d1-incline-bench',
-            name: 'Barbell Incline Bench Press (30°)',
+            id: 'tb-sun-incline-bench',
+            name: 'Incline Barbell or Dumbbell Bench Press',
             muscleGroup: 'Chest',
             type: 'strength',
-            defaultSets: 3,
-            targetReps: '8-10',
-            targetRpe: 8.5,
-            restPeriodSeconds: 90,
-            notes: 'Tempo: 2-0-1-0. Retract scapulae, touch clavicle line, drive through heels.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
-          },
-          {
-            id: 'th-d1-bent-row',
-            name: 'Barbell Bent-Over Row (Strict)',
-            muscleGroup: 'Back',
-            type: 'strength',
             defaultSets: 4,
             targetReps: '8-10',
             targetRpe: 8,
-            restPeriodSeconds: 90,
-            notes: 'Tempo: 2-0-1-1. Hinged at 45 degrees, pull bar to navel, pause 1 sec at top.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            restPeriodSeconds: 120,
+            notes: 'Primary press; 2-sec controlled eccentric. Double Progression: +5 lbs upper upon hitting top reps with 1-2 RIR.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs upper next week' }
           },
           {
-            id: 'th-d1-zpress',
-            name: 'Barbell Z-Press (or Seated Dumbbell Press)',
+            id: 'tb-sun-seated-ohp',
+            name: 'Seated Dumbbell Overhead Press',
             muscleGroup: 'Shoulders',
             type: 'strength',
             defaultSets: 3,
             targetReps: '10-12',
-            targetRpe: 8.5,
+            targetRpe: 8,
             restPeriodSeconds: 75,
-            notes: 'Tempo: 2-0-1-0. Seated flat on floor with legs straight; forces strict thoracic posture and anti-extension.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            notes: 'Full range of motion; brace core without lumbar arch.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs DBs on top reps' }
           },
           {
-            id: 'th-d1-dips',
-            name: 'Bodyweight Dips',
+            id: 'tb-sun-dips-cgbp',
+            name: 'Weighted Dips or Close-Grip Bench Press',
             muscleGroup: 'Chest',
             type: 'strength',
             defaultSets: 3,
-            targetReps: '12-15',
+            targetReps: '10-12',
             targetRpe: 8,
-            restPeriodSeconds: 60,
-            notes: 'Tempo: 2-0-1-0. Slight forward lean, lower until elbows hit 90 degrees.',
-            progression_rules: {
-              metric: 'reps',
-              trigger: 'complete_max_reps',
-              increment_value: 1,
-              action: '+1 rep or add weight vest'
-            }
+            restPeriodSeconds: 75,
+            notes: 'Keep elbows tucked to protect shoulder capsule.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs on top reps' }
           },
           {
-            id: 'th-d1-hammer-curls',
-            name: 'Incline Dumbbell Hammer Curls',
-            muscleGroup: 'Arms',
+            id: 'tb-sun-medball-pass',
+            name: 'Explosive Med-Ball Chest Pass (against wall)',
+            muscleGroup: 'Chest',
             type: 'strength',
-            defaultSets: 3,
-            targetReps: '10-12',
-            targetRpe: 9,
+            defaultSets: 4,
+            targetReps: '5',
+            targetRpe: 8.5,
             restPeriodSeconds: 60,
-            notes: 'Tempo: 2-1-1-0. Elbows pinned back, palms facing inward, emphasize brachioradialis.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            notes: 'Maximum velocity, full reset between throws (All Phases).'
+          },
+          {
+            id: 'tb-sun-superset',
+            name: 'Lateral Raises + Cable Tricep Pushdowns',
+            muscleGroup: 'Arms',
+            type: 'superset',
+            format: 'superset',
+            defaultSets: 3,
+            targetReps: '12-15 / 12-15',
+            targetRpe: 8.5,
+            restPeriodSeconds: 60,
+            supersetExercises: [
+              { name: 'Lateral Raises', targetReps: '12-15', muscleGroup: 'Shoulders' },
+              { name: 'Cable Tricep Pushdowns', targetReps: '12-15', muscleGroup: 'Arms' }
+            ],
+            notes: 'Superset: Minimal rest between paired movements (All Phases).'
           }
         ]
       },
       {
         day: 2,
-        focus: 'Heavy Lower: Posterior Chain & Base Drive',
+        focus: 'Monday: Lower Body — Quad Drive & Acceleration',
         exercises: [
           {
-            id: 'th-d2-trap-deadlift',
-            name: 'Trap Bar Deadlift (High or Low Handles)',
-            muscleGroup: 'Hamstrings & Glutes',
-            type: 'strength',
-            defaultSets: 4,
-            targetReps: '5-6',
-            targetRpe: 8,
-            restPeriodSeconds: 150,
-            notes: 'Tempo: 1-0-X-0. Full ground reset each rep, pack lats, drive the floor away violently.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 10,
-              action: '+10 lbs next session'
-            }
-          },
-          {
-            id: 'th-d2-front-squat',
-            name: 'Front Squat (Clean Grip or Cross-Arm)',
+            id: 'tb-mon-trapbar-front',
+            name: 'Trap Bar Deadlift or Front Squat',
             muscleGroup: 'Quads',
             type: 'strength',
             defaultSets: 4,
-            targetReps: '6-8',
-            targetRpe: 8,
-            restPeriodSeconds: 120,
-            notes: 'Tempo: 3-0-1-0. Elbows held high, vertical torso, full depth below parallel.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 10,
-              action: '+10 lbs next session'
-            }
-          },
-          {
-            id: 'th-d2-rdl',
-            name: 'Romanian Deadlift (RDL)',
-            muscleGroup: 'Hamstrings & Glutes',
-            type: 'strength',
-            defaultSets: 3,
             targetReps: '8-10',
             targetRpe: 8,
-            restPeriodSeconds: 90,
-            notes: 'Tempo: 3-1-1-0. Push hips back horizontally, soft knee bend, deep stretch on hamstrings.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 10,
-              action: '+10 lbs next session'
-            }
+            restPeriodSeconds: 120,
+            notes: 'Primary lower lift; explosive concentric drive. Double Progression: +10 lbs lower at top reps w/ 1-2 RIR.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 10, action: '+10 lbs lower next week' }
           },
           {
-            id: 'th-d2-bulgarian-split',
-            name: 'Bulgarian Split Squat',
+            id: 'tb-mon-bss',
+            name: 'Bulgarian Split Squats (Dumbbells)',
             muscleGroup: 'Quads',
             type: 'strength',
             defaultSets: 3,
-            targetReps: '10-12 per leg',
-            targetRpe: 8.5,
+            targetReps: '10/leg',
+            targetRpe: 8,
             restPeriodSeconds: 75,
-            notes: 'Tempo: 2-0-1-0. Rear foot on bench, maintain upright posture, drive through front midfoot.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            notes: 'Maintain upright torso and knee alignment.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs DBs' }
           },
           {
-            id: 'th-d2-calf-raises',
-            name: 'Standing Barbell Calf Raises',
+            id: 'tb-mon-leg-press',
+            name: 'Leg Press',
+            muscleGroup: 'Quads',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '12',
+            targetRpe: 8,
+            restPeriodSeconds: 75,
+            notes: 'Controlled 3-second eccentric lowering phase.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 10, action: '+10 lbs' }
+          },
+          {
+            id: 'tb-mon-box-jumps',
+            name: 'Box Jumps',
             muscleGroup: 'Quads',
             type: 'strength',
             defaultSets: 4,
-            targetReps: '12-15',
-            targetRpe: 9,
-            restPeriodSeconds: 60,
-            notes: 'Tempo: 2-2-1-0. 2-second pause at full peak stretch and contraction.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 to 10 lbs next session'
-            }
+            targetReps: '4',
+            targetRpe: 8.5,
+            restPeriodSeconds: 90,
+            notes: 'Step down, reset; focus on soft landing mechanics (All Phases).'
           },
           {
-            id: 'th-d2-hanging-leg-raises',
-            name: 'Hanging Leg / Knee Raises',
+            id: 'tb-mon-superset',
+            name: 'Standing Calf Raises + Hanging Leg Raises',
             muscleGroup: 'Core',
-            type: 'strength',
-            defaultSets: 4,
-            targetReps: '12-15',
-            targetRpe: 8,
+            type: 'superset',
+            format: 'superset',
+            defaultSets: 3,
+            targetReps: '12-15 / 12-15',
+            targetRpe: 8.5,
             restPeriodSeconds: 60,
-            notes: 'Tempo: 2-0-1-1. Control pelvic tilt; eliminate swinging momentum.',
-            progression_rules: {
-              metric: 'reps',
-              trigger: 'complete_max_reps',
-              increment_value: 1,
-              action: '+1 rep next session'
-            }
+            supersetExercises: [
+              { name: 'Standing Calf Raises', targetReps: '12-15', muscleGroup: 'Quads' },
+              { name: 'Hanging Leg Raises', targetReps: '12-15', muscleGroup: 'Core' }
+            ],
+            notes: 'Superset: Full stretch at bottom of calf raise; no swinging on leg raises (All Phases).'
           }
         ]
       },
       {
         day: 3,
-        focus: 'Conditioning Session A: Aerobic Engine & Lactate Clearance',
+        focus: 'Tuesday: Speed & Pursuit Conditioning (Track / Turf)',
         exercises: [
           {
-            id: 'th-d3-flush-pace',
-            name: 'The Flush & Pace Aerobic Interval (Rower or Echo Bike)',
+            id: 'tb-tue-20m-starts',
+            name: '20m Falling-Start Sprints',
             muscleGroup: 'Full Body',
             type: 'cardio',
-            defaultSets: 5,
-            targetReps: '4 min work / 2 min recovery',
-            targetRpe: 8,
-            restPeriodSeconds: 120,
-            notes: 'Zone 3 / Threshold (75-80% Max HR) work; Zone 1 recovery. Maintain identical 500m split or RPM output across all 5 rounds.'
+            defaultSets: 6,
+            targetReps: '20m',
+            targetRpe: 9,
+            restPeriodSeconds: 90,
+            notes: 'Walk-back recovery (~90 sec rest). Bad Shift Protocol: Swap sprints for 20-min Zone 2 flush.'
           },
           {
-            id: 'th-d3-sorensen',
-            name: 'Sorensen Back Extension or Reverse Hyperextension',
-            muscleGroup: 'Hamstrings & Glutes',
+            id: 'tb-tue-40m-buildup',
+            name: '40m Build-Up Sprints',
+            muscleGroup: 'Full Body',
+            type: 'cardio',
+            defaultSets: 4,
+            targetReps: '40m',
+            targetRpe: 8.5,
+            restPeriodSeconds: 120,
+            notes: '85-90% effort, 2 min rest.'
+          },
+          {
+            id: 'tb-tue-sled-finisher',
+            name: '50m Sled Push Finisher',
+            muscleGroup: 'Full Body',
             type: 'strength',
-            defaultSets: 3,
-            targetReps: '12-15',
+            defaultSets: 4,
+            targetReps: '50m',
             targetRpe: 8,
             restPeriodSeconds: 60,
-            notes: 'Tempo: 2-2-1-0. Flush the lower back with nutrient-rich blood; squeeze glutes at the top.',
-            progression_rules: {
-              metric: 'reps',
-              trigger: 'complete_max_reps',
-              increment_value: 1,
-              action: '+1 rep next session'
-            }
-          },
-          {
-            id: 'th-d3-copenhagen',
-            name: 'Copenhagen Side Plank',
-            muscleGroup: 'Core',
-            type: 'strength',
-            defaultSets: 3,
-            targetReps: '20-30 sec per side',
-            targetRpe: 8,
-            restPeriodSeconds: 45,
-            notes: 'Isometric hold. Top foot on bench, hips forward and locked, brace groin and lateral core.',
-            progression_rules: {
-              metric: 'seconds',
-              trigger: 'per_set',
-              increment_value: 5,
-              action: '+5s hold'
-            }
+            notes: 'Moderate load + 60 sec rest.'
           }
         ]
       },
       {
         day: 4,
-        focus: 'Density Upper: Armor Building & Volume',
+        focus: 'Wednesday: Upper Body — Pull & Duty-Belt Posture',
         exercises: [
           {
-            id: 'th-d4-bench-press',
-            name: 'Flat Barbell Bench Press',
-            muscleGroup: 'Chest',
+            id: 'tb-wed-pullups',
+            name: 'Weighted Pull-Ups or Lat Pulldowns',
+            muscleGroup: 'Back',
             type: 'strength',
             defaultSets: 4,
             targetReps: '8-10',
-            targetRpe: 8.5,
-            restPeriodSeconds: 90,
-            notes: 'Tempo: 2-0-1-0. Scapulae retracted and depressed, bar touches lower sternum, drive through feet.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            targetRpe: 8,
+            restPeriodSeconds: 120,
+            notes: 'Full scapular depression and chest-to-bar pull.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs upper' }
           },
           {
-            id: 'th-d4-tbar-row',
+            id: 'tb-wed-row',
             name: 'Chest-Supported T-Bar or Dumbbell Row',
             muscleGroup: 'Back',
             type: 'strength',
             defaultSets: 4,
             targetReps: '10-12',
-            targetRpe: 8.5,
-            restPeriodSeconds: 75,
-            notes: 'Tempo: 2-0-1-1. Chest glued to pad, squeeze shoulder blades together at top without lumbar compensation.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
-          },
-          {
-            id: 'th-d4-push-press',
-            name: 'Standing Push Press',
-            muscleGroup: 'Shoulders',
-            type: 'strength',
-            defaultSets: 3,
-            targetReps: '6-8',
             targetRpe: 8,
-            restPeriodSeconds: 90,
-            notes: 'Tempo: 1-0-X-0. Shallow 3-inch knee dip, violent hip drive, press through to solid overhead lockout.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            restPeriodSeconds: 75,
+            notes: 'Eliminates lower-back fatigue; squeeze shoulder blades.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs' }
           },
           {
-            id: 'th-d4-lateral-raises',
-            name: 'Dual Dumbbell Lateral Raises',
+            id: 'tb-wed-facepulls',
+            name: 'Face Pulls',
             muscleGroup: 'Shoulders',
             type: 'strength',
             defaultSets: 4,
-            targetReps: '12-15',
-            targetRpe: 9,
-            restPeriodSeconds: 60,
-            notes: 'Tempo: 2-0-1-1. Slight forward torso lean, raise through scapular plane, lead with elbows.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 2.5,
-              action: '+2.5 to 5 lbs next session'
-            }
-          },
-          {
-            id: 'th-d4-face-pulls',
-            name: 'Cable / Band Rope Face Pulls',
-            muscleGroup: 'Shoulders',
-            type: 'strength',
-            defaultSets: 4,
-            targetReps: '15-20',
-            targetRpe: 9,
-            restPeriodSeconds: 60,
-            notes: 'Tempo: 2-1-1-1. Pull to forehead/ears, external rotation emphasis, pull thumbs back.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
-          },
-          {
-            id: 'th-d4-close-grip-bench',
-            name: 'Close-Grip Barbell Bench Press',
-            muscleGroup: 'Arms',
-            type: 'strength',
-            defaultSets: 3,
-            targetReps: '10-12',
+            targetReps: '15',
             targetRpe: 8.5,
             restPeriodSeconds: 60,
-            notes: 'Tempo: 2-0-1-0. Hands shoulder-width apart, elbows tucked against ribs, full tricep lockout.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            notes: 'External rotation at peak contraction (All Phases).'
           },
           {
-            id: 'th-d4-ez-curl',
-            name: 'Barbell EZ-Curl',
-            muscleGroup: 'Arms',
+            id: 'tb-wed-shrugs',
+            name: 'Barbell or Heavy Dumbbell Shrugs',
+            muscleGroup: 'Back',
             type: 'strength',
             defaultSets: 3,
             targetReps: '10-12',
-            targetRpe: 9,
+            targetRpe: 8,
             restPeriodSeconds: 60,
-            notes: 'Tempo: 2-0-1-1. Strict form without hip swinging, peak contraction squeeze at top.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            notes: '2-second pause at the top of each repetition (All Phases).'
+          },
+          {
+            id: 'tb-wed-superset',
+            name: "Hammer Curls + Heavy Farmer's Carries",
+            muscleGroup: 'Arms',
+            type: 'superset',
+            format: 'superset',
+            defaultSets: 3,
+            targetReps: '10 / 40m',
+            targetRpe: 8.5,
+            restPeriodSeconds: 90,
+            supersetExercises: [
+              { name: 'Hammer Curls', targetReps: '10', muscleGroup: 'Arms' },
+              { name: "Heavy Farmer's Carries", targetReps: '40m', muscleGroup: 'Full Body' }
+            ],
+            notes: 'Superset: Maintain tall posture and braced core on carries (All Phases).'
           }
         ]
       },
       {
         day: 5,
-        focus: 'Power Lower: Grip, Carries & Squat Drive',
+        focus: 'Thursday: Lower Body — Posterior Chain & Top-End Speed',
         exercises: [
           {
-            id: 'th-d5-back-squat',
-            name: 'Barbell Back Squat',
+            id: 'tb-thu-rdl',
+            name: 'Romanian Deadlift (Barbell or Dumbbell)',
+            muscleGroup: 'Hamstrings & Glutes',
+            type: 'strength',
+            defaultSets: 4,
+            targetReps: '8-10',
+            targetRpe: 8,
+            restPeriodSeconds: 120,
+            notes: 'Push hips back until deep hamstring tension; flat spine.',
+            progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 10, action: '+10 lbs lower' }
+          },
+          {
+            id: 'tb-thu-sled',
+            name: 'Heavy Sled Push or Reverse Sled Drag',
             muscleGroup: 'Quads',
             type: 'strength',
             defaultSets: 4,
-            targetReps: '6-8',
-            targetRpe: 8,
-            restPeriodSeconds: 120,
-            notes: 'Tempo: 2-1-1-0. Tight upper back shelf, knees track over toes, drive hips up out of bottom.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 10,
-              action: '+10 lbs next session'
-            }
-          },
-          {
-            id: 'th-d5-hip-thrust',
-            name: 'Barbell Hip Thrusts',
-            muscleGroup: 'Hamstrings & Glutes',
-            type: 'strength',
-            defaultSets: 3,
-            targetReps: '8-10',
+            targetReps: '30m',
             targetRpe: 8.5,
             restPeriodSeconds: 90,
-            notes: 'Tempo: 2-1-1-1. Chin tucked, full posterior pelvic tilt and glute lockout at top.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 10,
-              action: '+10 lbs next session'
-            }
+            notes: '90 sec rest between trips; drive through balls of feet (All Phases).'
           },
           {
-            id: 'th-d5-walking-lunges',
-            name: 'Walking Dumbbell Lunges',
-            muscleGroup: 'Quads',
-            type: 'strength',
-            defaultSets: 3,
-            targetReps: '10-12 steps per leg',
-            targetRpe: 8.5,
-            restPeriodSeconds: 75,
-            notes: 'Controlled cadence. Maintain vertical chest, gentle tap of back knee to floor.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
-          },
-          {
-            id: 'th-d5-leg-curls',
+            id: 'tb-thu-leg-curl',
             name: 'Lying or Seated Leg Curls',
             muscleGroup: 'Hamstrings & Glutes',
             type: 'strength',
             defaultSets: 3,
-            targetReps: '12-15',
-            targetRpe: 9,
-            restPeriodSeconds: 60,
-            notes: 'Tempo: 2-0-1-1. Direct knee flexion isolation for hamstring tensile health under fatigue.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 to 10 lbs next session'
-            }
+            targetReps: '12',
+            targetRpe: 8,
+            restPeriodSeconds: 75,
+            notes: 'Control the return phase; avoid hip lift.'
           },
           {
-            id: 'th-d5-farmer-walks',
-            name: "Heavy Farmer's Walks",
-            muscleGroup: 'Full Body',
+            id: 'tb-thu-kb-swings',
+            name: 'Kettlebell Swings',
+            muscleGroup: 'Hamstrings & Glutes',
             type: 'strength',
             defaultSets: 4,
-            targetReps: '50 meters',
-            targetRpe: 8.5,
-            restPeriodSeconds: 90,
-            notes: '~50% Bodyweight per hand. Short, rapid heel-to-toe strides. Shoulders down and back, zero sway.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
+            targetReps: '12',
+            targetRpe: 8,
+            restPeriodSeconds: 60,
+            notes: 'Explosive power hip snap; hinge, do not squat (All Phases).'
           },
           {
-            id: 'th-d5-suitcase-carry',
-            name: 'Suitcase Carry',
+            id: 'tb-thu-pallof',
+            name: 'Pallof Press',
             muscleGroup: 'Core',
             type: 'strength',
             defaultSets: 3,
-            targetReps: '30 meters per side',
-            targetRpe: 8.5,
+            targetReps: '10/side',
+            targetRpe: 8,
             restPeriodSeconds: 60,
-            notes: 'Moderate-heavy DB or KB (~35% BW). Maintain perfectly vertical spine, resist lateral flexion.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs next session'
-            }
-          },
-          {
-            id: 'th-d5-wrist-rollers',
-            name: 'Barbell Wrist Rollers or Plate Pinches',
-            muscleGroup: 'Arms',
-            type: 'strength',
-            defaultSets: 3,
-            targetReps: 'To failure (30-45 sec)',
-            targetRpe: 10,
-            restPeriodSeconds: 60,
-            notes: 'To mechanical grip failure. Build forearm thickness and tactical load bearing grip endurance.',
-            progression_rules: {
-              metric: 'weight_lbs',
-              trigger: 'complete_max_reps',
-              increment_value: 5,
-              action: '+5 lbs or +10s TUT'
-            }
+            notes: 'Anti-rotation core stability; 2-second hold at full extension (All Phases).'
           }
         ]
       },
       {
         day: 6,
-        focus: 'Conditioning Session B: Duty Cardio Progression & Zone 2 Base',
+        focus: 'Friday: Athletic Conditioning & Arms ("Friday Pump + Engine")',
         exercises: [
           {
-            id: 'th-d6-cardio',
-            name: 'Duty Aerobic Base Run & Pursuit Intervals',
+            id: 'tb-fri-ez-curls',
+            name: 'EZ-Bar Curls',
+            muscleGroup: 'Arms',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '10-12',
+            targetRpe: 8.5,
+            restPeriodSeconds: 60,
+            notes: 'Part A Arm & Core Hypertrophy (25 mins).'
+          },
+          {
+            id: 'tb-fri-skullcrushers',
+            name: 'Skullcrushers or Overhead Cable Extension',
+            muscleGroup: 'Arms',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '10-12',
+            targetRpe: 8.5,
+            restPeriodSeconds: 60,
+            notes: 'Part A Arm & Core Hypertrophy.'
+          },
+          {
+            id: 'tb-fri-core',
+            name: 'Cable Crunches or Ab-Wheel Rollouts',
+            muscleGroup: 'Core',
+            type: 'strength',
+            defaultSets: 3,
+            targetReps: '12-15',
+            targetRpe: 8,
+            restPeriodSeconds: 60,
+            notes: 'Part A Arm & Core Hypertrophy.'
+          },
+          {
+            id: 'tb-fri-zone2',
+            name: 'Zone 2 Run, Row, or Incline Treadmill Walk',
             muscleGroup: 'Full Body',
             type: 'cardio',
             defaultSets: 1,
-            targetReps: '4.0 miles',
-            targetRpe: 7,
+            targetReps: '25-30 mins',
+            targetRpe: 6.5,
             restPeriodSeconds: 0,
-            distance_miles: 4.0,
-            pace: '8:30-9:30 min/mile',
-            notes: 'Zone 2 HR (60-70% Max HR, approx 120-140 BPM). Continuous steady-state aerobic engine run building officer stamina and cardiovascular reserve.',
-            progression_rules: {
-              metric: 'distance_miles',
-              trigger: 'per_week',
-              increment_value: 0.5,
-              action: '+0.5 miles aerobic volume weekly'
-            }
-          },
-          {
-            id: 'th-d6-decompression',
-            name: 'Post-Run Mandatory Tissue Decompression',
-            muscleGroup: 'Full Body',
-            type: 'strength',
-            defaultSets: 1,
-            targetReps: '1 Circuit',
-            targetRpe: 5,
-            restPeriodSeconds: 0,
-            notes: 'Legs-Up-On-Wall Pose (3-5 min) + Couch Stretch (90 sec/side) + Foam roll calves and thoracic spine (2 min).'
+            pace: 'HR 130-145 BPM',
+            notes: 'Part B Aerobic Base / Shift Flush (25-30 mins): Heart rate 130-145 BPM — conversational pace.'
           }
         ]
       },
       {
         day: 7,
-        focus: 'Full Rest & Tissue Regeneration',
+        focus: 'Saturday: Complete Rest (Optional DIME Restorative Flow)',
         exercises: []
       }
     ],
     exercises: [
       {
-        id: 'th-d1-ohp',
-        name: 'Standing Overhead Barbell Press (OHP)',
-        muscleGroup: 'Shoulders',
-        type: 'strength',
-        defaultSets: 4,
-        targetReps: '6-8',
-        targetRpe: 8,
-        restPeriodSeconds: 120,
-        notes: 'Tempo: 2-0-1-0. Glutes clenched, core braced, head through at lockout.',
-        progression_rules: {
-          metric: 'weight_lbs',
-          trigger: 'complete_max_reps',
-          increment_value: 5,
-          action: '+2.5 to 5 lbs next session'
-        }
-      },
-      {
-        id: 'th-d1-pullups',
-        name: 'Weighted Neutral-Grip Pull-Ups',
-        muscleGroup: 'Back',
-        type: 'strength',
-        defaultSets: 4,
-        targetReps: '6-8',
-        targetRpe: 8,
-        restPeriodSeconds: 120,
-        notes: 'Tempo: 2-1-1-0. Full dead hang stretch at bottom, clear chin above bar.',
-        progression_rules: {
-          metric: 'weight_lbs',
-          trigger: 'complete_max_reps',
-          increment_value: 2.5,
-          action: '+2.5 to 5 lbs on belt'
-        }
-      },
-      {
-        id: 'th-d1-incline-bench',
-        name: 'Barbell Incline Bench Press (30°)',
+        id: 'tb-sun-incline-bench',
+        name: 'Incline Barbell or Dumbbell Bench Press',
         muscleGroup: 'Chest',
         type: 'strength',
-        defaultSets: 3,
-        targetReps: '8-10',
-        targetRpe: 8.5,
-        restPeriodSeconds: 90,
-        notes: 'Tempo: 2-0-1-0. Retract scapulae, touch clavicle line.',
-        progression_rules: {
-          metric: 'weight_lbs',
-          trigger: 'complete_max_reps',
-          increment_value: 5,
-          action: '+5 lbs next session'
-        }
-      },
-      {
-        id: 'th-d1-bent-row',
-        name: 'Barbell Bent-Over Row (Strict)',
-        muscleGroup: 'Back',
-        type: 'strength',
         defaultSets: 4,
         targetReps: '8-10',
         targetRpe: 8,
-        restPeriodSeconds: 90,
-        notes: 'Tempo: 2-0-1-1. Hinged at 45 degrees, pull bar to navel, pause 1 sec.',
-        progression_rules: {
-          metric: 'weight_lbs',
-          trigger: 'complete_max_reps',
-          increment_value: 5,
-          action: '+5 lbs next session'
-        }
+        restPeriodSeconds: 120,
+        notes: 'Primary press; 2-sec controlled eccentric.',
+        progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs upper next week' }
       },
       {
-        id: 'th-d1-zpress',
-        name: 'Barbell Z-Press (or Seated Dumbbell Press)',
+        id: 'tb-sun-seated-ohp',
+        name: 'Seated Dumbbell Overhead Press',
         muscleGroup: 'Shoulders',
         type: 'strength',
         defaultSets: 3,
         targetReps: '10-12',
-        targetRpe: 8.5,
+        targetRpe: 8,
         restPeriodSeconds: 75,
-        notes: 'Tempo: 2-0-1-0. Seated flat on floor, strict thoracic posture.',
-        progression_rules: {
-          metric: 'weight_lbs',
-          trigger: 'complete_max_reps',
-          increment_value: 5,
-          action: '+5 lbs next session'
-        }
+        notes: 'Full range of motion; brace core without arch.',
+        progression_rules: { metric: 'weight_lbs', trigger: 'complete_max_reps', increment_value: 5, action: '+5 lbs DBs on top reps' }
       },
       {
-        id: 'th-d1-dips',
-        name: 'Bodyweight Dips',
+        id: 'tb-sun-dips-cgbp',
+        name: 'Weighted Dips or Close-Grip Bench Press',
         muscleGroup: 'Chest',
         type: 'strength',
         defaultSets: 3,
-        targetReps: '12-15',
+        targetReps: '10-12',
         targetRpe: 8,
-        restPeriodSeconds: 60,
-        notes: 'Tempo: 2-0-1-0. Slight forward lean, 90 deg elbows.',
-        progression_rules: {
-          metric: 'reps',
-          trigger: 'complete_max_reps',
-          increment_value: 1,
-          action: '+1 rep or add weight vest'
-        }
+        restPeriodSeconds: 75,
+        notes: 'Keep elbows tucked to protect shoulder capsule.'
       },
       {
-        id: 'th-d1-hammer-curls',
-        name: 'Incline Dumbbell Hammer Curls',
-        muscleGroup: 'Arms',
+        id: 'tb-sun-medball-pass',
+        name: 'Explosive Med-Ball Chest Pass (against wall)',
+        muscleGroup: 'Chest',
         type: 'strength',
-        defaultSets: 3,
-        targetReps: '10-12',
-        targetRpe: 9,
+        defaultSets: 4,
+        targetReps: '5',
+        targetRpe: 8.5,
         restPeriodSeconds: 60,
-        notes: 'Tempo: 2-1-1-0. Elbows pinned back, palms facing inward.',
-        progression_rules: {
-          metric: 'weight_lbs',
-          trigger: 'complete_max_reps',
-          increment_value: 5,
-          action: '+5 lbs next session'
-        }
+        notes: 'Maximum velocity, full reset between throws.'
+      },
+      {
+        id: 'tb-sun-superset',
+        name: 'Lateral Raises + Cable Tricep Pushdowns',
+        muscleGroup: 'Arms',
+        type: 'superset',
+        format: 'superset',
+        defaultSets: 3,
+        targetReps: '12-15 / 12-15',
+        targetRpe: 8.5,
+        restPeriodSeconds: 60,
+        supersetExercises: [
+          { name: 'Lateral Raises', targetReps: '12-15', muscleGroup: 'Shoulders' },
+          { name: 'Cable Tricep Pushdowns', targetReps: '12-15', muscleGroup: 'Arms' }
+        ],
+        notes: 'Minimal rest between paired movements.'
       }
     ]
   }
@@ -1780,6 +1511,102 @@ export const INITIAL_WARMUPS: WarmUpRoutine[] = [
           'Stay light and springy on the ball of your foot.'
         ],
         coachingPoint: 'Completes CNS and joint preparation for heavy lifting, sprinting, and agility.'
+      }
+    ]
+  },
+  {
+    id: 'warmup-dime-tactical-bb',
+    title: 'Mandatory 8-Minute DIME Warm-Up Protocol (12-Week Tactical Bodybuilding)',
+    category: 'Full Body / CNS',
+    durationMinutes: 8,
+    description:
+      'Mandated before every session in the 12-Week Tactical Bodybuilding Program (8 minutes). Progresses through Dynamic Mobility, Isolation & Activation, Movement Prep, and Explosive Primer to protect patrol joints and maximize lift & sprint readiness.',
+    focusMuscles: ['Hips & T-Spine', 'Glutes & Rear Delts', 'Hamstrings & Ankles', 'CNS Acceleration'],
+    steps: [
+      {
+        id: 'tbb-dime-1-wgs',
+        name: "1. Dynamic Mobility: World's Greatest Stretches",
+        targetArea: 'Hips, Thoracic Spine & Hamstrings',
+        repsText: '10 total (5 per side)',
+        cues: [
+          'Step into a deep forward lunge, drop inside elbow toward your instep, and rotate chest toward the ceiling.',
+          'Smoothly alternate 5 slow controlled reps per side.'
+        ],
+        coachingPoint: 'Undoes cruiser hip-flexor tightness and restores thoracic rotation.'
+      },
+      {
+        id: 'tbb-dime-2-swings',
+        name: '2. Dynamic Mobility: Leg Swings (Front/Back & Side-to-Side)',
+        targetArea: 'Hip Capsule, Hamstrings & Adductors',
+        repsText: '10 front/back + 10 side-to-side / leg',
+        cues: [
+          'Hold a rack or wall lightly; swing one leg smoothly forward and back for 10 reps, then side-to-side across your body for 10 reps.',
+          'Keep torso upright and avoid rounding your lower back.'
+        ],
+        coachingPoint: 'Mobilizes hip flexors, hamstrings, and groin dynamically.'
+      },
+      {
+        id: 'tbb-dime-3-bridges',
+        name: '3. Isolation & Activation: Glute Bridges',
+        targetArea: 'Glutes & Posterior Pelvic Tilt',
+        repsText: '15 reps',
+        cues: [
+          'Drive heels into the floor, squeeze glutes hard for 1 second at top without hyperextending low back.',
+          'Lower under control and repeat for 15 crisp reps.'
+        ],
+        coachingPoint: 'Wakes up inhibited glutes after extended hours seated in a patrol cruiser.'
+      },
+      {
+        id: 'tbb-dime-4-pullaparts',
+        name: '4. Isolation & Activation: Band Pull-Aparts',
+        targetArea: 'Rear Delts, Rhomboids & Scapular Posture',
+        repsText: '15 reps',
+        cues: [
+          'Hold light resistance band shoulder-width at chest height with straight arms.',
+          'Pull band apart by squeezing shoulder blades down and back to counteract body-armor forward pull.'
+        ],
+        coachingPoint: 'Primes upper-back posture before heavy pressing and pulling.'
+      },
+      {
+        id: 'tbb-dime-5-high-knees',
+        name: '5. Movement Prep: 20m High Knees',
+        targetArea: 'Hip Flexor Speed & Ankle Stiffness',
+        repsText: '20 meters',
+        cues: [
+          'Drive knees sharply to hip height with fast arm punch and crisp mid-foot strike underneath hips.'
+        ],
+        coachingPoint: 'Elevates core temperature and reinforces upright sprint posture.'
+      },
+      {
+        id: 'tbb-dime-6-butt-kicks',
+        name: '6. Movement Prep: 20m Butt Kicks',
+        targetArea: 'Hamstring Recovery & Knee Drive',
+        repsText: '20 meters',
+        cues: [
+          'Cycle heels rapidly underneath glutes with relaxed shoulders and elastic ground contact.'
+        ],
+        coachingPoint: 'Warms up hamstring tendons for top-end speed and deadlifts.'
+      },
+      {
+        id: 'tbb-dime-7-askips',
+        name: '7. Movement Prep: 20m A-Skips',
+        targetArea: 'Sprint Mechanics & Elastic Rhythm',
+        repsText: '20 meters',
+        cues: [
+          'Rhythmic skip with knee and toe pulled up (“dorsiflexed”) and active punch down to mid-foot.'
+        ],
+        coachingPoint: 'Connects upper-lower sprinting rhythm prior to falling starts or lifts.'
+      },
+      {
+        id: 'tbb-dime-8-broad-jumps',
+        name: '8. Explosive Primer: Broad Jumps',
+        targetArea: 'Fast-Twitch CNS Potentiation',
+        repsText: '3 reps (step back & reset)',
+        cues: [
+          'Load hips dynamically and explode forward for maximum distance.',
+          'Stick a soft athletic landing, step back, and fully reset between every rep.'
+        ],
+        coachingPoint: 'Primes maximum rate of force development right before Working Set 1.'
       }
     ]
   },

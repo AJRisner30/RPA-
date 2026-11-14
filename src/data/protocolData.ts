@@ -603,20 +603,20 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           'Reverse Lunges (3x10/leg) [Overload: Start at 3 sets x 10/leg; add light DBs once stable - Effort: Bodyweight / Light DBs (RPE 7) - Rest: 60s]',
           'McGill Curl-Up + Side Plank + Bird Dog (3x10 sec holds each) [Effort: Bodyweight (RPE 7) - Rest: 45s - Spine-safe core bracing; never do straight-leg sit-ups]'
         ],
-        run: 'Post-Lift Aerobic Run: 3,000m (1 set)',
+        run: 'Post-Lift Aerobic Run: 1.9 miles (1 set)',
         pace: 'Easy Conversational Pace (Rest: 0s)',
-        progressionRule: 'Start at 3 sets x 10 reps (RPE 7, 3s eccentric). Build to 12 reps across all sets before adding +5–10 lbs. Post-Lift Run: 3,000m easy conversational pace.'
+        progressionRule: 'Start at 3 sets x 10 reps (RPE 7, 3s eccentric). Build to 12 reps across all sets before adding +5–10 lbs. Post-Lift Run: 1.9 miles easy conversational pace.'
       },
       {
         day: 'Day 2',
         focus: 'Cardio Endurance & Tempo Running',
         warmup: DIME_WARMUP_TEXT,
         strength: [
-          'Steady Aerobic Run (build distance weekly) (1x4,000-5,000m) [Overload: Start at 4,000m; increase distance max 10%/week toward 5,000m - Effort: Conversational Pace (RPE 7) - Rest: 0s]'
+          'Steady Aerobic Run (build distance weekly) (1x2.5-3.1 miles) [Overload: Start at 2.5 miles; increase distance max 10%/week toward 3.1 miles - Effort: Conversational Pace (RPE 7) - Rest: 0s]'
         ],
-        run: 'Steady Aerobic Run (build distance weekly): 4,000–5,000m (start at 4,000m)',
+        run: 'Steady Aerobic Run (build distance weekly): 2.5–3.1 miles (start at 2.5 miles)',
         pace: 'Conversational Pace (Rest: 0s)',
-        progressionRule: 'Start at 4,000m and build distance by no more than 10% per week up to 5,000m.'
+        progressionRule: 'Start at 2.5 miles and build distance by no more than 10% per week up to 3.1 miles.'
       },
       {
         day: 'Day 3',
@@ -637,11 +637,11 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         focus: 'Mid-Week Steady Run & Hip Mobility',
         warmup: DIME_WARMUP_TEXT,
         strength: [
-          'Steady Aerobic Run + 10-Min Hip Mobility (1x4,000m) [Effort: Easy Conversational Pace (RPE 7) - Rest: 0s - Follow with 10-min hip flexor, hamstring, calf & chest static stretches]'
+          'Steady Aerobic Run + 10-Min Hip Mobility (1x2.5 miles) [Effort: Easy Conversational Pace (RPE 7) - Rest: 0s - Follow with 10-min hip flexor, hamstring, calf & chest static stretches]'
         ],
-        run: 'Steady Aerobic Run (4,000m) + 10-Min Hip Mobility',
+        run: 'Steady Aerobic Run (2.5 miles) + 10-Min Hip Mobility',
         pace: 'Easy Conversational Pace (Rest: 0s)',
-        progressionRule: '4,000m easy conversational run followed by 10 minutes of hip mobility to undo patrol car stiffness.'
+        progressionRule: '2.5-mile easy conversational run followed by 10 minutes of hip mobility to undo patrol car stiffness.'
       },
       {
         day: 'Day 5',
@@ -653,9 +653,9 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           'Half-Kneeling Pallof Press (Anti-Rotation) (3x12/side) [Effort: Moderate Band/Cable (RPE 7) - Rest: 60s]',
           'One-Arm Suitcase Carry (3x25m/arm) [Overload: +5 lbs DB/KB when posture stays vertical - Effort: Moderate Dumbbell/KB (RPE 7) - Rest: 60s]'
         ],
-        run: 'Easy Finisher Run: 2,400m (1 set)',
+        run: 'Easy Finisher Run: 1.5 miles (1 set)',
         pace: 'Easy Pace (Rest: 0s)',
-        progressionRule: 'Complete all 4 full-body & anti-rotation core drills at RPE 7, then finish with a 2,400m Easy Finisher Run.'
+        progressionRule: 'Complete all 4 full-body & anti-rotation core drills at RPE 7, then finish with a 1.5-mile Easy Finisher Run.'
       },
       {
         day: 'Day 6',
@@ -685,7 +685,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     id: 'apex_phase2',
     title: 'Quarter 2 (Weeks 14–26): Running Stamina & Grappling Strength',
     weeks: 'Weeks 14–26',
-    desc: 'Increase running stamina with 100m–400m tempo/interval sessions and 5,000–6,000m runs while building lean muscle and grip strength for ground control.',
+    desc: 'Increase running stamina with 100m–400m tempo/interval sessions and 3.1–3.7 mile runs while building lean muscle and grip strength for ground control.',
     coachRule:
       'Quarter 2 Progression Rules: Start at 6 reps on 4x6-8 compound lifts at Challenging Effort (RPE 8). Build to 8 reps across all 4 sets before adding +2.5–5 lbs (upper) or +5–10 lbs (lower). Never increase vest weight, running distance, and running speed in the same week. Deload (-40% volume) on Weeks 16, 20, 24. Benchmark Test on Week 26.',
     days: [
@@ -699,9 +699,9 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           'Bulgarian Split Squat (rear foot elevated) (3x8/leg) [Overload: +5 lbs DBs when 3x8/leg is solid - Effort: Moderate Dumbbells (RPE 8) - Rest: 90s]',
           'Tall-Kneeling Pallof Press + Glute Bridge (3x10/side + 15 reps) [Effort: Moderate Band/Cable (RPE 8) - Rest: 60s]'
         ],
-        run: 'Post-Lift Aerobic Run: 3,000m (1 set)',
+        run: 'Post-Lift Aerobic Run: 1.9 miles (1 set)',
         pace: 'Easy Recovery Pace (Rest: 0s)',
-        progressionRule: 'Back Squat: Start at 4x6 (RPE 8), build to 4x8 then +5–10 lbs. Deadlift: 4x6 at RPE 8. Finish with 3,000m easy recovery run.'
+        progressionRule: 'Back Squat: Start at 4x6 (RPE 8), build to 4x8 then +5–10 lbs. Deadlift: 4x6 at RPE 8. Finish with 1.9-mile easy recovery run.'
       },
       {
         day: 'Day 2',
@@ -709,11 +709,11 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         warmup: DIME_WARMUP_TEXT,
         strength: [
           '100m Tempo Runs (smooth, consistent speed) (10x100m (~16-18s)) [Effort: Moderate (65-75% speed, RPE 8) - Rest: 45s walk]',
-          'Brisk Walk or Light Jog Wearing 20-30 lb Vest (1x2,400m) [Effort: Brisk Pace (20-30 lb Vest, RPE 7.5) - Rest: 0s]'
+          'Brisk Walk or Light Jog Wearing 20-30 lb Vest (1x1.5 miles) [Effort: Brisk Pace (20-30 lb Vest, RPE 7.5) - Rest: 0s]'
         ],
-        run: '10x100m Tempo Runs (~16–18s, 45s walk rest) + 2,400m Brisk Walk or Light Jog Wearing 20–30 lb Vest',
+        run: '10x100m Tempo Runs (~16–18s, 45s walk rest) + 1.5 Mile Brisk Walk or Light Jog Wearing 20–30 lb Vest',
         pace: 'Moderate (65–75% speed) on 100m Tempo Runs + Brisk Pace with 20–30 lb Vest',
-        progressionRule: 'Hit smooth 16–18s pacing across all 10x100m tempo repeats (45s walk rest), followed by 2,400m in a 20–30 lb duty vest.'
+        progressionRule: 'Hit smooth 16–18s pacing across all 10x100m tempo repeats (45s walk rest), followed by 1.5 miles in a 20–30 lb duty vest.'
       },
       {
         day: 'Day 3',
@@ -734,11 +734,11 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         focus: 'Mid-Week Long Steady Aerobic Run',
         warmup: DIME_WARMUP_TEXT,
         strength: [
-          'Long Steady Aerobic Run (1x5,000-6,400m) [Overload: Start at 5,000m; increase distance max 10%/week up to 6,400m - Effort: Steady Zone 2 Pace (RPE 7) - Rest: 0s]'
+          'Long Steady Aerobic Run (1x3.1-4.0 miles) [Overload: Start at 3.1 miles; increase distance max 10%/week up to 4.0 miles - Effort: Steady Zone 2 Pace (RPE 7) - Rest: 0s]'
         ],
-        run: 'Long Steady Aerobic Run: 5,000–6,400m (start at 5,000m)',
+        run: 'Long Steady Aerobic Run: 3.1–4.0 miles (start at 3.1 miles)',
         pace: 'Steady Zone 2 Pace (Rest: 0s)',
-        progressionRule: 'Start at 5,000m and build weekly by no more than 10% toward 6,400m at steady Zone 2 pace.'
+        progressionRule: 'Start at 3.1 miles and build weekly by no more than 10% toward 4.0 miles at steady Zone 2 pace.'
       },
       {
         day: 'Day 5',
@@ -782,7 +782,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     id: 'apex_phase3',
     title: 'Quarter 3 (Weeks 27–39): Limit Strength, Pursuit Speed & Threshold Runs',
     weeks: 'Weeks 27–39',
-    desc: 'Build maximum strength while moving every rep upward as fast as possible, paired with short sprints, agility drills, and sustained 4,000–6,000m tempo runs.',
+    desc: 'Build maximum strength while moving every rep upward as fast as possible, paired with short sprints, agility drills, and sustained 2.5–3.7 mile tempo runs.',
     coachRule:
       'Quarter 3 Progression Rules: Start at the low end of every set and rep range (e.g., 4 sets x 3 reps on 4-5x3-5 Back Squat & Bench Press; 3 sets x 3 reps on 3-4x3-4 Deadlift; 8 repeats on 8-10x40m Sprint Repeats). Explode upward fast on every concentric rep at 85–92% Max (RPE 8.5–9). Deload (-40% volume) on Weeks 28, 32, 36. Benchmark Test on Week 39.',
     days: [
@@ -808,9 +808,9 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           '10m & 20m Sprint Starts (from ready stance) (6x10-20m) [Effort: All-Out (95-100%, RPE 9.5) - Rest: 90s]',
           'Pro Agility (5m-10m-5m) & 10m T-Test Cone Drills (3x1 rep each drill) [Effort: All-Out (sharp cuts, RPE 9) - Rest: 120s (2 min)]'
         ],
-        run: 'Easy Recovery Run: 3,200m (1 set)',
+        run: 'Easy Recovery Run: 2.0 miles (1 set)',
         pace: 'Easy Pace (after Sprint Starts & Cone Drills)',
-        progressionRule: 'Execute 6x10–20m Sprint Starts from patrol ready stance and 3x1 Pro Agility & T-Test drills at 95–100% effort, then 3,200m easy recovery run.'
+        progressionRule: 'Execute 6x10–20m Sprint Starts from patrol ready stance and 3x1 Pro Agility & T-Test drills at 95–100% effort, then 2.0-mile easy recovery run.'
       },
       {
         day: 'Day 3',
@@ -831,11 +831,11 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         focus: 'Mid-Week Sustained Threshold Tempo Run',
         warmup: DIME_WARMUP_TEXT,
         strength: [
-          'Sustained Tempo Run (fast, controlled pace) (1x4,800-6,400m) [Overload: Start at 4,800m; build max 10%/week to 6,400m - Effort: Threshold (75-80% HRR, RPE 8) - Rest: 0s]'
+          'Sustained Tempo Run (fast, controlled pace) (1x3.0-4.0 miles) [Overload: Start at 3.0 miles; build max 10%/week to 4.0 miles - Effort: Threshold (75-80% HRR, RPE 8) - Rest: 0s]'
         ],
-        run: 'Sustained Tempo Run (fast, controlled pace): 4,800–6,400m (start at 4,800m)',
+        run: 'Sustained Tempo Run (fast, controlled pace): 3.0–4.0 miles (start at 3.0 miles)',
         pace: 'Threshold (75–80% HRR, Rest: 0s)',
-        progressionRule: 'Start at 4,800m at Threshold pace (75–80% HRR) and build progressively toward 6,400m.'
+        progressionRule: 'Start at 3.0 miles at Threshold pace (75–80% HRR) and build progressively toward 4.0 miles.'
       },
       {
         day: 'Day 5',
@@ -904,9 +904,9 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         strength: [
           'Hill Sprints (easier on hamstrings than flat sprints) (6x30m) [Effort: All-Out (95%, RPE 9) - Rest: 90s walk]'
         ],
-        run: 'Steady Aerobic Run: 4,000–5,000m (start at 4,000m)',
+        run: 'Steady Aerobic Run: 2.5–3.1 miles (start at 2.5 miles)',
         pace: 'Conversational Pace (after 6 × 30m Hill Sprints)',
-        progressionRule: 'Complete 6x30m Hill Sprints at 95% effort (90s walk rest), then transition into a 4,000–5,000m conversational aerobic run.'
+        progressionRule: 'Complete 6x30m Hill Sprints at 95% effort (90s walk rest), then transition into a 2.5–3.1 mile conversational aerobic run.'
       },
       {
         day: 'Day 3',
@@ -927,11 +927,11 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         focus: 'Mid-Week Steady Zone 2 Recovery Run',
         warmup: DIME_WARMUP_TEXT,
         strength: [
-          'Steady Zone 2 Recovery Run (1x4,800m) [Effort: Easy Conversational Pace (RPE 7) - Rest: 0s]'
+          'Steady Zone 2 Recovery Run (1x3.0 miles) [Effort: Easy Conversational Pace (RPE 7) - Rest: 0s]'
         ],
-        run: 'Steady Zone 2 Recovery Run: 4,800m',
+        run: 'Steady Zone 2 Recovery Run: 3.0 miles',
         pace: 'Easy Conversational Pace (Rest: 0s)',
-        progressionRule: 'Maintain an easy conversational Zone 2 pace across 4,800m to flush fatigue before Day 5 Duty Circuit.'
+        progressionRule: 'Maintain an easy conversational Zone 2 pace across 3.0 miles to flush fatigue before Day 5 Duty Circuit.'
       },
       {
         day: 'Day 5',
@@ -1027,7 +1027,7 @@ export function getApexWeekData(weekNumber: number): ProtocolPhase {
   } else if (isTestWeek) {
     weekBadge = week === 52 ? ' (FINAL ANNUAL FITNESS TEST)' : ` (QUARTER ${quarterNum} BENCHMARK TEST)`;
     weekRulePrefix +=
-      'FITNESS BENCHMARK WEEK (Test Well-Rested): Test 1) 2,400m (1.5-Mile) Run [Duty Ready <11:30 | High Readiness <10:15 | SWAT/Tactical <9:30] & 5,000m Run [<24:00 | <21:00 | <19:15], 2) Squat & Trap-Bar Deadlift [1.5x | 1.75x | 2.0-2.5x BW], 3) Bench Press [1.0x | 1.25x | 1.5-1.75x BW] & 1-Min Push-Ups [35+ | 45+ | 60+], 4) Strict Pull-Ups [8+ | 14+ | 20+] & 40m Sprint [<5.6s | <5.2s | <4.9s], 5) Vertical Jump [50+ cm | 60+ cm | 70+ cm]. ';
+      'FITNESS BENCHMARK WEEK (Test Well-Rested): Test 1) 1.5-Mile Run [Duty Ready <11:30 | High Readiness <10:15 | SWAT/Tactical <9:30] & 3.1-Mile (5K) Run [<24:00 | <21:00 | <19:15], 2) Squat & Trap-Bar Deadlift [1.5x | 1.75x | 2.0-2.5x BW], 3) Bench Press [1.0x | 1.25x | 1.5-1.75x BW] & 1-Min Push-Ups [35+ | 45+ | 60+], 4) Strict Pull-Ups [8+ | 14+ | 20+] & 40m Sprint [<5.6s | <5.2s | <4.9s], 5) Vertical Jump [50+ cm | 60+ cm | 70+ cm]. ';
   } else {
     const blockWeek = ((week - 1) % 4) + 1; // 1, 2, or 3 within the 4-week cycle
     weekRulePrefix += `3-Week Progressive Block (Week ${blockWeek} of 3): Start at the low end of set & rep ranges; add 1–2 reps per set until hitting the top of the rep range with 1–2 RIR, then add +2.5–5 lbs (upper) or +5–10 lbs (lower). `;
@@ -1047,203 +1047,280 @@ export function getApexWeekData(weekNumber: number): ProtocolPhase {
 Object.assign(PROTOCOL_DATA, APEX_PROTOCOL_PHASES);
 
 // ---------------------------------------------------------------------------
-// PATROL READY PERFORMANCE TACTICAL HYPERTROPHY & CONDITIONING PROTOCOL (6-WEEK)
+// 12-WEEK TACTICAL BODYBUILDING PROGRAM (Starts Sunday • 4 Lift + 2 Speed/Cond + 1 Rest)
 // ---------------------------------------------------------------------------
+export const TACTICAL_BB_DIME_WARMUP_TEXT =
+  'Mandatory 8-Minute DIME Warm-Up Protocol (Required Every Session): Dynamic Mobility — 10 World\'s Greatest Stretches (5/side), 10 Leg Swings (front/back & side-to-side/leg); Isolation & Activation — 15 Glute Bridges, 15 Band Pull-Aparts; Movement Prep — 20m High Knees, 20m Butt Kicks, 20m A-Skips; Explosive Primer — 3 Broad Jumps (step back and fully reset between reps).';
+
+export const TACTICAL_BB_DAILY_RECOVERY_DIME_TEXT =
+  'Mandatory Daily DIME Restorative Flow (8 Minutes) + Full Recovery: Complete light DIME Dynamic Mobility & Activation (10 World\'s Greatest Stretches, 10 Leg Swings/leg, 15 Glute Bridges, 15 Band Pull-Aparts) to relieve patrol-belt stiffness, then prioritize 8+ hours of sleep and hydration.';
+
 export interface TacticalConditioningWeek {
   week: number;
-  distance_miles: number;
-  target_pace: string;
-  focus: string;
+  phase: 1 | 2 | 3;
+  phaseName: string;
+  conditioningSummary: string;
   is_deload?: boolean;
 }
 
 export const TACTICAL_CONDITIONING_MATRIX: TacticalConditioningWeek[] = [
-  {
-    week: 1,
-    distance_miles: 4.0,
-    target_pace: "8:45-9:30 min/mile",
-    focus: "Aerobic base cadence, nasal breathing, and duty stamina",
-    is_deload: false,
-  },
-  {
-    week: 2,
-    distance_miles: 5.0,
-    target_pace: "8:30-9:15 min/mile",
-    focus: "Sustained threshold pacing and hydration management",
-    is_deload: false,
-  },
-  {
-    week: 3,
-    distance_miles: 4.0,
-    target_pace: "8:00-8:45 min/mile",
-    focus: "Tempo foot pursuit speed intervals and sprint recovery",
-    is_deload: false,
-  },
-  {
-    week: 4,
-    distance_miles: 3.0,
-    target_pace: "9:00-9:45 min/mile",
-    focus: "Active flush, low systemic fatigue, tissue regeneration",
-    is_deload: true,
-  },
-  {
-    week: 5,
-    distance_miles: 6.0,
-    target_pace: "8:30-9:15 min/mile",
-    focus: "Extended aerobic duration check and duty engine capacity",
-    is_deload: false,
-  },
-  {
-    week: 6,
-    distance_miles: 5.0,
-    target_pace: "7:45-8:30 min/mile",
-    focus: "Frontline pursuit speed and physical assessment benchmark",
-    is_deload: false,
-  }
+  { week: 1, phase: 1, phaseName: 'Phase 1: Armor & Base', conditioningSummary: '6×20m Falling Starts + 4×40m Build-Ups + 4×50m Sled Push | Fri Zone 2 (25–30m)', is_deload: false },
+  { week: 2, phase: 1, phaseName: 'Phase 1: Armor & Base', conditioningSummary: '6×20m Falling Starts + 4×40m Build-Ups + 4×50m Sled Push | Fri Zone 2 (25–30m)', is_deload: false },
+  { week: 3, phase: 1, phaseName: 'Phase 1: Armor & Base', conditioningSummary: '6×20m Falling Starts + 4×40m Build-Ups + 4×50m Sled Push | Fri Zone 2 (25–30m)', is_deload: false },
+  { week: 4, phase: 1, phaseName: 'Phase 1 Deload', conditioningSummary: 'Deload (-40% volume, ~80% weight, crisp speed)', is_deload: true },
+  { week: 5, phase: 2, phaseName: 'Phase 2: Power-Building', conditioningSummary: '6× Pro Agility (5-10-5m) + 5×30m Flying Sprints + 6×15s/45s Assault Bike | Fri Zone 2', is_deload: false },
+  { week: 6, phase: 2, phaseName: 'Phase 2: Power-Building', conditioningSummary: '6× Pro Agility (5-10-5m) + 5×30m Flying Sprints + 6×15s/45s Assault Bike | Fri Zone 2', is_deload: false },
+  { week: 7, phase: 2, phaseName: 'Phase 2: Power-Building', conditioningSummary: '6× Pro Agility (5-10-5m) + 5×30m Flying Sprints + 6×15s/45s Assault Bike | Fri Zone 2', is_deload: false },
+  { week: 8, phase: 2, phaseName: 'Phase 2 Deload', conditioningSummary: 'Deload (-40% volume, ~80% weight, crisp speed)', is_deload: true },
+  { week: 9, phase: 3, phaseName: 'Phase 3: Peak & Velocity', conditioningSummary: '4×60m Broken Sprints (20m/drop/40m) + 4× T-Drill (10m×10m) | Fri Zone 2', is_deload: false },
+  { week: 10, phase: 3, phaseName: 'Phase 3: Peak & Velocity', conditioningSummary: '4×60m Broken Sprints (20m/drop/40m) + 4× T-Drill (10m×10m) | Fri Zone 2', is_deload: false },
+  { week: 11, phase: 3, phaseName: 'Phase 3: Peak & Velocity', conditioningSummary: '4×60m Broken Sprints (20m/drop/40m) + 4× T-Drill (10m×10m) | Fri Zone 2', is_deload: false },
+  { week: 12, phase: 3, phaseName: 'Phase 3 Deload / Peak', conditioningSummary: 'Deload (-40% volume, ~80% weight, crisp bar speed)', is_deload: true },
 ];
 
-export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = {
-  id: 'tactical_hypertrophy_v1',
-  title: 'Patrol Ready Tactical Hypertrophy & Conditioning Protocol',
-  weeks: '6-Week Tactical Cycle',
-  desc: 'A 6-day comprehensive frontline tactical conditioning protocol combining a 4-day Upper/Lower hypertrophy split with a 2-day aerobic capacity and duty pursuit stamina system.',
-  coachRule: 'Double Progression Rule: +5 lbs for upper body or +10 lbs for lower body upon achieving top of target rep range at target RPE. Compound structural lifts stay within RPE 7.5-8.5. Accessories reach RPE 9.0-10.0. Conditioning intervals strictly in Zone 3; Long base runs strictly in Zone 2 (120-140 BPM).',
-  days: [
-    {
-      day: 'Day 1',
-      focus: 'Heavy Upper: Tactical Press & Pull',
-      warmup: DIME_WARMUP_TEXT,
-      strength: [
-        'Standing Overhead Barbell Press (OHP) (4x6-8) [Overload: +2.5 to 5 lbs on 8 reps - Rest: 120s - Tempo: 2-0-1-0 - Glutes clenched, core braced, head through at lockout]',
-        'Weighted Neutral-Grip Pull-Ups (4x6-8) [Overload: +2.5 to 5 lbs on 8 reps - Rest: 120s - Tempo: 2-1-1-0 - Full dead hang stretch, clear chin above bar]',
-        'Barbell Incline Bench Press (30°) (3x8-10) [Overload: +5 lbs on 10 reps - Rest: 90s - Tempo: 2-0-1-0 - Retract scapulae, touch clavicle line]',
-        'Barbell Bent-Over Row (Strict) (4x8-10) [Overload: +5 lbs on 10 reps - Rest: 90s - Tempo: 2-0-1-1 - Hinged 45 deg, pull to navel, 1s pause]',
-        'Barbell Z-Press (or Seated Dumbbell Press) (3x10-12) [Overload: +5 lbs on 12 reps - Rest: 75s - Tempo: 2-0-1-0 - Seated on floor, strict thoracic posture]',
-        'Bodyweight Dips (3x12-15) [Overload: +1 rep or add weight vest if >15 easy - Rest: 60s - Tempo: 2-0-1-0 - Slight forward lean, 90 deg elbows]',
-        'Incline Dumbbell Hammer Curls (3x10-12) [Overload: +5 lbs DBs on 12 reps - Rest: 60s - Tempo: 2-1-1-0 - Elbows pinned back, palms inward]'
-      ],
-      run: 'Rest from running',
-      pace: 'N/A',
-      progressionRule: 'OHP & Pull-Ups: +2.5-5 lbs upon hitting 8 reps; Incline Bench & Rows: +5 lbs on 10 reps'
-    },
-    {
-      day: 'Day 2',
-      focus: 'Heavy Lower: Posterior Chain & Base Drive',
-      warmup: DIME_WARMUP_TEXT,
-      strength: [
-        'Trap Bar Deadlift (High or Low Handles) (4x5-6) [Overload: +10 lbs on 6 reps - Rest: 150s - Tempo: 1-0-X-0 - Full ground reset, pack lats, violent drive]',
-        'Front Squat (Clean Grip or Cross-Arm) (4x6-8) [Overload: +10 lbs on 8 reps - Rest: 120s - Tempo: 3-0-1-0 - High elbows, vertical torso, below parallel]',
-        'Romanian Deadlift (RDL) (3x8-10) [Overload: +10 lbs on 10 reps - Rest: 90s - Tempo: 3-1-1-0 - Push hips back horizontally, hamstring stretch]',
-        'Bulgarian Split Squat (3x10-12/leg) [Overload: +5 lbs DBs on 12 reps - Rest: 75s - Tempo: 2-0-1-0 - Rear foot on bench, drive front midfoot]',
-        'Standing Barbell Calf Raises (4x12-15) [Overload: +5-10 lbs on 15 reps - Rest: 60s - Tempo: 2-2-1-0 - 2s pause peak stretch and contraction]',
-        'Hanging Leg / Knee Raises (4x12-15) [Overload: +1 rep or toes-to-bar - Rest: 60s - Tempo: 2-0-1-1 - Control pelvic tilt, eliminate swing]'
-      ],
-      run: 'Rest from running',
-      pace: 'N/A',
-      progressionRule: 'Trap Bar Deadlift & Front Squat: +10 lbs on top reps; RDL: +10 lbs; Split Squat: +5 lbs'
-    },
-    {
-      day: 'Day 3',
-      focus: 'Conditioning Session A: Aerobic Engine & Lactate Clearance',
-      warmup: DIME_WARMUP_TEXT,
-      strength: [
-        'The Flush & Pace Aerobic Interval (Rower or Echo Bike) (5x4 min) [Zone 3 / Threshold (75-80% Max HR) work, 2 min Zone 1 recovery - Rest: 120s]',
-        'Sorensen Back Extension or Reverse Hyperextension (3x12-15) [Overload: +1-2 reps or light band - Rest: 60s - Tempo: 2-2-1-0 - Flush lower back, squeeze glutes]',
-        'Copenhagen Side Plank (3x20-30s/side) [Overload: +5s per set - Rest: 45s - Isometric hold - Top foot on bench, brace groin and lateral core]'
-      ],
-      run: 'The Flush & Pace Aerobic Interval (Rower or Echo Bike - 5 Rounds of 4 min work / 2 min active recovery)',
-      pace: 'Zone 3 / Threshold (75-80% Max HR) work with Zone 1 active recovery. Rest: 120s between rounds.',
-      progressionRule: 'Flush & Pace Intervals: Maintain identical 500m split or RPM output across all 5 rounds'
-    },
-    {
-      day: 'Day 4',
-      focus: 'Density Upper: Armor Building & Volume',
-      warmup: DIME_WARMUP_TEXT,
-      strength: [
-        'Flat Barbell Bench Press (4x8-10) [Overload: +5 lbs on 10 reps - Rest: 90s - Tempo: 2-0-1-0 - Retract scapulae, touch lower sternum]',
-        'Chest-Supported T-Bar or Dumbbell Row (4x10-12) [Overload: +5 lbs on 12 reps - Rest: 75s - Tempo: 2-0-1-1 - Chest glued to pad, squeeze shoulder blades]',
-        'Standing Push Press (3x6-8) [Overload: +5 lbs on 8 reps - Rest: 90s - Tempo: 1-0-X-0 - Shallow 3-inch dip, violent hip drive, solid lockout]',
-        'Dual Dumbbell Lateral Raises (4x12-15) [Overload: +2.5-5 lbs on 15 reps - Rest: 60s - Tempo: 2-0-1-1 - Slight forward lean, scapular plane]',
-        'Cable / Band Rope Face Pulls (4x15-20) [Overload: +5 lbs on 20 reps - Rest: 60s - Tempo: 2-1-1-1 - Pull to forehead/ears, thumbs back]',
-        'Close-Grip Barbell Bench Press (3x10-12) [Overload: +5 lbs on 12 reps - Rest: 60s - Tempo: 2-0-1-0 - Shoulder-width hands, elbows tucked]',
-        'Barbell EZ-Curl (3x10-12) [Overload: +5 lbs on 12 reps - Rest: 60s - Tempo: 2-0-1-1 - Strict form, peak contraction squeeze]'
-      ],
-      run: 'Rest from running',
-      pace: 'N/A',
-      progressionRule: 'Bench Press & Push Press: +5 lbs on top reps; Rows & Arms: +5 lbs'
-    },
-    {
-      day: 'Day 5',
-      focus: 'Power Lower: Grip, Carries & Squat Drive',
-      warmup: DIME_WARMUP_TEXT,
-      strength: [
-        'Barbell Back Squat (4x6-8) [Overload: +10 lbs on 8 reps - Rest: 120s - Tempo: 2-1-1-0 - Tight upper back shelf, knees over toes, drive hips up]',
-        'Barbell Hip Thrusts (3x8-10) [Overload: +10 lbs on 10 reps - Rest: 90s - Tempo: 2-1-1-1 - Chin tucked, full posterior pelvic tilt and lockout]',
-        'Walking Dumbbell Lunges (3x10-12 steps/leg) [Overload: +5 lbs DBs on 12 reps - Rest: 75s - Controlled cadence - Vertical chest, tap back knee]',
-        'Lying or Seated Leg Curls (3x12-15) [Overload: +5-10 lbs on 15 reps - Rest: 60s - Tempo: 2-0-1-1 - Direct knee flexion isolation]',
-        "Heavy Farmer's Walks (4x50m) [Overload: +5 lbs/hand on completed 50m - Rest: 90s - Rapid short strides - Shoulders down and back, zero sway]",
-        'Suitcase Carry (3x30m/side) [Overload: +5 lbs on completed 30m - Rest: 60s - Controlled walk - Vertical spine, resist lateral flexion]',
-        'Barbell Wrist Rollers or Plate Pinches (3xTo failure) [Overload: +5 lbs or +10s TUT - Rest: 60s - Continuous - Build forearm armor & grip endurance]'
-      ],
-      run: 'Rest from running',
-      pace: 'N/A',
-      progressionRule: 'Back Squat & Hip Thrusts: +10 lbs upon hitting top reps; Carries: +5 lbs'
-    },
-    {
-      day: 'Day 6',
-      focus: 'Conditioning Session B: Duty Cardio Progression & Zone 2 Base',
-      warmup: DIME_WARMUP_TEXT,
-      strength: [
-        'Duty Aerobic Base Run (1xDynamic) [Zone 2 HR (60-70% Max HR, approx 120-140 BPM) - Rest: 0s - Continuous steady-state aerobic cadence]',
-        'Post-Run Mandatory Tissue Decompression (1xCircuit) [Passive recovery - Rest: 0s - Legs-Up-On-Wall 3-5 min + Couch Stretch 90s/side + Foam roll calves/T-spine 2 min]'
-      ],
-      run: '4.0 Mile Duty Aerobic Base Run',
-      pace: '8:45-9:30 min/mile (Zone 2 HR)',
-      progressionRule: 'Zone 2 Duty Engine: Maintain target pace without exceeding Zone 2 HR (120-140 BPM)'
-    },
-    {
-      day: 'Day 7',
-      focus: 'Full Rest & Tissue Regeneration',
-      warmup: 'None. Passive rest and recovery.',
-      strength: [
-        'Complete physiological reset, systemic CNS recovery, hydration, and nutritional replenishment.'
-      ],
-      run: 'Complete Rest',
-      pace: 'N/A',
-      progressionRule: 'Rest, 8+ hours sleep, optimal protein & micronutrient intake'
-    }
-  ]
-};
+function buildTacticalBodybuildingPhase(phaseNum: 1 | 2 | 3): ProtocolPhase {
+  const isP1 = phaseNum === 1;
+  const isP2 = phaseNum === 2;
+  const mainReps = isP1 ? '8-10' : isP2 ? '5-6' : '3-5';
+  const upperAccReps = isP1 ? '10-12' : isP2 ? '8-10' : '6-8';
+  const lowerAccSingleReps = isP1 ? '10/leg' : isP2 ? '8/leg' : '6/leg';
+  const legPressReps = isP1 ? '12' : isP2 ? '10' : '8';
+  const compoundRest = isP1 ? 120 : isP2 ? 150 : 180;
+  const accessoryRest = isP1 ? 75 : isP2 ? 90 : 75;
 
-/**
- * Returns customized week data for any week 1 through 6 of the Tactical Hypertrophy & Conditioning Protocol.
- * Dynamically injects the exact weekly Day 6 run prescription from the 6-week progression matrix.
- */
-export function getTacticalHypertrophyWeekData(weekNumber: number): ProtocolPhase {
-  const week = Math.max(1, Math.min(6, weekNumber));
-  const cardioPrescription = TACTICAL_CONDITIONING_MATRIX[week - 1] || TACTICAL_CONDITIONING_MATRIX[0];
+  const phaseTitle = isP1
+    ? 'Phase 1 (Weeks 1–4): Armor & Base — 12-Week Tactical Bodybuilding Program'
+    : isP2
+    ? 'Phase 2 (Weeks 5–8): Power-Building — 12-Week Tactical Bodybuilding Program'
+    : 'Phase 3 (Weeks 9–12): Peak & Velocity — 12-Week Tactical Bodybuilding Program';
 
-  const clonedDays = JSON.parse(JSON.stringify(TACTICAL_HYPERTROPHY_BASE_PHASE.days)) as ProtocolDay[];
+  const phaseWeeks = isP1 ? 'Weeks 1–4' : isP2 ? 'Weeks 5–8' : 'Weeks 9–12';
+  const phaseDesc = isP1
+    ? 'Phase 1 (Armor & Base): Structural hypertrophy (8–10 main, 10–15 accessory), tendon preparation, and acceleration mechanics. Starts Sunday. Guardrails: Zero Olympic lifts, burpees, sandbags, or jump ropes. Mandatory 8-Min DIME Warm-Up daily.'
+    : isP2
+    ? 'Phase 2 (Power-Building): Maximal force production (5–6 main, 8–10 accessory), upper-back & shoulder density, and top-end agility/deceleration speed. Guardrails: Zero Olympic lifts, burpees, sandbags, or jump ropes. Mandatory 8-Min DIME Warm-Up daily.'
+    : 'Phase 3 (Peak & Velocity): Heavy strength maintenance (3–5 main, 6–8 explosive/hypertrophy), ballistic power, and broken-sprint pursuit conditioning. Guardrails: Zero Olympic lifts, burpees, sandbags, or jump ropes. Mandatory 8-Min DIME Warm-Up daily.';
 
-  // Dynamically configure Day 6 (Aerobic Duty Run)
-  const deloadBadge = cardioPrescription.is_deload ? ' (DELOAD FLUSH)' : '';
-  clonedDays[5].run = `${cardioPrescription.distance_miles.toFixed(1)} Mile Duty Aerobic Run${deloadBadge}`;
-  clonedDays[5].pace = `Target: ${cardioPrescription.target_pace} • Zone 2 HR (120-140 BPM). Week ${week}: ${cardioPrescription.focus}.`;
-  clonedDays[5].progressionRule = `Week ${week} Benchmark: ${cardioPrescription.distance_miles} miles @ ${cardioPrescription.target_pace}. Maintain steady continuous cadence.`;
-  
-  // Update strength array run item
-  clonedDays[5].strength[0] = `Duty Aerobic Base Run (${cardioPrescription.distance_miles} Miles) [Zone 2 HR - Target Pace: ${cardioPrescription.target_pace} - Rest: 0s]`;
+  const coachRule =
+    'Tactical Bodybuilding Execution & Shift Rules: 1) Double Progression — Pick a weight within the rep range; once you hit the top reps across all sets with 1–2 RIR, add +5 lbs (upper) or +10 lbs (lower) next week. 2) Mandated Daily DIME — Complete the 8-Minute DIME Warm-Up before EVERY session. 3) Guardrails — Zero Olympic lifts, burpees, sandbags, or jump ropes. 4) Deload Weeks (4, 8, 12) — Cut working sets by 40% (~80% weight, crisp speed). 5) Bad Shift Protocol — Off double shift / 4 hrs sleep: cut secondary accessory sets by half, keep main lift @ 3 RIR, swap sprints for 20-min Zone 2 flush.';
+
+  const tuesdayDay: ProtocolDay = isP1
+    ? {
+        day: 'Sunday +2 • Tuesday',
+        focus: 'Tuesday: Speed & Pursuit Conditioning (Track / Turf — Phase 1 Acceleration)',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          '20m Falling-Start Sprints (6x20m) [Overload: Explosive first 3 steps - Effort: Max Acceleration (RPE 9) - Rest: 90s - Walk-back recovery between reps]',
+          '40m Build-Up Sprints (4x40m) [Overload: Smooth top-speed posture - Effort: Hard (85-90% effort, RPE 8.5) - Rest: 120s - 2 min recovery]',
+          '50m Sled Push Finisher (4x50m) [Overload: Add +10 lbs sled when crisp - Effort: Moderate Load (RPE 8) - Rest: 60s - Drive low through balls of feet]'
+        ],
+        run: 'Phase 1 Track / Turf Acceleration: 6×20m Falling Starts + 4×40m Build-Ups + 4×50m Sled Push',
+        pace: '90s walk-back (20m) • 2 min rest (40m @ 85–90%) • 60s rest (50m sled)',
+        progressionRule: 'Phase 1 Acceleration: Foot-pursuit acceleration and anaerobic repeatability. Bad Shift Rule: Swap sprints for 20-min Zone 2 flush if sleep-deprived.'
+      }
+    : isP2
+    ? {
+        day: 'Sunday +2 • Tuesday',
+        focus: 'Tuesday: Speed & Pursuit Conditioning (Track / Turf — Phase 2 Agility & Deceleration)',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          'Pro Agility Shuttle (5-10-5 meters) (6x5-10-5m) [Overload: Sharp plant & drop hips - Effort: All-Out Change of Direction (RPE 9) - Rest: 90s]',
+          '30m Flying Sprints (15m build-up, 30m max velocity) (5x30m) [Overload: Upright relaxed top speed - Effort: Max Velocity (RPE 9.5) - Rest: 120s - 2 min full recovery]',
+          'Assault Bike Max Sprint / Easy Spin Finisher (6x15s sprint / 45s spin) [Effort: All-Out 15s / Easy 45s (RPE 9) - Rest: 45s]'
+        ],
+        run: 'Phase 2 Agility & Deceleration: 6× Pro Agility (5-10-5m) + 5×30m Flying Sprints + 6×15s/45s Bike Finisher',
+        pace: '90s rest (Pro Agility) • 2 min rest (Flying Sprints) • 15s Max / 45s Easy Spin',
+        progressionRule: 'Phase 2 Agility & Deceleration: Sharp lateral deceleration and top-end sprint mechanics. Bad Shift Rule: Swap sprints for 20-min Zone 2 flush.'
+      }
+    : {
+        day: 'Sunday +2 • Tuesday',
+        focus: 'Tuesday: Speed & Pursuit Conditioning (Track / Turf — Phase 3 Pursuit Simulation)',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          '60m Broken Sprints (sprint 20m, drop to chest, pop up, sprint 40m) (4x60m) [Effort: Pursuit Simulation (RPE 9.5) - Rest: 150s - 2.5 min full recovery]',
+          'T-Drill Agility Runs (10m x 10m) (4x10m x 10m) [Effort: Crisp Lateral & Backpedal Cuts (RPE 9) - Rest: 90s]'
+        ],
+        run: 'Phase 3 Pursuit Simulation: 4×60m Broken Sprints (20m/drop/40m) + 4× T-Drill (10m×10m)',
+        pace: '2.5 min rest (Broken Sprints) • 90s rest (T-Drill)',
+        progressionRule: 'Phase 3 Pursuit Simulation: Realistic foot-pursuit get-ups and multi-directional agility under fatigue. Bad Shift Rule: Swap for 20-min Zone 2 flush.'
+      };
 
   return {
-    ...TACTICAL_HYPERTROPHY_BASE_PHASE,
-    id: `tactical_week_${week}`,
-    title: `Tactical Hypertrophy & Conditioning — Week ${week}`,
-    weeks: `Week ${week} of 6`,
+    id: `tactical_bodybuilding_p${phaseNum}`,
+    title: phaseTitle,
+    weeks: phaseWeeks,
+    desc: phaseDesc,
+    coachRule,
+    days: [
+      {
+        day: 'Sunday',
+        focus: 'Sunday: Upper Body — Push & Shoulder Armor',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          `Incline Barbell or Dumbbell Bench Press (4x${mainReps}) [Overload: Double progression (+5 lbs upper at top reps, 1-2 RIR) - Effort: RPE 8 - Rest: ${compoundRest}s - Primary press; 2-sec controlled eccentric]`,
+          `Seated Dumbbell Overhead Press (3x${upperAccReps}) [Overload: +5 lbs DBs on top reps (1-2 RIR) - Effort: RPE 8 - Rest: ${accessoryRest}s - Full range of motion; brace core without arch]`,
+          `Weighted Dips or Close-Grip Bench Press (3x${upperAccReps}) [Overload: +5 lbs on top reps (1-2 RIR) - Effort: RPE 8 - Rest: ${accessoryRest}s - Keep elbows tucked to protect shoulder capsule]`,
+          `Explosive Med-Ball Chest Pass (against wall) (4x5) [Overload: Maximum throwing velocity - Effort: Explosive (RPE 8.5) - Rest: 60s - Maximum velocity, full reset between throws]`,
+          `Superset: Lateral Raises + Cable Tricep Pushdowns (3x12-15 / 12-15) [Overload: Minimal rest between paired movements; +2.5-5 lbs at 15 reps - Effort: RPE 8.5 - Rest: 60s]`
+        ],
+        run: 'Rest from running',
+        pace: 'N/A',
+        progressionRule: `Primary Press: 4×${mainReps} (+5 lbs upper when hitting top reps w/ 1–2 RIR); Accessories: ${upperAccReps}. Mandatory 8-Min DIME Warm-Up.`
+      },
+      {
+        day: 'Monday',
+        focus: 'Monday: Lower Body — Quad Drive & Acceleration',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          `Trap Bar Deadlift or Front Squat (4x${mainReps}) [Overload: Double progression (+10 lbs lower at top reps, 1-2 RIR) - Effort: RPE 8 - Rest: ${compoundRest}s - Primary lower lift; explosive concentric drive]`,
+          `Bulgarian Split Squats (Dumbbells) (3x${lowerAccSingleReps}) [Overload: +5-10 lbs DBs when hitting top reps - Effort: RPE 8 - Rest: ${accessoryRest}s - Maintain upright torso and knee alignment]`,
+          `Leg Press (3x${legPressReps}) [Overload: +10 lbs at crisp eccentric control - Effort: RPE 8 - Rest: ${accessoryRest}s - Controlled 3-second eccentric lowering phase]`,
+          `Box Jumps (4x4) [Overload: Step down and fully reset each rep - Effort: Explosive Power (RPE 8.5) - Rest: 90s - Focus on soft landing mechanics]`,
+          `Superset: Standing Calf Raises + Hanging Leg Raises (3x12-15 / 12-15) [Overload: Full stretch at bottom of calf raise; no swinging - Effort: RPE 8.5 - Rest: 60s]`
+        ],
+        run: 'Rest from running',
+        pace: 'N/A',
+        progressionRule: `Primary Lower: 4×${mainReps} (+10 lbs lower at top reps w/ 1–2 RIR); Split Squats ${lowerAccSingleReps}, Leg Press ${legPressReps}. Mandatory 8-Min DIME Warm-Up.`
+      },
+      {
+        ...tuesdayDay,
+        day: 'Tuesday'
+      },
+      {
+        day: 'Wednesday',
+        focus: 'Wednesday: Upper Body — Pull & Duty-Belt Posture',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          `Weighted Pull-Ups or Lat Pulldowns (4x${mainReps}) [Overload: Double progression (+5 lbs upper at top reps, 1-2 RIR) - Effort: RPE 8 - Rest: ${compoundRest}s - Full scapular depression and chest-to-bar pull]`,
+          `Chest-Supported T-Bar or Dumbbell Row (4x${upperAccReps}) [Overload: +5 lbs on top reps - Effort: RPE 8 - Rest: ${accessoryRest}s - Eliminates lower-back fatigue; squeeze shoulder blades]`,
+          `Face Pulls (4x15) [Overload: +5 lbs when external rotation stays crisp - Effort: RPE 8.5 - Rest: 60s - External rotation at peak contraction]`,
+          `Barbell or Heavy Dumbbell Shrugs (3x10-12) [Overload: +5-10 lbs on 12 reps - Effort: RPE 8 - Rest: 60s - 2-second pause at the top of each repetition]`,
+          `Superset: Hammer Curls + Heavy Farmer's Carries (3x10 / 40m) [Overload: +5 lbs at crisp posture - Effort: RPE 8.5 - Rest: 90s - Maintain tall posture and braced core on carries]`
+        ],
+        run: 'Rest from running',
+        pace: 'N/A',
+        progressionRule: `Pull-Ups/Pulldowns: 4×${mainReps} (+5 lbs upper at top reps); Rows: 4×${upperAccReps}; Shrugs + Hammer Curl/Farmer Carry superset. Mandatory 8-Min DIME Warm-Up.`
+      },
+      {
+        day: 'Thursday',
+        focus: 'Thursday: Lower Body — Posterior Chain & Top-End Speed',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          `Romanian Deadlift (Barbell or Dumbbell) (4x${mainReps}) [Overload: Double progression (+10 lbs lower at top reps, 1-2 RIR) - Effort: RPE 8 - Rest: ${compoundRest}s - Push hips back until deep hamstring tension; flat spine]`,
+          `Heavy Sled Push or Reverse Sled Drag (4x30m) [Overload: +10 lbs sled when trips stay crisp - Effort: Heavy (RPE 8.5) - Rest: 90s - Drive through balls of feet]`,
+          `Lying or Seated Leg Curls (3x${legPressReps}) [Overload: +5-10 lbs with strict return control - Effort: RPE 8 - Rest: ${accessoryRest}s - Control the return phase; avoid hip lift]`,
+          `Kettlebell Swings (4x12) [Overload: +5 lbs KB when hip snap is explosive - Effort: Explosive Hinge (RPE 8) - Rest: 60s - Explosive power hip snap; hinge, do not squat]`,
+          `Pallof Press (3x10/side) [Overload: +2.5-5 lbs or band tension - Effort: RPE 8 - Rest: 60s - Anti-rotation core stability; 2-second hold at full extension]`
+        ],
+        run: 'Rest from running',
+        pace: 'N/A',
+        progressionRule: `RDL: 4×${mainReps} (+10 lbs lower at top reps); Sled Push/Drag: 4×30m (90s rest); Leg Curls: 3×${legPressReps}. Mandatory 8-Min DIME Warm-Up.`
+      },
+      {
+        day: 'Friday',
+        focus: 'Friday: Athletic Conditioning & Arms ("Friday Pump + Engine")',
+        warmup: TACTICAL_BB_DIME_WARMUP_TEXT,
+        strength: [
+          'EZ-Bar Curls (3x10-12) [Overload: +5 lbs upper at 12 reps - Effort: RPE 8.5 - Rest: 60s - Part A Arm Hypertrophy (25 mins total)]',
+          'Skullcrushers or Overhead Cable Extension (3x10-12) [Overload: +5 lbs upper at 12 reps - Effort: RPE 8.5 - Rest: 60s - Controlled eccentric, full elbow lock]',
+          'Cable Crunches or Ab-Wheel Rollouts (3x12-15) [Overload: +5 lbs cable or deeper rollout - Effort: RPE 8 - Rest: 60s - Spine-safe anterior core hypertrophy]',
+          'Zone 2 Run, Row, or Incline Treadmill Walk (1x25-30 mins) [Effort: Zone 2 HR 130-145 BPM Conversational Pace (RPE 6.5-7) - Rest: 0s - Part B Aerobic Base / Shift Flush to clear metabolic waste]'
+        ],
+        run: 'Part B — Aerobic Base / Shift Flush: 25–30 mins Zone 2 Run, Row, or Incline Treadmill Walk',
+        pace: 'Heart rate 130–145 BPM — conversational pace to clear metabolic waste and build shift stamina',
+        progressionRule: 'Part A (25 mins Arms & Core) + Part B (25–30 mins Zone 2 Flush @ 130–145 BPM). Mandatory 8-Min DIME Warm-Up.'
+      },
+      {
+        day: 'Saturday',
+        focus: 'Saturday: Complete Rest (Optional Daily DIME Mobility Flush)',
+        warmup: TACTICAL_BB_DAILY_RECOVERY_DIME_TEXT,
+        strength: [
+          'Complete Rest: Full recovery, hydration, 8+ hours of dark sleep, and shift meal prep (Optional: light 8-min DIME mobility flow to relieve cruiser hip tightness).'
+        ],
+        run: 'Complete Rest',
+        pace: 'N/A',
+        progressionRule: 'Full recovery, hydration, and sleep prioritization before starting Sunday Upper Push.'
+      }
+    ]
+  };
+}
+
+export const TACTICAL_BODYBUILDING_PHASES: Record<'tb_phase1' | 'tb_phase2' | 'tb_phase3', ProtocolPhase> = {
+  tb_phase1: buildTacticalBodybuildingPhase(1),
+  tb_phase2: buildTacticalBodybuildingPhase(2),
+  tb_phase3: buildTacticalBodybuildingPhase(3),
+};
+
+export const TACTICAL_HYPERTROPHY_BASE_PHASE: ProtocolPhase = TACTICAL_BODYBUILDING_PHASES.tb_phase1;
+
+/**
+ * Applies 40% set reduction & ~80% weight deload guidance for Weeks 4, 8, and 12.
+ */
+function applyDeloadToExerciseString(exerciseStr: string): string {
+  const bracketMatch = exerciseStr.match(/\[(.*?)\]/);
+  const hint = bracketMatch ? bracketMatch[1] : '';
+  const withoutBracket = exerciseStr.replace(/\[.*?\]/g, '').trim();
+  const lastOpenParen = withoutBracket.lastIndexOf('(');
+  const lastCloseParen = withoutBracket.lastIndexOf(')');
+
+  let updatedCore = withoutBracket;
+  if (lastOpenParen > 0 && lastCloseParen === withoutBracket.length - 1) {
+    const spec = withoutBracket.slice(lastOpenParen + 1, lastCloseParen).trim();
+    const xMatch = spec.match(/^(\d+)\s*[x×]\s*(.+)$/i);
+    if (xMatch) {
+      const origSets = parseInt(xMatch[1], 10);
+      if (origSets >= 2) {
+        // 40% reduction (e.g. 4 sets -> 2-3 sets; 3 sets -> 2 sets; 6 rounds -> 3-4 rounds)
+        const deloadSets = origSets === 4 ? '2-3' : `${Math.max(2, Math.round(origSets * 0.6))}`;
+        updatedCore = `${withoutBracket.slice(0, lastOpenParen)}(${deloadSets}x${xMatch[2]})`;
+      }
+    }
+  }
+
+  const deloadHint = hint
+    ? `DELOAD (-40% sets, ~80% weight, crisp bar speed) • ${hint}`
+    : 'DELOAD (-40% sets, ~80% weight, crisp bar speed)';
+  return `${updatedCore} [${deloadHint}]`;
+}
+
+/**
+ * Returns customized week data for any week 1 through 12 of the 12-Week Tactical Bodybuilding Program.
+ * Incorporates Phase 1 (Wks 1–4), Phase 2 (Wks 5–8), Phase 3 (Wks 9–12),
+ * Deload Weeks (Weeks 4, 8, 12: -40% working sets, ~80% weight), and Mandated Daily DIME Warm-Up.
+ */
+export function getTacticalHypertrophyWeekData(weekNumber: number): ProtocolPhase {
+  const week = Math.max(1, Math.min(12, weekNumber));
+  const phaseNum: 1 | 2 | 3 = week <= 4 ? 1 : week <= 8 ? 2 : 3;
+  const basePhase = TACTICAL_BODYBUILDING_PHASES[`tb_phase${phaseNum}`];
+  const clonedDays = JSON.parse(JSON.stringify(basePhase.days)) as ProtocolDay[];
+
+  const isDeloadWeek = week === 4 || week === 8 || week === 12;
+  if (isDeloadWeek) {
+    clonedDays.forEach((d) => {
+      const isRest = d.focus.toLowerCase().includes('complete rest');
+      if (!isRest) {
+        d.strength = d.strength.map((s) => applyDeloadToExerciseString(s));
+        if (d.run && !d.run.toLowerCase().includes('rest')) {
+          d.run = `${d.run} [Week ${week} Deload: -40% rounds/volume]`;
+        }
+        d.progressionRule = `DELOAD WEEK ${week}: Cut working sets by 40% (e.g. 4 sets → 2–3 sets) & keep weights at ~80% of prior week's load with crisp bar speed. ${d.progressionRule || ''}`;
+      }
+    });
+  }
+
+  const phaseLabel =
+    phaseNum === 1 ? 'Phase 1: Armor & Base' : phaseNum === 2 ? 'Phase 2: Power-Building' : 'Phase 3: Peak & Velocity';
+
+  return {
+    ...basePhase,
+    id: `tactical_bb_week_${week}`,
+    title: `12-Week Tactical Bodybuilding — Week ${week} (${phaseLabel}${isDeloadWeek ? ' • DELOAD' : ''})`,
+    weeks: `Week ${week} of 12 • ${phaseLabel}`,
     days: clonedDays
   };
 }
 
-// Add base tactical hypertrophy into PROTOCOL_DATA
+// Add base tactical bodybuilding into PROTOCOL_DATA
 PROTOCOL_DATA.tactical_hypertrophy = TACTICAL_HYPERTROPHY_BASE_PHASE;
 
 // ---------------------------------------------------------------------------
