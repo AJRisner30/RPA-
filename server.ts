@@ -486,6 +486,9 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
     id: string;
     name: string;
     muscleGroup: 'Chest' | 'Back' | 'Quads' | 'Hamstrings & Glutes' | 'Shoulders' | 'Arms' | 'Core' | 'Full Body';
+    type?: string;
+    format?: string;
+    supersetExercises?: Array<{ name: string; targetReps: string; muscleGroup?: string }>;
     defaultSets: number;
     targetReps: string;
     restPeriodSeconds: number;
@@ -503,6 +506,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-1',
       name: isDbOnly ? 'Heavy Dumbbell Neutral-Grip Flat Bench' : hasShoulderInjury ? 'Neutral-Grip Dumbbell Floor Press' : 'Barbell Bench Press (or Heavy DB Press)',
       muscleGroup: 'Chest',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '8-10 reps',
       restPeriodSeconds: 90,
@@ -514,6 +519,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-2',
       name: isBwOnly ? 'Chest-to-Bar Pull-Ups or Inverted Rows' : 'Chest-Supported Dumbbell / Barbell Row',
       muscleGroup: 'Back',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '8-10 reps',
       restPeriodSeconds: 75,
@@ -525,6 +532,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-3',
       name: hasShoulderInjury ? 'Landmine Shoulder Press or Half-Kneeling DB Press' : 'Standing Dumbbell Overhead Strict Press',
       muscleGroup: 'Shoulders',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 3,
       targetReps: '10-12 reps',
       restPeriodSeconds: 60,
@@ -537,6 +546,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-4',
         name: isBwOnly ? 'Diamond Push-Ups (or Deficit Push-Ups)' : 'Incline Dumbbell Hammer Curls',
         muscleGroup: 'Arms',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '12-15 reps',
         restPeriodSeconds: 60,
@@ -547,6 +558,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-5',
         name: isBwOnly ? 'Bench / Box Dips (Strict Scapular Retraction)' : 'Overhead Rope Triceps Extensions or Skull Crushers',
         muscleGroup: 'Arms',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '12-15 reps',
         restPeriodSeconds: 60,
@@ -560,6 +573,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-6',
         name: 'Face Pulls with Band or Cable (Scapular Retraction)',
         muscleGroup: 'Shoulders',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '15-20 reps',
         restPeriodSeconds: 45,
@@ -577,6 +592,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-1',
       name: hasHipInjury ? 'Box Squat to Parallel (Hip Labrum Safe • Vertical Shins)' : isDbOnly ? 'Heavy Dumbbell Goblet Squats (Elevated Heels)' : 'Barbell Back Squats (or Safety Bar Squat)',
       muscleGroup: 'Quads',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '8-10 reps',
       restPeriodSeconds: 100,
@@ -588,6 +605,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-2',
       name: hasBackInjury ? 'Chest-Supported DB Romanian Deadlift' : 'High-Handle Trap Bar Deadlift / Dumbbell RDL',
       muscleGroup: 'Hamstrings & Glutes',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '8-10 reps',
       restPeriodSeconds: 90,
@@ -599,6 +618,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-3',
       name: hasKneeInjury ? 'Backward Sled Drags or Step-Downs' : 'Bulgarian Split Squats or Walking Lunges',
       muscleGroup: 'Quads',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 3,
       targetReps: '10-12 reps per leg',
       restPeriodSeconds: 75,
@@ -611,6 +632,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-4',
         name: 'Dumbbell / Barbell Hip Thrusts or Glute Bridges',
         muscleGroup: 'Hamstrings & Glutes',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '12-15 reps',
         restPeriodSeconds: 60,
@@ -621,6 +644,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-5',
         name: 'Standing Dumbbell Calf Raises & Tibialis Raises',
         muscleGroup: 'Quads',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '15-20 reps',
         restPeriodSeconds: 45,
@@ -638,6 +663,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-1',
       name: 'Foot Pursuit Sprint Repeats (100m to 200m or High-Incline Treadmill)',
       muscleGroup: 'Full Body',
+      type: 'cardio',
+      format: 'straight',
       defaultSets: duration <= 25 ? 5 : 8,
       targetReps: '100m sprint / 45s recovery',
       restPeriodSeconds: 60,
@@ -649,6 +676,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-2',
       name: isKbOnly ? 'Kettlebell Hardstyle Swings' : 'Dumbbell Thrusters (Squat to Overhead Press)',
       muscleGroup: 'Full Body',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '15 reps',
       restPeriodSeconds: 60,
@@ -660,6 +689,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-3',
       name: 'Farmers Walk with Heavy Load (or Heavy Kettlebell Carry)',
       muscleGroup: 'Full Body',
+      type: 'cardio',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '60 yards',
       restPeriodSeconds: 60,
@@ -672,6 +703,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-4',
         name: 'Burpee Broad Jumps or Sprawl to Sprint',
         muscleGroup: 'Full Body',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '10 reps',
         restPeriodSeconds: 60,
@@ -680,10 +713,12 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       });
       exercises.push({
         id: 'sw-ex-5',
-        name: 'Hanging Knee Raises / RKC Planks',
+        name: 'Hanging Knee Raises',
         muscleGroup: 'Core',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
-        targetReps: '45s hold / 15 reps',
+        targetReps: '12-15 reps',
         restPeriodSeconds: 45,
         targetRpe: 8,
         notes: 'Anterior core brace against rotational torsional stress.',
@@ -699,6 +734,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-1',
       name: 'Double Kettlebell (or Dumbbell) Clean & Press',
       muscleGroup: 'Full Body',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '8 reps',
       restPeriodSeconds: 60,
@@ -710,6 +747,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-2',
       name: 'Goblet Squats with 3-Second Isometric Pause',
       muscleGroup: 'Quads',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '10 reps',
       restPeriodSeconds: 60,
@@ -721,6 +760,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-3',
       name: 'Single-Arm Kettlebell / DB Renegade Rows with Push-Up',
       muscleGroup: 'Back',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 3,
       targetReps: '8 reps per side',
       restPeriodSeconds: 60,
@@ -733,6 +774,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-4',
         name: 'Kettlebell Snatch or High Pulls',
         muscleGroup: 'Hamstrings & Glutes',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '10 reps per arm',
         restPeriodSeconds: 60,
@@ -743,6 +786,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-5',
         name: 'Suitcase Carry (Unilateral Offset Weight)',
         muscleGroup: 'Core',
+        type: 'cardio',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '50 yds per side',
         restPeriodSeconds: 45,
@@ -760,6 +805,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-1',
       name: 'Heavy Weighted Trap Bar / Dumbbell Farmers Carry',
       muscleGroup: 'Full Body',
+      type: 'cardio',
+      format: 'straight',
       defaultSets: 5,
       targetReps: '60 yds (Max Load)',
       restPeriodSeconds: 75,
@@ -771,6 +818,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-2',
       name: 'Heavy Sandbag or Dumbbell Bear-Hug Carry',
       muscleGroup: 'Full Body',
+      type: 'cardio',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '50 yds',
       restPeriodSeconds: 60,
@@ -782,6 +831,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-3',
       name: 'High-Handle Trap Bar Deadlift or Romanian Deadlift',
       muscleGroup: 'Hamstrings & Glutes',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: '8 reps',
       restPeriodSeconds: 90,
@@ -794,6 +845,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-4',
         name: 'Weighted Vest / Pack Walking Lunges or Step-Ups',
         muscleGroup: 'Quads',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '10 reps per leg',
         restPeriodSeconds: 60,
@@ -804,6 +857,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-5',
         name: 'Suitcase Hold & March (Anti-Lateral Flexion)',
         muscleGroup: 'Core',
+        type: 'cardio',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '40s per side',
         restPeriodSeconds: 45,
@@ -822,6 +877,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-1',
       name: isDbOnly ? 'Heavy Dumbbell Flat Bench Press' : isBwOnly ? 'Hand-Release Push-Ups (or Deficit Push-Ups)' : 'Barbell Bench Press or Floor Press',
       muscleGroup: 'Chest',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: isBwOnly ? '15-20 reps' : '8-10 reps',
       restPeriodSeconds: 90,
@@ -833,6 +890,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-2',
       name: isBwOnly ? 'Strict Dead-Hang Pull-Ups' : 'Chest-Supported Row or Barbell Row',
       muscleGroup: 'Back',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 4,
       targetReps: isBwOnly ? '6-10 reps' : '8-10 reps',
       restPeriodSeconds: 75,
@@ -844,6 +903,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       id: 'sw-ex-3',
       name: hasHipInjury ? 'Parallel Box Squats (Vertical Shins)' : isDbOnly ? 'Dumbbell Front Squats / Goblet Squats' : 'Barbell Back Squats',
       muscleGroup: 'Quads',
+      type: 'strength',
+      format: 'straight',
       defaultSets: 3,
       targetReps: '10 reps',
       restPeriodSeconds: 90,
@@ -856,6 +917,8 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
         id: 'sw-ex-4',
         name: hasBackInjury ? 'Hamstring Glute Bridges' : 'High-Handle Trap Bar RDL or Dumbbell RDL',
         muscleGroup: 'Hamstrings & Glutes',
+        type: 'strength',
+        format: 'straight',
         defaultSets: 3,
         targetReps: '10 reps',
         restPeriodSeconds: 60,
@@ -864,8 +927,10 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
       });
       exercises.push({
         id: 'sw-ex-5',
-        name: isBwOnly ? 'Hanging Knee Raises & Plank Walkouts' : 'Heavy Farmers Carry or Kettlebell March',
+        name: isBwOnly ? 'Hanging Knee Raises' : 'Heavy Farmers Carry or Kettlebell March',
         muscleGroup: 'Core',
+        type: isBwOnly ? 'strength' : 'cardio',
+        format: 'straight',
         defaultSets: 3,
         targetReps: isBwOnly ? '15 reps' : '50 yds',
         restPeriodSeconds: 45,
@@ -877,10 +942,16 @@ function generateFallbackSingleWorkout(params: SingleWorkoutRequest) {
     if (duration >= 45) {
       exercises.push({
         id: 'sw-ex-6',
-        name: 'Standing DB Lateral Raises & Face Pulls Superset',
+        name: 'Standing DB Lateral Raises + Face Pulls Superset',
         muscleGroup: 'Shoulders',
+        type: 'superset',
+        format: 'superset',
+        supersetExercises: [
+          { name: 'Standing DB Lateral Raises', targetReps: '12-15 reps', muscleGroup: 'Shoulders' },
+          { name: 'Face Pulls (Band or Cable)', targetReps: '15-20 reps', muscleGroup: 'Back' },
+        ],
         defaultSets: 3,
-        targetReps: '12-15 reps',
+        targetReps: '12-15 / 15-20',
         restPeriodSeconds: 45,
         targetRpe: 8,
         notes: 'Shoulder stability and upper armor definition.',
@@ -1457,11 +1528,12 @@ ${bannedSection}
 RULES:
 1. Build an executable, high-impact, single-day session fitting strictly within ${duration} minutes.
 2. Select ${targetExerciseCount} specific exercises calibrated to the duration.
-3. If running or cardio circuits are requested, ensure the session contains the running session or cardio circuit. If programming a circuit, set exercise type to "circuit" and list each numbered station clearly in notes (e.g. "Circuit Stations: 1. [Movement 1], 2. [Movement 2], 3. [Movement 3], 4. [Movement 4]. Continuous station rotation.").
-4. STRICTLY match the available equipment: ${(params.equipment || []).join(', ')}. Never prescribe equipment they don't have.
-5. Provide engaging tactical names, sets, reps, rest timers, target RPE, and tactical coaching cues in 'notes'.
-6. Category MUST be one of: 'Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'.
-7. recommendedWarmupId should be one of: 'warmup-apex-sop', 'warmup-upper-primer', 'warmup-lower-prep', 'warmup-universal-tactical', 'warmup-express-primer'.`;
+3. For ALL straight-set resistance, barbell, dumbbell, kettlebell, cable, and calisthenic exercises (bench press, rows, squats, curls, triceps extensions, face pulls, push-ups, pull-ups, dips, hip thrusts, etc.), ALWAYS set type to "strength" and format to "straight", and specify rep ranges (e.g., "8-10 reps", "12-15 reps").
+4. If running or cardio conditioning is requested, set exercise type to "cardio" and format to "straight" with target distance/time. If programming a circuit, set type to "circuit" and format to "circuit" and list numbered stations in notes (e.g. "Circuit Stations: 1. [Movement 1], 2. [Movement 2]..."). If programming a superset, set type to "superset" and format to "superset".
+5. STRICTLY match the available equipment: ${(params.equipment || []).join(', ')}. Never prescribe equipment they don't have.
+6. Provide engaging tactical names, sets, reps, rest timers, target RPE, and tactical coaching cues in 'notes'.
+7. Category MUST be one of: 'Strength', 'Hypertrophy', 'Athletic Conditioning', 'Power', 'Hybrid'.
+8. recommendedWarmupId should be one of: 'warmup-dime-mandatory', 'warmup-apex-sop', 'warmup-upper-primer', 'warmup-lower-prep', 'warmup-universal-tactical', 'warmup-express-primer'.`;
 
       const candidateModels = [
         'gemini-2.5-flash',
@@ -1504,14 +1576,21 @@ RULES:
                           type: Type.STRING,
                           enum: ['Chest', 'Back', 'Quads', 'Hamstrings & Glutes', 'Shoulders', 'Arms', 'Core', 'Full Body'],
                         },
-                        type: { type: Type.STRING },
+                        type: {
+                          type: Type.STRING,
+                          enum: ['strength', 'cardio', 'core', 'circuit', 'superset', 'emom', 'amrap'],
+                        },
+                        format: {
+                          type: Type.STRING,
+                          enum: ['straight', 'superset', 'emom', 'amrap', 'circuit'],
+                        },
                         defaultSets: { type: Type.INTEGER },
                         targetReps: { type: Type.STRING },
                         restPeriodSeconds: { type: Type.INTEGER },
                         targetRpe: { type: Type.INTEGER },
                         notes: { type: Type.STRING },
                       },
-                      required: ['id', 'name', 'muscleGroup', 'defaultSets', 'targetReps', 'restPeriodSeconds'],
+                      required: ['id', 'name', 'muscleGroup', 'type', 'format', 'defaultSets', 'targetReps', 'restPeriodSeconds'],
                     },
                   },
                 },
@@ -1537,7 +1616,22 @@ RULES:
             if (!parsedWorkout.frequency) {
               parsedWorkout.frequency = 'Single Day Session';
             }
-            parsedWorkout.exercises = sanitizeExerciseList(parsedWorkout.exercises || [], bannedRules);
+            const sanitizedList = sanitizeExerciseList(parsedWorkout.exercises || [], bannedRules);
+            parsedWorkout.exercises = sanitizedList.map((ex: any) => {
+              const exFormat = ex.format || (ex.type === 'circuit' || ex.type === 'superset' || ex.type === 'emom' || ex.type === 'amrap' ? ex.type : 'straight');
+              const isRepBased = /\breps?\b/i.test(String(ex.targetReps || '')) && !/\b(run|jog|sprint|mile|min|sec|plank|hold|carry)\b/i.test(`${ex.name || ''} ${ex.targetReps || ''}`);
+              const resolvedType =
+                exFormat !== 'straight'
+                  ? exFormat
+                  : isRepBased
+                  ? 'strength'
+                  : ex.type || 'strength';
+              return {
+                ...ex,
+                format: exFormat,
+                type: resolvedType,
+              };
+            });
 
             return res.json({
               success: true,

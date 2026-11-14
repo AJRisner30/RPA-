@@ -1,4 +1,4 @@
-import { WorkoutSessionLog } from '../types';
+import { WorkoutSessionLog, isExerciseTimed } from '../types';
 
 export interface OverloadRecommendation {
   exerciseName: string;
@@ -110,16 +110,7 @@ export function getAutoOverloadRecommendation(
 
   const isDumbbell = nameLower.includes('db') || nameLower.includes('dumbbell');
 
-  const isTimed =
-    nameLower.includes('plank') ||
-    nameLower.includes('hold') ||
-    nameLower.includes('run') ||
-    nameLower.includes('sprint') ||
-    nameLower.includes('carry') ||
-    (targetRepsText || '').toLowerCase().includes('min') ||
-    (targetRepsText || '').toLowerCase().includes('sec') ||
-    (targetRepsText || '').toLowerCase().includes(' s') ||
-    (targetRepsText || '').toLowerCase().endsWith('s');
+  const isTimed = isExerciseTimed(exerciseName, undefined, targetRepsText);
 
   // Search past logs for this exercise (most recent first)
   let matchingSession: WorkoutSessionLog | undefined;

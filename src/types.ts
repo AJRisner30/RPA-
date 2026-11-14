@@ -416,68 +416,55 @@ export function isExerciseTimed(
   type?: string,
   targetReps?: string
 ): boolean {
-  if (type === 'strength') return false;
-  if (type === 'cardio') return true;
-  const name = exerciseName.toLowerCase();
-  const reps = (targetReps || '').toLowerCase();
+  const normalizedType = (type || '').toLowerCase().trim();
+  if (normalizedType === 'strength' || normalizedType === 'superset') return false;
+  if (normalizedType === 'cardio') return true;
+
+  const name = (exerciseName || '').toLowerCase();
+  const reps = (targetReps || '').toLowerCase().trim();
+
+  // Cardio ergometers / machines MUST be checked before 'row' (since 'rower' contains 'row')
+  if (
+    /\b(rower|rowing machine|concept2|ergometer|skierg|assault bike|air bike|airdyne|treadmill|spin bike)\b/i.test(name) ||
+    /\bcalorie\s+row\b/i.test(name)
+  ) {
+    return true;
+  }
 
   // Strength and accessory movements that must NEVER be timed cardio
   if (
-    name.includes('lunge') || 
-    name.includes('split squat') || 
-    name.includes('squat') || 
-    name.includes('step-up') ||
-    name.includes('deadlift') ||
-    name.includes('press') ||
-    name.includes('row') ||
-    name.includes('pull-up') ||
-    name.includes('curl') ||
-    name.includes('raise') ||
-    name.includes('swing') ||
+    /\b(lunge|lunges|split squat|squat|squats|step-up|step-ups|step up|step down|step-down|deadlift|deadlifts|rdl|press|presses|row|rows|pull-up|pull-ups|pullup|pullups|chin-up|chin-ups|chinup|chinups|push-up|push-ups|pushup|pushups|dip|dips|curl|curls|raise|raises|swing|swings|bench|fly|flye|flyes|pulldown|pulldowns|pushdown|pushdowns|extension|extensions|thruster|thrusters|clean|snatch|shrug|shrugs|hip thrust|hip thrusts|glute bridge|glute bridges|calf|calves|tibialis|face pull|face pulls|high pull|high pulls|pull-through|pull through|skull crusher|skull crushers|rollout|rollouts|crunch|crunches|sit-up|sit-ups|situp|situps|russian twist|woodchop|tuck|tucks|inverted)\b/i.test(
+      name
+    ) ||
     reps.includes('steps') ||
     reps.includes('/leg') ||
-    reps.includes('/side')
+    reps.includes('/side') ||
+    /\bper\s+(?:leg|arm|side)\b/i.test(reps)
   ) {
     return false;
   }
 
-  // Explicit time indicators in target reps
+  // Pure rep prescriptions (e.g. "8-10 reps", "12 reps", "10-12") without time/distance indicators
   if (
-    reps.includes('min') ||
-    reps.includes('sec') ||
-    reps.includes(' s') ||
-    reps.endsWith('s') ||
-    reps.includes('mile') ||
-    reps.includes('repeat') ||
-    reps.includes('hold')
+    (/\b\d+(?:\s*[-–]\s*\d+)?\s*reps?\b/i.test(reps) || /^\d+(?:\s*[-–]\s*\d+)?$/.test(reps)) &&
+    !/\b(hold|plank|sprint|run|mile|miles|yard|yd|yds|meter|meters|min|mins|minute|minutes|sec|secs|second|seconds)\b/i.test(reps) &&
+    !/\b(plank|wall sit|hollow body|bear crawl|carry|carries|farmer|run|jog|sprint|time trial|shuttle)\b/i.test(name)
+  ) {
+    return false;
+  }
+
+  // Explicit time or distance indicators in targetReps (word-boundary safe; never match plural 'reps')
+  if (
+    /\b\d+(?:\.\d+)?\s*(?:s|sec|secs|second|seconds|min|mins|minute|minutes|mile|miles|mi|km|meter|meters)\b/i.test(reps) ||
+    /\b(?:hold|holds|repeat|repeats|isometric|time trial)\b/i.test(reps)
   ) {
     return true;
   }
 
   // Name matching for runs, holds, carries, sprints
-  const timedKeywords = [
-    'run',
-    'jog',
-    'sprint',
-    'tempo',
-    'intervals',
-    'plank',
-    'hollow body',
-    'bear crawl hold',
-    'wall sit',
-    'carry',
-    'farmer',
-    'walk',
-    'spin',
-    'bike',
-    'rower',
-    'skierg',
-    'active recovery',
-    'shakeout',
-    'time trial'
-  ];
-
-  return timedKeywords.some((kw) => name.includes(kw));
+  return /\b(run|runs|running|jog|jogging|sprint|sprints|tempo\s+run|tempo\s+jog|intervals|plank|planks|hollow\s+body|bear\s+crawl\s+hold|wall\s+sit|carry|carries|farmer\s+walk|farmers\s+walk|farmer\s+walks|farmers\s+walks|ruck|rucking|spin|bike|rower|skierg|active\s+recovery|shakeout|time\s+trial|shuttle)\b/i.test(
+    name
+  );
 }
 
 export interface OfficerAssignedProgram {
