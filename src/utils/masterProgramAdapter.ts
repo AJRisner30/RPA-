@@ -449,7 +449,8 @@ function adaptMasterConditioning(
   const level = (fitnessLevel || 'Intermediate').toLowerCase();
 
   // Case 1: User explicitly wants Cardio Circuits instead of running, OR has a lower-body impact injury banning runs
-  if (cardioPreference === 'cardio_circuits' || (hasRunBan && !isRestRun)) {
+  // Only swap on days that actually have a scheduled run in the master program!
+  if ((cardioPreference === 'cardio_circuits' || hasRunBan) && !isRestRun) {
     const circuitEx = selectSafeDistinctCircuit(dayNum, cardioCircuitType, bannedRules);
     const originalLabel = !isRestRun ? runClean : 'Master Conditioning Slot';
     const scaledRounds = level.includes('beginner')
@@ -479,27 +480,46 @@ function adaptMasterConditioning(
     let adaptedPace = dayPace || 'Zone 2 Conversational Pace';
     let adaptationReason: string | undefined;
 
-    // Scale distance or minutes in the run title for Beginner / Advanced / Elite
+    // Extract clean starting distance in miles or duration in minutes if present
     const mileRangeMatch = runClean.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*Miles?/i);
     const mileMatch = runClean.match(/(\d+(?:\.\d+)?)[-\s]*Miles?/i);
-    const minMatch = runClean.match(/(\d+)\s*Min/i);
+    const minRangeMatch = runClean.match(/(\d+)\s*[-–]\s*(\d+)\s*Mins?/i);
+    const minMatch = runClean.match(/(\d+)\s*Mins?/i);
     const repeatMatch = runClean.match(/(\d+)\s*x\s*(\d+m)/i);
+
+    if (mileRangeMatch) {
+      adaptedTargetReps = `${mileRangeMatch[1]} miles`;
+    } else if (mileMatch) {
+      adaptedTargetReps = `${mileMatch[1]} miles`;
+    } else if (minRangeMatch) {
+      adaptedTargetReps = `${minRangeMatch[1]}–${minRangeMatch[2]} mins`;
+    } else if (minMatch) {
+      adaptedTargetReps = `${minMatch[1]} mins`;
+    } else if (repeatMatch) {
+      adaptedTargetReps = `${repeatMatch[1]} x ${repeatMatch[2]}`;
+    }
 
     if (level.includes('beginner')) {
       if (mileRangeMatch) {
         const origLow = parseFloat(mileRangeMatch[1]);
         const origHigh = parseFloat(mileRangeMatch[2]);
-        const scaledLow = Math.max(1.0, parseFloat((origLow * 0.75).toFixed(1)));
-        const scaledHigh = Math.max(scaledLow + 0.3, parseFloat((origHigh * 0.75).toFixed(1)));
-        adaptedRunName = runClean.replace(mileRangeMatch[0], `${scaledLow}–${scaledHigh} Miles`);
-        adaptedTargetReps = `${scaledLow}–${scaledHigh} Miles`;
-        adaptationReason = `Scaled from ${origLow}–${origHigh} Miles (-25% volume for Beginner tier)`;
+        const scaledLow = Math.max(1.0, Math.round(origLow * 0.75 * 2) / 2);
+        const scaledHigh = Math.max(scaledLow + 0.5, Math.round(origHigh * 0.75 * 2) / 2);
+        adaptedRunName = runClean.replace(mileRangeMatch[0], `${scaledLow}–${scaledHigh} miles`);
+        adaptedTargetReps = `${scaledLow} miles`;
+        adaptationReason = `Scaled from ${origLow}–${origHigh} miles (-25% volume for Beginner tier)`;
       } else if (mileMatch) {
         const origMiles = parseFloat(mileMatch[1]);
-        const scaledMiles = Math.max(1.0, parseFloat((origMiles * 0.75).toFixed(1)));
-        adaptedRunName = runClean.replace(mileMatch[0], `${scaledMiles} Mile`);
-        adaptedTargetReps = `${scaledMiles} Miles`;
-        adaptationReason = `Scaled from ${origMiles} Miles (-25% volume for Beginner tier)`;
+        const scaledMiles = Math.max(1.0, Math.round(origMiles * 0.75 * 2) / 2);
+        adaptedRunName = runClean.replace(mileMatch[0], `${scaledMiles} miles`);
+        adaptedTargetReps = `${scaledMiles} miles`;
+        adaptationReason = `Scaled from ${origMiles} miles (-25% volume for Beginner tier)`;
+      } else if (minRangeMatch) {
+        const origLowMins = parseInt(minRangeMatch[1], 10);
+        const scaledMins = Math.max(15, Math.round((origLowMins * 0.75) / 5) * 5);
+        adaptedRunName = runClean.replace(minRangeMatch[0], `${scaledMins} mins`);
+        adaptedTargetReps = `${scaledMins} mins`;
+        adaptationReason = `Scaled from ${minRangeMatch[1]}–${minRangeMatch[2]} mins (-25% duration for Beginner tier)`;
       } else if (minMatch) {
         const origMins = parseInt(minMatch[1], 10);
         const scaledMins = Math.max(15, Math.round((origMins * 0.75) / 5) * 5);
@@ -518,17 +538,17 @@ function adaptMasterConditioning(
       if (mileRangeMatch) {
         const origLow = parseFloat(mileRangeMatch[1]);
         const origHigh = parseFloat(mileRangeMatch[2]);
-        const scaledLow = parseFloat((origLow * 1.15).toFixed(1));
-        const scaledHigh = parseFloat((origHigh * 1.15).toFixed(1));
-        adaptedRunName = runClean.replace(mileRangeMatch[0], `${scaledLow}–${scaledHigh} Miles`);
-        adaptedTargetReps = `${scaledLow}–${scaledHigh} Miles`;
-        adaptationReason = `Scaled from ${origLow}–${origHigh} Miles (+15% volume for Elite tier)`;
+        const scaledLow = Math.round(origLow * 1.15 * 2) / 2;
+        const scaledHigh = Math.round(origHigh * 1.15 * 2) / 2;
+        adaptedRunName = runClean.replace(mileRangeMatch[0], `${scaledLow}–${scaledHigh} miles`);
+        adaptedTargetReps = `${scaledLow} miles`;
+        adaptationReason = `Scaled from ${origLow}–${origHigh} miles (+15% volume for Elite tier)`;
       } else if (mileMatch) {
         const origMiles = parseFloat(mileMatch[1]);
-        const scaledMiles = parseFloat((origMiles * 1.15).toFixed(1));
-        adaptedRunName = runClean.replace(mileMatch[0], `${scaledMiles} Mile`);
-        adaptedTargetReps = `${scaledMiles} Miles`;
-        adaptationReason = `Scaled from ${origMiles} Miles (+15% volume for Elite tier)`;
+        const scaledMiles = Math.round(origMiles * 1.15 * 2) / 2;
+        adaptedRunName = runClean.replace(mileMatch[0], `${scaledMiles} miles`);
+        adaptedTargetReps = `${scaledMiles} miles`;
+        adaptationReason = `Scaled from ${origMiles} miles (+15% volume for Elite tier)`;
       } else if (repeatMatch) {
         const origReps = parseInt(repeatMatch[1], 10);
         const scaledReps = origReps + 1;
@@ -552,7 +572,7 @@ function adaptMasterConditioning(
       notes: `Target Pace: ${adaptedPace} (Week ${weekNum})`,
     });
   } else if (cardioPreference === 'running' && !skipSupplementalRunOnRestRun) {
-    // Master day had no run, but user requested running on every training day
+    // Master day had no run, but user requested running on every training day (excluded for 52-week & Tactical BB)
     const dist = runningDistPref || '1.5-2.0 Miles';
     results.push({
       id: `adapt-extra-run-d${dayNum}`,
@@ -568,8 +588,8 @@ function adaptMasterConditioning(
     });
   }
 
-  // If hybrid preference, also append a distinct conditioning circuit on non-interval lift days
-  if (cardioPreference === 'hybrid' && results.length === 0) {
+  // If hybrid preference, only append a conditioning circuit on non-run days if not a strict built-in schedule
+  if (cardioPreference === 'hybrid' && results.length === 0 && !skipSupplementalRunOnRestRun) {
     const circuitEx = selectSafeDistinctCircuit(dayNum, cardioCircuitType, bannedRules);
     results.push({
       ...circuitEx,
@@ -1150,16 +1170,21 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
       const hasRunBan = bannedRules.some(
         (r) => r.keyword === 'run' || r.keyword === 'jump' || r.keyword === 'lunge'
       );
-      const tacticalHasConditioningInStrength =
-        isTacticalBodybuilding && (dayIdx === 2 || dayIdx === 5);
+      const tacticalTuesdaySprintsInStrength =
+        isTacticalBodybuilding && dayIdx === 2;
 
-      // Avoid duplicating Tuesday sprints/agility or Friday Zone 2 Flush on 12-Week Tactical Bodybuilding
-      // since day.strength already holds the exact track/turf sprints, bike finisher, and Zone 2 Flush.
+      // On Tactical Bodybuilding Tuesday (dayIdx === 2), the track/turf sprints & agility drills live in day.strength.
+      // Only invoke adaptMasterConditioning on Tuesday if the user explicitly switched to Cardio Circuits or has a Run Ban.
+      const effectiveDayRunForAdapter =
+        tacticalTuesdaySprintsInStrength && (params.cardioPreference === 'cardio_circuits' || hasRunBan)
+          ? 'Tuesday Track / Turf Speed & Pursuit Conditioning'
+          : protoDay.run;
+
       const conditioningExercises =
-        tacticalHasConditioningInStrength && params.cardioPreference !== 'cardio_circuits' && !hasRunBan
+        tacticalTuesdaySprintsInStrength && params.cardioPreference !== 'cardio_circuits' && !hasRunBan
           ? []
           : adaptMasterConditioning(
-              protoDay.run,
+              effectiveDayRunForAdapter,
               protoDay.pace,
               globalDayNum,
               weekNum,
@@ -1168,7 +1193,7 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
               params.cardioPreference,
               params.runningDistancePreference,
               params.cardioCircuitType,
-              isTacticalBodybuilding
+              isTacticalBodybuilding || is52WeekBuiltIn
             );
 
       conditioningExercises.forEach((cEx) => {
@@ -1195,12 +1220,12 @@ export function adaptMasterProgram(params: WorkoutGenerationRequest): GeneratedW
       const dayExercises: GeneratedExercise[] = [];
 
       realStrengthStrings.forEach((exStr, exIdx) => {
-        // On Tactical Bodybuilding Tuesday/Friday, if athlete switched to Cardio Circuits or has a Run Ban,
-        // skip the duplicate run/sprint items inside realStrengthStrings so the swapped circuit takes over cleanly.
+        // On Tactical Bodybuilding Tuesday, if athlete switched to Cardio Circuits or has a Run Ban,
+        // skip the sprint/agility items inside realStrengthStrings so the swapped circuit takes over cleanly.
         if (
-          tacticalHasConditioningInStrength &&
+          tacticalTuesdaySprintsInStrength &&
           (params.cardioPreference === 'cardio_circuits' || hasRunBan) &&
-          /\b(sprint|sprints|pro\s+agility|t-drill|zone\s*2\s*run)\b/i.test(exStr)
+          /\b(sprint|sprints|pro\s+agility|t-drill)\b/i.test(exStr)
         ) {
           return;
         }

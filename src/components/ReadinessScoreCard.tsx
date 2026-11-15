@@ -5,7 +5,7 @@ import {
   RefreshCw, X, Heart, BatteryCharging, Zap, Info
 } from 'lucide-react';
 import { AthleteProfile, WorkoutSessionLog, RecoveryCheckIn, BodyweightEntry } from '../types';
-import { calculateReadinessScore } from '../utils/readinessEngine';
+import { calculateReadinessScore, getLocalTodayDateStr, markDailyReadinessCompletedToday } from '../utils/readinessEngine';
 
 interface ReadinessScoreCardProps {
   athlete: AthleteProfile;
@@ -31,7 +31,7 @@ export const ReadinessScoreCard: React.FC<ReadinessScoreCardProps> = ({
     athlete.weightLbs ? String(athlete.weightLbs) : '185'
   );
   const [inputWeightDate, setInputWeightDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    getLocalTodayDateStr()
   );
   const [weightSaveMsg, setWeightSaveMsg] = useState<string | null>(null);
 
@@ -97,7 +97,7 @@ export const ReadinessScoreCard: React.FC<ReadinessScoreCardProps> = ({
 
   const handleSaveRecovery = (e: React.FormEvent) => {
     e.preventDefault();
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalTodayDateStr();
     const parsedHr = restingHrInput ? parseInt(restingHrInput, 10) : undefined;
 
     const newCheckIn: RecoveryCheckIn = {
@@ -121,6 +121,7 @@ export const ReadinessScoreCard: React.FC<ReadinessScoreCardProps> = ({
       restingHr: newCheckIn.restingHr || athlete.restingHr,
     };
 
+    markDailyReadinessCompletedToday(updatedAthlete);
     onUpdateAthlete(updatedAthlete);
     setRecoverySaveMsg('Daily Check-In Recorded!');
     setTimeout(() => {

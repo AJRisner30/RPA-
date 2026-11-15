@@ -346,6 +346,117 @@ export function saveActiveCustomAIProgram(program: WorkoutProgram): void {
   }
 }
 
+function cleanCachedMasterAdaptedProgram(program: WorkoutProgram): WorkoutProgram {
+  if (
+    !program ||
+    (program.baseProgramKey !== 'apex_protocol' && program.baseProgramKey !== 'tactical_hypertrophy') ||
+    !Array.isArray(program.schedule)
+  ) {
+    return program;
+  }
+  const normalizeMilesText = (txt: string) =>
+    txt
+      .replace(/1\.9\s*miles?/gi, '2 miles')
+      .replace(/1\.9-mile/gi, '2-mile')
+      .replace(/2\.5\s*[–-]\s*3\.1\s*miles?/gi, '2.5–3 miles')
+      .replace(/3\.1\s*[–-]\s*4\.0\s*miles?/gi, '3–4 miles')
+      .replace(/3\.0\s*[–-]\s*4\.0\s*miles?/gi, '3–4 miles')
+      .replace(/3\.1\s*miles?/gi, '3 miles')
+      .replace(/2\.0\s*miles?/gi, '2 miles')
+      .replace(/3\.0\s*miles?/gi, '3 miles');
+
+  const cleanedSchedule = program.schedule.map((day) => {
+    const rawExercises = day.exercises || [];
+    // 1. Remove any injected "Supplemental Tactical Aerobic Run" that was never in the 52-week or 12-week Tactical Bodybuilding PDFs
+    let filtered = rawExercises.filter(
+      (ex) => !ex.name.toLowerCase().includes('supplemental tactical aerobic run')
+    );
+
+    if (program.baseProgramKey === 'tactical_hypertrophy') {
+      // On Tuesday (Track / Turf), remove any duplicate summary adapt-run item since the individual sprints are already in exercises
+      filtered = filtered.filter((ex) => {
+        if (ex.id.startsWith('adapt-run-')) {
+          const n = ex.name.toLowerCase();
+          if (
+            n.includes('track / turf acceleration') ||
+            n.includes('agility & deceleration') ||
+            n.includes('pursuit simulation')
+          ) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      // On Friday (Pump + Engine), if both a strength-parsed Zone 2 item and an adapt-run Zone 2 item exist, keep only one
+      const zone2Items = filtered.filter((ex) => ex.name.toLowerCase().includes('zone 2'));
+      if (zone2Items.length > 1) {
+        let keptFirstZone2 = false;
+        filtered = filtered.filter((ex) => {
+          if (ex.name.toLowerCase().includes('zone 2')) {
+            if (!keptFirstZone2) {
+              keptFirstZone2 = true;
+              return true;
+            }
+            return false;
+          }
+          return true;
+        });
+      }
+    }
+
+    // 2. For 52-week program, remove duplicate cardio entries if day had both a strength-parsed run and an adapt-run entry
+    if (program.baseProgramKey === 'apex_protocol') {
+      const hasAdaptRun = filtered.some((ex) => ex.id.startsWith('adapt-run-'));
+      if (hasAdaptRun) {
+        filtered = filtered.filter((ex) => {
+          if (ex.id.startsWith('adapt-run-')) {
+            const n = ex.name.toLowerCase();
+            // Remove non-run Q2/Q3/Q4 Day 5 items that were previously duplicated into day.run
+            if (
+              n.includes('heavy sled push') ||
+              n.includes('40m sprint repeats') ||
+              n.includes('4 rounds duty pursuit')
+            ) {
+              return false;
+            }
+            return true;
+          }
+          const n = ex.name.toLowerCase();
+          if (
+            n.includes('steady aerobic run') ||
+            n.includes('long steady aerobic run') ||
+            n.includes('sustained tempo run') ||
+            n.includes('steady zone 2 recovery run') ||
+            n.includes('brisk walk or light jog wearing')
+          ) {
+            return false;
+          }
+          return true;
+        });
+      }
+    }
+
+    const normalizedExercises = filtered.map((ex) => ({
+      ...ex,
+      name: normalizeMilesText(ex.name),
+      targetReps: normalizeMilesText(ex.targetReps),
+      notes: ex.notes ? normalizeMilesText(ex.notes) : ex.notes,
+    }));
+
+    return {
+      ...day,
+      conditioning: day.conditioning ? normalizeMilesText(day.conditioning) : day.conditioning,
+      exercises: normalizedExercises,
+    };
+  });
+
+  return {
+    ...program,
+    schedule: cleanedSchedule,
+  };
+}
+
 /**
  * Loads the active custom AI program from localStorage.
  */
@@ -355,7 +466,9 @@ export function getStoredActiveCustomAIProgram(): WorkoutProgram | null {
     const raw = localStorage.getItem(ACTIVE_CUSTOM_AI_PROGRAM_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return parsed && parsed.id ? parsed : null;
+    if (!parsed || !parsed.id) return null;
+    const cleaned = cleanCachedMasterAdaptedProgram(parsed);
+    return cleaned;
   } catch {
     return null;
   }
@@ -387,7 +500,7 @@ export function getStoredCustomAIPrograms(): WorkoutProgram[] {
     const raw = localStorage.getItem(SAVED_CUSTOM_AI_PROGRAMS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(cleanCachedMasterAdaptedProgram) : [];
   } catch {
     return [];
   }

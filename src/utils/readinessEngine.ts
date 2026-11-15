@@ -1,6 +1,93 @@
 import { AthleteProfile, WorkoutSessionLog, ReadinessScoreBreakdown, ReadinessTier, RecoveryCheckIn, BodyweightEntry } from '../types';
 
 /**
+ * Returns today's date string in YYYY-MM-DD using the user's local calendar day
+ * so the once-daily readiness questionnaire resets accurately at midnight local time.
+ */
+export function getLocalTodayDateStr(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+const DAILY_READINESS_STORAGE_PREFIX = 'patrol_ready_daily_readiness_v1';
+
+/**
+ * Checks whether the current user/athlete has already completed the Daily Readiness
+ * Questionnaire today (once per local calendar day).
+ */
+export function hasCompletedDailyReadinessToday(
+  athlete?: AthleteProfile | null,
+  userId?: string | null,
+  userEmail?: string | null
+): boolean {
+  const todayLocal = getLocalTodayDateStr();
+
+  // 1. Check athlete profile's lastRecoveryCheckIn or recoveryHistory for today's local date
+  if (athlete?.lastRecoveryCheckIn?.date === todayLocal) {
+    return true;
+  }
+  if (athlete?.recoveryHistory?.some((r) => r.date === todayLocal)) {
+    return true;
+  }
+
+  // 2. Check per-user daily check-in flag in localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const keysToCheck: string[] = [];
+      if (userId) keysToCheck.push(`${DAILY_READINESS_STORAGE_PREFIX}_${userId}_${todayLocal}`);
+      if (userEmail) keysToCheck.push(`${DAILY_READINESS_STORAGE_PREFIX}_${userEmail.trim().toLowerCase()}_${todayLocal}`);
+      if (athlete?.id && athlete.id !== 'athlete-default') {
+        keysToCheck.push(`${DAILY_READINESS_STORAGE_PREFIX}_${athlete.id}_${todayLocal}`);
+      }
+      if (athlete?.email) {
+        keysToCheck.push(`${DAILY_READINESS_STORAGE_PREFIX}_${athlete.email.trim().toLowerCase()}_${todayLocal}`);
+      }
+
+      for (const k of keysToCheck) {
+        if (localStorage.getItem(k) === 'true') {
+          return true;
+        }
+      }
+    } catch {
+      // ignore storage access issues
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Marks the Daily Readiness Questionnaire as completed for today's local calendar date
+ * for the given user/athlete so it only triggers once daily.
+ */
+export function markDailyReadinessCompletedToday(
+  athlete?: AthleteProfile | null,
+  userId?: string | null,
+  userEmail?: string | null
+): void {
+  if (typeof window === 'undefined') return;
+  const todayLocal = getLocalTodayDateStr();
+  try {
+    if (userId) {
+      localStorage.setItem(`${DAILY_READINESS_STORAGE_PREFIX}_${userId}_${todayLocal}`, 'true');
+    }
+    if (userEmail) {
+      localStorage.setItem(`${DAILY_READINESS_STORAGE_PREFIX}_${userEmail.trim().toLowerCase()}_${todayLocal}`, 'true');
+    }
+    if (athlete?.id) {
+      localStorage.setItem(`${DAILY_READINESS_STORAGE_PREFIX}_${athlete.id}_${todayLocal}`, 'true');
+    }
+    if (athlete?.email) {
+      localStorage.setItem(`${DAILY_READINESS_STORAGE_PREFIX}_${athlete.email.trim().toLowerCase()}_${todayLocal}`, 'true');
+    }
+  } catch {
+    // ignore storage access issues
+  }
+}
+
+/**
  * Calculates a comprehensive Tactical Readiness Score for law enforcement officers
  * aggregating Recovery, Weight Logging Consistency, and Workout Completion Rates.
  */
@@ -9,7 +96,7 @@ export function calculateReadinessScore(
   allLogs: WorkoutSessionLog[]
 ): ReadinessScoreBreakdown {
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = getLocalTodayDateStr(now);
 
   // Filter logs for this athlete
   const athleteLogs = allLogs.filter((l) => {

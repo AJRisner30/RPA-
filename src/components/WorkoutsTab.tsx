@@ -640,12 +640,15 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         return candidateTemplate;
       });
 
-    const tacticalAlreadyHasConditioningInList =
-      selectedProgram === 'tactical_hypertrophy' &&
-      day.strength.some((s) => /\b(sprint|sprints|pro\s+agility|t-drill|zone\s*2)\b/i.test(s));
+    const alreadyHasMatchingRunInList = exercises.some(
+      (ex) =>
+        ex.type === 'cardio' &&
+        (ex.name.toLowerCase() === day.run.trim().toLowerCase() ||
+          (day.run.toLowerCase().includes('zone 2') && ex.name.toLowerCase().includes('zone 2')))
+    );
 
     // If day has conditioning (run / pursuit / sprints) and is not already explicitly listed inside day.strength, append as trackable cardio
-    if (isRealConditioningRun(day.run) && !tacticalAlreadyHasConditioningInList) {
+    if (isRealConditioningRun(day.run) && !alreadyHasMatchingRunInList) {
       const combined = `${day.run} ${day.pace} ${day.focus}`.toLowerCase();
       const isIntervals = combined.includes('interval') || combined.includes('track') || combined.includes('sprint') || combined.includes('repeats');
 
@@ -686,36 +689,35 @@ export const WorkoutsTab: React.FC<WorkoutsTabProps> = ({
         }
       }
 
-      // Duration in minutes (start at low end of minute ranges)
+      // Duration in minutes (only when explicitly prescribed in minutes in day.run or day.pace)
       let durationMins: number | undefined;
-      const minMatch = day.run.match(/(\d+(?:\.\d+)?)\s*(?:[-–]\s*(\d+(?:\.\d+)?))?\s*min/i);
+      const minMatch = day.run.match(/(\d+(?:\.\d+)?)\s*(?:[-–]\s*(\d+(?:\.\d+)?))?\s*min(?!\s*hip|\s*between)/i);
       if (minMatch) {
         durationMins = Math.round(parseFloat(minMatch[1]));
       } else {
-        const paceMinMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*(?:[-–]\s*(\d+(?:\.\d+)?))?\s*min/i);
+        const paceMinMatch = day.pace.match(/(\d+(?:\.\d+)?)\s*(?:[-–]\s*(\d+(?:\.\d+)?))?\s*min(?!\s*rest|\s*between)/i);
         if (paceMinMatch) {
           durationMins = Math.round(parseFloat(paceMinMatch[1]));
         }
       }
 
-      // Sensible defaults if not specified
+      // Sensible defaults if neither distance nor duration was specified
       if (!distance && !durationMins) {
         if (isIntervals) {
           distance = 2.0;
-          durationMins = 22;
         } else {
           distance = 2.5;
-          durationMins = 25;
         }
       } else if (!distance && durationMins) {
-        distance = parseFloat((durationMins / 9.5).toFixed(1));
-      } else if (distance && !durationMins) {
-        durationMins = Math.round(distance * 9);
+        distance = Math.round((durationMins / 10) * 2) / 2;
       }
 
-      const targetText = durationMins 
-        ? `${durationMins} mins${distance ? ` (${distance} mi target)` : ''}`
-        : `${distance} miles`;
+      const targetText =
+        distance && !durationMins
+          ? `${distance} ${distance === 1 ? 'mile' : 'miles'}`
+          : durationMins
+          ? `${durationMins} mins${distance ? ` (${distance} mi target)` : ''}`
+          : `${distance} miles`;
 
       exercises.push({
         id: `proto-cardio-${Date.now()}`,

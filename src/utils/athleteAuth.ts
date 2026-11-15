@@ -322,6 +322,20 @@ export function getSelectableAthletes(allowAdminRoster = false): AthleteProfile[
   });
 }
 
+const COACH_PROFILE_STORAGE_KEY = 'rpa_coach_profile_v1';
+
+function getStoredCoachProfile(): AthleteProfile {
+  if (typeof window === 'undefined') return COACH_PROFILE;
+  try {
+    const raw = localStorage.getItem(COACH_PROFILE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...COACH_PROFILE, ...parsed, id: COACH_PROFILE.id };
+    }
+  } catch {}
+  return COACH_PROFILE;
+}
+
 export function getCurrentAthlete(): AthleteProfile {
   if (typeof window === 'undefined') return DEFAULT_ATHLETES[0];
 
@@ -336,7 +350,7 @@ export function getCurrentAthlete(): AthleteProfile {
   // If currentId is Coach AJ, check if this session was explicitly authenticated with PIN
   if (currentId === 'athlete-aj-risner') {
     if (isCoachSession()) {
-      return COACH_PROFILE;
+      return getStoredCoachProfile();
     }
     // Standard visitor: reset to Tactical Athlete so nobody sees Aryan's name selected!
     localStorage.setItem(CURRENT_ATHLETE_KEY, DEFAULT_ATHLETES[0].id);
@@ -362,9 +376,10 @@ export function getCurrentAthlete(): AthleteProfile {
 export function setCurrentAthlete(athleteId: string): AthleteProfile {
   if (athleteId === 'athlete-aj-risner') {
     if (isCoachSession()) {
-      localStorage.setItem(CURRENT_ATHLETE_KEY, COACH_PROFILE.id);
-      window.dispatchEvent(new CustomEvent('athlete_changed', { detail: COACH_PROFILE }));
-      return COACH_PROFILE;
+      const storedCoach = getStoredCoachProfile();
+      localStorage.setItem(CURRENT_ATHLETE_KEY, storedCoach.id);
+      window.dispatchEvent(new CustomEvent('athlete_changed', { detail: storedCoach }));
+      return storedCoach;
     }
     return getCurrentAthlete();
   }
@@ -441,9 +456,10 @@ export function loginAthlete(emailOrName: string, pin?: string): AthleteProfile 
     try {
       sessionStorage.setItem(COACH_AUTH_SESSION_KEY, 'true');
     } catch {}
-    localStorage.setItem(CURRENT_ATHLETE_KEY, COACH_PROFILE.id);
-    window.dispatchEvent(new CustomEvent('athlete_changed', { detail: COACH_PROFILE }));
-    return COACH_PROFILE;
+    const storedCoach = getStoredCoachProfile();
+    localStorage.setItem(CURRENT_ATHLETE_KEY, storedCoach.id);
+    window.dispatchEvent(new CustomEvent('athlete_changed', { detail: storedCoach }));
+    return storedCoach;
   }
 
   const athletes = getAthletes();
@@ -466,14 +482,34 @@ export function updateAthleteProfile(
   updates: Partial<AthleteProfile>
 ): AthleteProfile | null {
   if (athleteId === 'athlete-aj-risner') {
-    Object.assign(COACH_PROFILE, updates);
-    window.dispatchEvent(new CustomEvent('athlete_changed', { detail: COACH_PROFILE }));
-    return COACH_PROFILE;
+    const storedCoach = getStoredCoachProfile();
+    const updatedCoach = { ...storedCoach, ...updates, id: COACH_PROFILE.id };
+    Object.assign(COACH_PROFILE, updatedCoach);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(COACH_PROFILE_STORAGE_KEY, JSON.stringify(updatedCoach));
+      }
+    } catch {}
+    window.dispatchEvent(new CustomEvent('athlete_changed', { detail: updatedCoach }));
+    return updatedCoach;
   }
 
   const athletes = getAthletes();
   const index = athletes.findIndex((a) => a.id === athleteId);
-  if (index === -1) return null;
+  if (index === -1) {
+    const upserted: AthleteProfile = {
+      ...DEFAULT_ATHLETES[0],
+      ...updates,
+      id: athleteId,
+    };
+    const nextList = [...athletes, upserted];
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ATHLETES_KEY, JSON.stringify(nextList));
+      localStorage.setItem(CURRENT_ATHLETE_KEY, athleteId);
+      window.dispatchEvent(new CustomEvent('athlete_changed', { detail: upserted }));
+    }
+    return upserted;
+  }
 
   athletes[index] = { ...athletes[index], ...updates };
   localStorage.setItem(ATHLETES_KEY, JSON.stringify(athletes));

@@ -39,8 +39,13 @@ import {
   registerAthlete, 
   isCoachSession 
 } from './utils/athleteAuth';
-import { calculateReadinessScore } from './utils/readinessEngine';
+import { 
+  calculateReadinessScore, 
+  hasCompletedDailyReadinessToday, 
+  markDailyReadinessCompletedToday 
+} from './utils/readinessEngine';
 import { PlanSelectionModal } from './components/PlanSelectionModal';
+import { DailyReadinessModal } from './components/DailyReadinessModal';
 import { 
   Award, ShieldCheck, Dumbbell, Heart, Flame, Mail, 
   Instagram, ExternalLink, Zap, Smartphone, Lock, CreditCard, ArrowRight 
@@ -152,6 +157,10 @@ export default function App() {
 
   // Guided App Tour & Feature Showcase state
   const [isGuidedTourOpen, setIsGuidedTourOpen] = useState<boolean>(false);
+
+  // Daily Readiness Questionnaire state (Once daily at first login of the day for everyone)
+  const [isDailyReadinessOpen, setIsDailyReadinessOpen] = useState<boolean>(false);
+  const [isAthleteCloudLoaded, setIsAthleteCloudLoaded] = useState<boolean>(false);
 
   const { 
     tier, 
@@ -295,7 +304,16 @@ export default function App() {
 
   // Real-time Firestore sync when authenticated
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsAthleteCloudLoaded(false);
+      setIsDailyReadinessOpen(false);
+      return;
+    }
+
+    // Fallback timer so daily readiness check still runs even if offline or slow network
+    const fallbackTimer = setTimeout(() => {
+      setIsAthleteCloudLoaded(true);
+    }, 600);
 
     // 1. Subscribe to workout logs in Firestore
     const unsubscribeLogs = subscribeToUserWorkoutLogs(user.uid, (cloudLogs) => {
@@ -329,6 +347,7 @@ export default function App() {
             localStorage.setItem(`rpa_trial_v2_${user.uid}`, JSON.stringify(t));
           } catch {}
         }
+        setIsAthleteCloudLoaded(true);
       } else {
         const athleteName = user.displayName || user.email?.split('@')[0] || 'Patrol Officer';
         const athleteEmail = user.email || '';
@@ -355,6 +374,7 @@ export default function App() {
         saveAthleteToFirestore(newAthlete, user.uid).catch((err) => {
           console.warn('[Firebase] Initial athlete save note:', err);
         });
+        setIsAthleteCloudLoaded(true);
       }
     });
 
@@ -396,6 +416,7 @@ export default function App() {
     });
 
     return () => {
+      clearTimeout(fallbackTimer);
       unsubscribeLogs();
       unsubscribeAthlete();
       unsubscribeOfficerProg();
@@ -403,6 +424,44 @@ export default function App() {
       unsubscribeCoachProgs();
     };
   }, [user, isMasterExempt]);
+
+  // Mandatory Once-Daily Readiness Questionnaire at First Login of the Day for Everyone
+  useEffect(() => {
+    if (loading || !user || !isAthleteCloudLoaded) return;
+    if (!hasActiveAccess && !isMasterExempt) return;
+
+    const alreadyCompletedToday = hasCompletedDailyReadinessToday(
+      currentAthlete,
+      user.uid,
+      user.email
+    );
+
+    if (alreadyCompletedToday) {
+      markDailyReadinessCompletedToday(currentAthlete, user.uid, user.email);
+      setIsDailyReadinessOpen(false);
+    } else {
+      setIsDailyReadinessOpen(true);
+    }
+  }, [
+    loading,
+    user,
+    isAthleteCloudLoaded,
+    hasActiveAccess,
+    isMasterExempt,
+    currentAthlete,
+  ]);
+
+  const handleDailyReadinessComplete = (updatedAthlete: AthleteProfile) => {
+    markDailyReadinessCompletedToday(updatedAthlete, user?.uid, user?.email);
+    setCurrentAthlete(updatedAthlete);
+    updateAthleteProfile(updatedAthlete.id, updatedAthlete);
+    setIsDailyReadinessOpen(false);
+    if (user) {
+      saveAthleteToFirestore(updatedAthlete, user.uid).catch((err) => {
+        console.warn('[Firebase] Daily readiness sync note:', err);
+      });
+    }
+  };
 
   // Real-time subscription to Coach AJ's workout logs - every single athlete sees every workout Coach AJ logs!
   useEffect(() => {
@@ -1131,6 +1190,16 @@ export default function App() {
         onOpenAIGenerator={() => setIsAIGeneratorOpen(true)}
         onOpenSingleDayWorkout={() => setIsSingleDayModalOpen(true)}
         onOpenQuestionnaire={() => setIsQuestionnaireOpen(true)}
+      />
+
+      {/* Mandatory Once-Daily Tactical Readiness Questionnaire at First Login of the Day */}
+      <DailyReadinessModal
+        isOpen={isDailyReadinessOpen}
+        athlete={currentAthlete}
+        logs={logs}
+        userId={user?.uid}
+        userEmail={user?.email}
+        onComplete={handleDailyReadinessComplete}
       />
     </div>
   );

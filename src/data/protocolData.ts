@@ -603,20 +603,18 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           'Reverse Lunges (3x10/leg) [Overload: Start at 3 sets x 10/leg; add light DBs once stable - Effort: Bodyweight / Light DBs (RPE 7) - Rest: 60s]',
           'McGill Curl-Up + Side Plank + Bird Dog (3x10 sec holds each) [Effort: Bodyweight (RPE 7) - Rest: 45s - Spine-safe core bracing; never do straight-leg sit-ups]'
         ],
-        run: 'Post-Lift Aerobic Run: 1.9 miles (1 set)',
+        run: 'Post-Lift Aerobic Run: 2 miles (1 set)',
         pace: 'Easy Conversational Pace (Rest: 0s)',
-        progressionRule: 'Start at 3 sets x 10 reps (RPE 7, 3s eccentric). Build to 12 reps across all sets before adding +5–10 lbs. Post-Lift Run: 1.9 miles easy conversational pace.'
+        progressionRule: 'Start at 3 sets x 10 reps (RPE 7, 3s eccentric). Build to 12 reps across all sets before adding +5–10 lbs. Post-Lift Run: 2 miles easy conversational pace.'
       },
       {
         day: 'Day 2',
         focus: 'Cardio Endurance & Tempo Running',
         warmup: DIME_WARMUP_TEXT,
-        strength: [
-          'Steady Aerobic Run (build distance weekly) (1x2.5-3.1 miles) [Overload: Start at 2.5 miles; increase distance max 10%/week toward 3.1 miles - Effort: Conversational Pace (RPE 7) - Rest: 0s]'
-        ],
-        run: 'Steady Aerobic Run (build distance weekly): 2.5–3.1 miles (start at 2.5 miles)',
+        strength: [],
+        run: 'Steady Aerobic Run (build distance weekly): 2.5–3 miles (start at 2.5 miles)',
         pace: 'Conversational Pace (Rest: 0s)',
-        progressionRule: 'Start at 2.5 miles and build distance by no more than 10% per week up to 3.1 miles.'
+        progressionRule: 'Start at 2.5 miles and build distance by no more than 10% per week up to 3 miles.'
       },
       {
         day: 'Day 3',
@@ -636,10 +634,8 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         day: 'Day 4',
         focus: 'Mid-Week Steady Run & Hip Mobility',
         warmup: DIME_WARMUP_TEXT,
-        strength: [
-          'Steady Aerobic Run + 10-Min Hip Mobility (1x2.5 miles) [Effort: Easy Conversational Pace (RPE 7) - Rest: 0s - Follow with 10-min hip flexor, hamstring, calf & chest static stretches]'
-        ],
-        run: 'Steady Aerobic Run (2.5 miles) + 10-Min Hip Mobility',
+        strength: [],
+        run: 'Steady Aerobic Run + 10-Min Hip Mobility: 2.5 miles (1 set)',
         pace: 'Easy Conversational Pace (Rest: 0s)',
         progressionRule: '2.5-mile easy conversational run followed by 10 minutes of hip mobility to undo patrol car stiffness.'
       },
@@ -685,7 +681,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     id: 'apex_phase2',
     title: 'Quarter 2 (Weeks 14–26): Running Stamina & Grappling Strength',
     weeks: 'Weeks 14–26',
-    desc: 'Increase running stamina with 100m–400m tempo/interval sessions and 3.1–3.7 mile runs while building lean muscle and grip strength for ground control.',
+    desc: 'Increase running stamina with 100m–400m tempo/interval sessions and 3–4 mile runs while building lean muscle and grip strength for ground control.',
     coachRule:
       'Quarter 2 Progression Rules: Start at 6 reps on 4x6-8 compound lifts at Challenging Effort (RPE 8). Build to 8 reps across all 4 sets before adding +2.5–5 lbs (upper) or +5–10 lbs (lower). Never increase vest weight, running distance, and running speed in the same week. Deload (-40% volume) on Weeks 16, 20, 24. Benchmark Test on Week 26.',
     days: [
@@ -699,20 +695,19 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           'Bulgarian Split Squat (rear foot elevated) (3x8/leg) [Overload: +5 lbs DBs when 3x8/leg is solid - Effort: Moderate Dumbbells (RPE 8) - Rest: 90s]',
           'Tall-Kneeling Pallof Press + Glute Bridge (3x10/side + 15 reps) [Effort: Moderate Band/Cable (RPE 8) - Rest: 60s]'
         ],
-        run: 'Post-Lift Aerobic Run: 1.9 miles (1 set)',
+        run: 'Post-Lift Aerobic Run: 2 miles (1 set)',
         pace: 'Easy Recovery Pace (Rest: 0s)',
-        progressionRule: 'Back Squat: Start at 4x6 (RPE 8), build to 4x8 then +5–10 lbs. Deadlift: 4x6 at RPE 8. Finish with 1.9-mile easy recovery run.'
+        progressionRule: 'Back Squat: Start at 4x6 (RPE 8), build to 4x8 then +5–10 lbs. Deadlift: 4x6 at RPE 8. Finish with 2-mile easy recovery run.'
       },
       {
         day: 'Day 2',
         focus: 'Cardio Endurance: 100m Tempo Runs & Vest Conditioning',
         warmup: DIME_WARMUP_TEXT,
         strength: [
-          '100m Tempo Runs (smooth, consistent speed) (10x100m (~16-18s)) [Effort: Moderate (65-75% speed, RPE 8) - Rest: 45s walk]',
-          'Brisk Walk or Light Jog Wearing 20-30 lb Vest (1x1.5 miles) [Effort: Brisk Pace (20-30 lb Vest, RPE 7.5) - Rest: 0s]'
+          '100m Tempo Runs (smooth, consistent speed) (10x100m (~16-18s)) [Effort: Moderate (65-75% speed, RPE 8) - Rest: 45s walk]'
         ],
-        run: '10x100m Tempo Runs (~16–18s, 45s walk rest) + 1.5 Mile Brisk Walk or Light Jog Wearing 20–30 lb Vest',
-        pace: 'Moderate (65–75% speed) on 100m Tempo Runs + Brisk Pace with 20–30 lb Vest',
+        run: 'Brisk Walk or Light Jog Wearing 20–30 lb Vest: 1.5 miles (1 set)',
+        pace: 'Brisk Pace Wearing 20–30 lb Vest (Rest: 0s)',
         progressionRule: 'Hit smooth 16–18s pacing across all 10x100m tempo repeats (45s walk rest), followed by 1.5 miles in a 20–30 lb duty vest.'
       },
       {
@@ -733,12 +728,10 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         day: 'Day 4',
         focus: 'Mid-Week Long Steady Aerobic Run',
         warmup: DIME_WARMUP_TEXT,
-        strength: [
-          'Long Steady Aerobic Run (1x3.1-4.0 miles) [Overload: Start at 3.1 miles; increase distance max 10%/week up to 4.0 miles - Effort: Steady Zone 2 Pace (RPE 7) - Rest: 0s]'
-        ],
-        run: 'Long Steady Aerobic Run: 3.1–4.0 miles (start at 3.1 miles)',
+        strength: [],
+        run: 'Long Steady Aerobic Run: 3–4 miles (start at 3 miles)',
         pace: 'Steady Zone 2 Pace (Rest: 0s)',
-        progressionRule: 'Start at 3.1 miles and build weekly by no more than 10% toward 4.0 miles at steady Zone 2 pace.'
+        progressionRule: 'Start at 3 miles and build weekly by no more than 10% toward 4 miles at steady Zone 2 pace.'
       },
       {
         day: 'Day 5',
@@ -750,8 +743,8 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           'Rotational Medicine Ball Wall Throw (3x8/side) [Effort: 10-14 lb Med Ball (RPE 8) - Rest: 60s]',
           'Heavy Sled Push & Backward Drag (4x15m out / 15m back) [Overload: +10 lbs sled load when all 4 rounds stay crisp - Effort: Heavy (75-80% effort, RPE 8) - Rest: 120s (2 min)]'
         ],
-        run: 'Heavy Sled Push & Backward Drag (4 × 15m out / 15m back)',
-        pace: 'Heavy (75–80% effort, 2 min rest)',
+        run: 'Rest from running',
+        pace: 'N/A',
         progressionRule: 'Build grappling & suspect-control power with 70–100 lb sandbag work and 4x15m out/15m back heavy sled pushes/drags.'
       },
       {
@@ -782,7 +775,7 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
     id: 'apex_phase3',
     title: 'Quarter 3 (Weeks 27–39): Limit Strength, Pursuit Speed & Threshold Runs',
     weeks: 'Weeks 27–39',
-    desc: 'Build maximum strength while moving every rep upward as fast as possible, paired with short sprints, agility drills, and sustained 2.5–3.7 mile tempo runs.',
+    desc: 'Build maximum strength while moving every rep upward as fast as possible, paired with short sprints, agility drills, and sustained 3–4 mile tempo runs.',
     coachRule:
       'Quarter 3 Progression Rules: Start at the low end of every set and rep range (e.g., 4 sets x 3 reps on 4-5x3-5 Back Squat & Bench Press; 3 sets x 3 reps on 3-4x3-4 Deadlift; 8 repeats on 8-10x40m Sprint Repeats). Explode upward fast on every concentric rep at 85–92% Max (RPE 8.5–9). Deload (-40% volume) on Weeks 28, 32, 36. Benchmark Test on Week 39.',
     days: [
@@ -808,9 +801,9 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           '10m & 20m Sprint Starts (from ready stance) (6x10-20m) [Effort: All-Out (95-100%, RPE 9.5) - Rest: 90s]',
           'Pro Agility (5m-10m-5m) & 10m T-Test Cone Drills (3x1 rep each drill) [Effort: All-Out (sharp cuts, RPE 9) - Rest: 120s (2 min)]'
         ],
-        run: 'Easy Recovery Run: 2.0 miles (1 set)',
+        run: 'Easy Recovery Run: 2 miles (1 set)',
         pace: 'Easy Pace (after Sprint Starts & Cone Drills)',
-        progressionRule: 'Execute 6x10–20m Sprint Starts from patrol ready stance and 3x1 Pro Agility & T-Test drills at 95–100% effort, then 2.0-mile easy recovery run.'
+        progressionRule: 'Execute 6x10–20m Sprint Starts from patrol ready stance and 3x1 Pro Agility & T-Test drills at 95–100% effort, then 2-mile easy recovery run.'
       },
       {
         day: 'Day 3',
@@ -830,12 +823,10 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         day: 'Day 4',
         focus: 'Mid-Week Sustained Threshold Tempo Run',
         warmup: DIME_WARMUP_TEXT,
-        strength: [
-          'Sustained Tempo Run (fast, controlled pace) (1x3.0-4.0 miles) [Overload: Start at 3.0 miles; build max 10%/week to 4.0 miles - Effort: Threshold (75-80% HRR, RPE 8) - Rest: 0s]'
-        ],
-        run: 'Sustained Tempo Run (fast, controlled pace): 3.0–4.0 miles (start at 3.0 miles)',
+        strength: [],
+        run: 'Sustained Tempo Run (fast, controlled pace): 3–4 miles (start at 3 miles)',
         pace: 'Threshold (75–80% HRR, Rest: 0s)',
-        progressionRule: 'Start at 3.0 miles at Threshold pace (75–80% HRR) and build progressively toward 4.0 miles.'
+        progressionRule: 'Start at 3 miles at Threshold pace (75–80% HRR) and build progressively toward 4 miles.'
       },
       {
         day: 'Day 5',
@@ -847,8 +838,8 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
           'Medicine Ball Overhead Slam + Rotational Lunge (3x8 reps each) [Effort: 10-14 lb Med Ball (RPE 8) - Rest: 60s]',
           '40m Sprint Repeats (Repeat Sprint Ability) (8-10x40m) [Overload: Start at 8 sets x 40m; build to 10 repeats - Effort: Hard (90-95% effort, RPE 9) - Rest: 35s]'
         ],
-        run: '40m Sprint Repeats (Repeat Sprint Ability): 8–10 × 40m (start at 8 × 40m)',
-        pace: 'Hard (90–95% effort, 35s rest)',
+        run: 'Rest from running',
+        pace: 'N/A',
         progressionRule: 'Explosive Trap-Bar Jumps (20% Squat Max) + Speed Bench (55–65% Max) + 40m Sprint Repeats (start at 8x40m with strict 35s rest).'
       },
       {
@@ -904,9 +895,9 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         strength: [
           'Hill Sprints (easier on hamstrings than flat sprints) (6x30m) [Effort: All-Out (95%, RPE 9) - Rest: 90s walk]'
         ],
-        run: 'Steady Aerobic Run: 2.5–3.1 miles (start at 2.5 miles)',
+        run: 'Steady Aerobic Run: 2.5–3 miles (start at 2.5 miles)',
         pace: 'Conversational Pace (after 6 × 30m Hill Sprints)',
-        progressionRule: 'Complete 6x30m Hill Sprints at 95% effort (90s walk rest), then transition into a 2.5–3.1 mile conversational aerobic run.'
+        progressionRule: 'Complete 6x30m Hill Sprints at 95% effort (90s walk rest), then transition into a 2.5–3 mile conversational aerobic run.'
       },
       {
         day: 'Day 3',
@@ -926,12 +917,10 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         day: 'Day 4',
         focus: 'Mid-Week Steady Zone 2 Recovery Run',
         warmup: DIME_WARMUP_TEXT,
-        strength: [
-          'Steady Zone 2 Recovery Run (1x3.0 miles) [Effort: Easy Conversational Pace (RPE 7) - Rest: 0s]'
-        ],
-        run: 'Steady Zone 2 Recovery Run: 3.0 miles',
+        strength: [],
+        run: 'Steady Zone 2 Recovery Run: 3 miles (1 set)',
         pace: 'Easy Conversational Pace (Rest: 0s)',
-        progressionRule: 'Maintain an easy conversational Zone 2 pace across 3.0 miles to flush fatigue before Day 5 Duty Circuit.'
+        progressionRule: 'Maintain an easy conversational Zone 2 pace across 3 miles to flush fatigue before Day 5 Duty Circuit.'
       },
       {
         day: 'Day 5',
@@ -940,8 +929,8 @@ export const APEX_PROTOCOL_PHASES: Record<string, ProtocolPhase> = {
         strength: [
           '4 Rounds Wearing 20-lb Weight Vest (60-90s/round) (4x1 full circuit) [Effort: Hard (85-95% effort, RPE 9) - Rest: 120s (2-3 min between rounds) - Circuit Stations: 1) 45m Pursuit Sprint + 1.2m Barrier Vault / Box Step-Over, 2) 15m Low Crawl + 10 Sledgehammer Tire Strikes, 3) 165-lb Dummy / Heavy Sled Drag (10m out, turn, 10m back), 4) 30s Heavy Sandbag Bear-Hug Hold / Ground Control Drill]'
         ],
-        run: '4 Rounds Duty Pursuit & Use-of-Force Circuit (Wearing 20-lb Weight Vest, 60–90s/round)',
-        pace: 'Hard (85–95% effort, 2–3 min rest between rounds)',
+        run: 'Rest from running',
+        pace: 'N/A',
         progressionRule: 'Complete 4 full rounds in a 20-lb weight vest (60–90s/round, 2–3 min rest): 1) 45m Sprint + 1.2m Vault, 2) 15m Low Crawl + 10 Sledgehammer Strikes, 3) 165-lb Dummy Drag (10m out/10m back), 4) 30s Sandbag Bear-Hug Hold.'
       },
       {
@@ -1027,7 +1016,7 @@ export function getApexWeekData(weekNumber: number): ProtocolPhase {
   } else if (isTestWeek) {
     weekBadge = week === 52 ? ' (FINAL ANNUAL FITNESS TEST)' : ` (QUARTER ${quarterNum} BENCHMARK TEST)`;
     weekRulePrefix +=
-      'FITNESS BENCHMARK WEEK (Test Well-Rested): Test 1) 1.5-Mile Run [Duty Ready <11:30 | High Readiness <10:15 | SWAT/Tactical <9:30] & 3.1-Mile (5K) Run [<24:00 | <21:00 | <19:15], 2) Squat & Trap-Bar Deadlift [1.5x | 1.75x | 2.0-2.5x BW], 3) Bench Press [1.0x | 1.25x | 1.5-1.75x BW] & 1-Min Push-Ups [35+ | 45+ | 60+], 4) Strict Pull-Ups [8+ | 14+ | 20+] & 40m Sprint [<5.6s | <5.2s | <4.9s], 5) Vertical Jump [50+ cm | 60+ cm | 70+ cm]. ';
+      'FITNESS BENCHMARK WEEK (Test Well-Rested): Test 1) 1.5-Mile Run [Duty Ready ≤11:30 | Strong Standard ≤10:15 | Elite Standard ≤9:30] & 3-Mile (5K) Run [≤25:00 | ≤22:00 | ≤20:00], 2) Back Squat & Deadlift [2.0x | 2.2x | 2.5x BW], 3) Bench Press [1.25x | 1.5x | 1.75x BW] & Push-Ups [35 | 45 | 55+], 4) Strict Pull-Ups [8 | 12 | 15+] & 40m Sprint [≤5.70s | ≤5.30s | ≤5.00s], 5) Vertical Jump [50 cm | 60 cm | 70+ cm]. ';
   } else {
     const blockWeek = ((week - 1) % 4) + 1; // 1, 2, or 3 within the 4-week cycle
     weekRulePrefix += `3-Week Progressive Block (Week ${blockWeek} of 3): Start at the low end of set & rep ranges; add 1–2 reps per set until hitting the top of the rep range with 1–2 RIR, then add +2.5–5 lbs (upper) or +5–10 lbs (lower). `;
@@ -1114,8 +1103,8 @@ function buildTacticalBodybuildingPhase(phaseNum: 1 | 2 | 3): ProtocolPhase {
           '40m Build-Up Sprints (4x40m) [Overload: Smooth top-speed posture - Effort: Hard (85-90% effort, RPE 8.5) - Rest: 120s - 2 min recovery]',
           '50m Sled Push Finisher (4x50m) [Overload: Add +10 lbs sled when crisp - Effort: Moderate Load (RPE 8) - Rest: 60s - Drive low through balls of feet]'
         ],
-        run: 'Phase 1 Track / Turf Acceleration: 6×20m Falling Starts + 4×40m Build-Ups + 4×50m Sled Push',
-        pace: '90s walk-back (20m) • 2 min rest (40m @ 85–90%) • 60s rest (50m sled)',
+        run: 'Rest from distance running',
+        pace: 'N/A',
         progressionRule: 'Phase 1 Acceleration: Foot-pursuit acceleration and anaerobic repeatability. Bad Shift Rule: Swap sprints for 20-min Zone 2 flush if sleep-deprived.'
       }
     : isP2
@@ -1128,8 +1117,8 @@ function buildTacticalBodybuildingPhase(phaseNum: 1 | 2 | 3): ProtocolPhase {
           '30m Flying Sprints (15m build-up, 30m max velocity) (5x30m) [Overload: Upright relaxed top speed - Effort: Max Velocity (RPE 9.5) - Rest: 120s - 2 min full recovery]',
           'Assault Bike Max Sprint / Easy Spin Finisher (6x15s sprint / 45s spin) [Effort: All-Out 15s / Easy 45s (RPE 9) - Rest: 45s]'
         ],
-        run: 'Phase 2 Agility & Deceleration: 6× Pro Agility (5-10-5m) + 5×30m Flying Sprints + 6×15s/45s Bike Finisher',
-        pace: '90s rest (Pro Agility) • 2 min rest (Flying Sprints) • 15s Max / 45s Easy Spin',
+        run: 'Rest from distance running',
+        pace: 'N/A',
         progressionRule: 'Phase 2 Agility & Deceleration: Sharp lateral deceleration and top-end sprint mechanics. Bad Shift Rule: Swap sprints for 20-min Zone 2 flush.'
       }
     : {
@@ -1140,8 +1129,8 @@ function buildTacticalBodybuildingPhase(phaseNum: 1 | 2 | 3): ProtocolPhase {
           '60m Broken Sprints (sprint 20m, drop to chest, pop up, sprint 40m) (4x60m) [Effort: Pursuit Simulation (RPE 9.5) - Rest: 150s - 2.5 min full recovery]',
           'T-Drill Agility Runs (10m x 10m) (4x10m x 10m) [Effort: Crisp Lateral & Backpedal Cuts (RPE 9) - Rest: 90s]'
         ],
-        run: 'Phase 3 Pursuit Simulation: 4×60m Broken Sprints (20m/drop/40m) + 4× T-Drill (10m×10m)',
-        pace: '2.5 min rest (Broken Sprints) • 90s rest (T-Drill)',
+        run: 'Rest from distance running',
+        pace: 'N/A',
         progressionRule: 'Phase 3 Pursuit Simulation: Realistic foot-pursuit get-ups and multi-directional agility under fatigue. Bad Shift Rule: Swap for 20-min Zone 2 flush.'
       };
 
@@ -1223,8 +1212,7 @@ function buildTacticalBodybuildingPhase(phaseNum: 1 | 2 | 3): ProtocolPhase {
         strength: [
           'EZ-Bar Curls (3x10-12) [Overload: +5 lbs upper at 12 reps - Effort: RPE 8.5 - Rest: 60s - Part A Arm Hypertrophy (25 mins total)]',
           'Skullcrushers or Overhead Cable Extension (3x10-12) [Overload: +5 lbs upper at 12 reps - Effort: RPE 8.5 - Rest: 60s - Controlled eccentric, full elbow lock]',
-          'Cable Crunches or Ab-Wheel Rollouts (3x12-15) [Overload: +5 lbs cable or deeper rollout - Effort: RPE 8 - Rest: 60s - Spine-safe anterior core hypertrophy]',
-          'Zone 2 Run, Row, or Incline Treadmill Walk (1x25-30 mins) [Effort: Zone 2 HR 130-145 BPM Conversational Pace (RPE 6.5-7) - Rest: 0s - Part B Aerobic Base / Shift Flush to clear metabolic waste]'
+          'Cable Crunches or Ab-Wheel Rollouts (3x12-15) [Overload: +5 lbs cable or deeper rollout - Effort: RPE 8 - Rest: 60s - Spine-safe anterior core hypertrophy]'
         ],
         run: 'Part B — Aerobic Base / Shift Flush: 25–30 mins Zone 2 Run, Row, or Incline Treadmill Walk',
         pace: 'Heart rate 130–145 BPM — conversational pace to clear metabolic waste and build shift stamina',
